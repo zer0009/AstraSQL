@@ -1,0 +1,87 @@
+import { useState } from "react";
+import { Check, Copy, Pencil } from "lucide-react";
+import { Button, Textarea } from "../ui";
+
+export interface SQLViewerProps {
+  sql: string;
+  onAskAgain?: () => void;
+}
+
+export function SQLViewer({ sql, onAskAgain }: SQLViewerProps) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(sql);
+  const [copied, setCopied] = useState(false);
+
+  const displaySql = editing ? draft : sql;
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(displaySql);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // ignore clipboard failures
+    }
+  };
+
+  const toggleEdit = () => {
+    if (!editing) {
+      setDraft(sql);
+      setEditing(true);
+    } else {
+      setEditing(false);
+    }
+  };
+
+  return (
+    <div className="overflow-hidden rounded-md border border-zinc-200">
+      <div className="flex items-center justify-between gap-2 border-b border-zinc-200 bg-zinc-50 px-3 py-1.5">
+        <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+          SQL
+        </span>
+        <div className="flex items-center gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={toggleEdit}
+          >
+            <Pencil className="h-3 w-3" strokeWidth={1.75} />
+            {editing ? "Done" : "Edit"}
+          </Button>
+          <Button type="button" variant="ghost" size="sm" onClick={copy}>
+            {copied ? (
+              <Check className="h-3 w-3" strokeWidth={1.75} />
+            ) : (
+              <Copy className="h-3 w-3" strokeWidth={1.75} />
+            )}
+            {copied ? "Copied" : "Copy"}
+          </Button>
+          {onAskAgain ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onAskAgain}
+            >
+              Ask again
+            </Button>
+          ) : null}
+        </div>
+      </div>
+
+      {editing ? (
+        <Textarea
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          className="min-h-[120px] rounded-none border-0 font-mono text-xs leading-relaxed focus-visible:ring-0 focus-visible:ring-offset-0"
+          spellCheck={false}
+        />
+      ) : (
+        <pre className="overflow-x-auto bg-white px-3 py-2.5 font-mono text-xs leading-relaxed text-zinc-800 whitespace-pre-wrap">
+          {sql}
+        </pre>
+      )}
+    </div>
+  );
+}
