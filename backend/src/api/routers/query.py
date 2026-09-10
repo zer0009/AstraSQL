@@ -38,8 +38,14 @@ async def query_sync(body: QueryRequest, db: DbSession) -> dict[str, Any]:
     connection = await _ensure_connection(db, body.connection_id)
     if not body.question.strip():
         raise HTTPException(status_code=400, detail="question must not be empty")
+    history = [t.model_dump() for t in body.conversation_history]
     try:
-        result = await run_query(db, connection, body.question)
+        result = await run_query(
+            db,
+            connection,
+            body.question,
+            conversation_history=history,
+        )
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -57,10 +63,16 @@ async def query_stream(body: QueryRequest, db: DbSession) -> EventSourceResponse
     connection = await _ensure_connection(db, body.connection_id)
     if not body.question.strip():
         raise HTTPException(status_code=400, detail="question must not be empty")
+    history = [t.model_dump() for t in body.conversation_history]
 
     async def event_generator():
         try:
-            async for item in stream_query(db, connection, body.question):
+            async for item in stream_query(
+                db,
+                connection,
+                body.question,
+                conversation_history=history,
+            ):
                 yield _normalize_sse_item(item if isinstance(item, dict) else {"data": item})
         except Exception as exc:
             yield {"event": "error", "data": json.dumps({"message": str(exc)})}

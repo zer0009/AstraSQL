@@ -8,11 +8,40 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.agent.graph import build_graph, get_graph
 from src.agent.state import AgentState
 from src.agent.utils import confidence_to_float
+from src.config.settings import get_settings
 from src.providers.database.registry import provider_from_connection
 from src.storage.models import Connection, QueryHistory
 
 
-def _initial_state(connection: Connection, question: str) -> AgentState:
+def _normalize_conversation_history(
+    conversation_history: list[dict[str, Any]] | None,
+) -> list[dict[str, Any]]:
+    """Keep only valid turns and cap to MAX_CONVERSATION_TURNS."""
+    if not conversation_history:
+        return []
+    settings = get_settings()
+    cleaned: list[dict[str, Any]] = []
+    for turn in conversation_history:
+        if not isinstance(turn, dict):
+            continue
+        question = str(turn.get("question") or "").strip()
+        if not question:
+            continue
+        cleaned.append(
+            {
+                "question": question,
+                "sql": (str(turn.get("sql") or "").strip() or None),
+                "answer": (str(turn.get("answer") or "").strip() or None),
+            }
+        )
+    return cleaned[-settings.max_conversation_turns :]
+
+
+def _initial_state(
+    connection: Connection,
+    question: str,
+    conversation_history: list[dict[str, Any]] | None = None,
+) -> AgentState:
     return {
         "connection_id": connection.id,
         "question": question,
@@ -20,6 +49,7 @@ def _initial_state(connection: Connection, question: str) -> AgentState:
         "steps": [],
         "retry_context": "",
         "error": None,
+        "conversation_history": _normalize_conversation_history(conversation_history),
     }
 
 
@@ -118,12 +148,13 @@ async def run_query(
     session: AsyncSession,
     connection: Connection,
     question: str,
+    conversation_history: list[dict[str, Any]] | None = None,
 ) -> AgentState:
     """Run the full agent graph and persist QueryHistory on completion."""
     provider = provider_from_connection(connection)
     try:
         graph = get_graph()
-        initial = _initial_state(connection, question)
+        initial = _initial_state(connection, question, conversation_history)
         result = await graph.ainvoke(
             initial,
             config=_run_config(session, connection, provider),
@@ -138,10 +169,13 @@ async def stream_query(
     session: AsyncSession,
     connection: Connection,
     question: str,
+    conversation_history: list[dict[str, Any]] | None = None,
 ) -> AsyncIterator[dict[str, Any]]:
     """Stream SSE-friendly events for each graph node / agent step."""
     provider = provider_from_connection(connection)
-    final_state: AgentState = dict(_initial_state(connection, question))
+    final_state: AgentState = dict(
+        _initial_state(connection, question, conversation_history)
+    )
     try:
         graph = get_graph()
         config = _run_config(session, connection, provider)

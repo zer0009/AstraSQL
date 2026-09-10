@@ -19,5 +19,7 @@ class AgentState(TypedDict, total=False):
     assumption: Optional[str]
     follow_ups: list[str]
     steps: list[dict]  # agent step events for SSE
+    # Prior completed turns for multi-turn follow-ups (working-memory window).
+    conversation_history: list[dict]  # [{question, sql, answer}, ...]
     # Injected by runner (not from LLM):
     # session and connection are handled outside graph or via config

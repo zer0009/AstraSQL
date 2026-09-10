@@ -169,9 +169,18 @@ class BusinessRuleOut(BaseModel):
 # ---------------------------------------------------------------------------
 
 
+class ConversationTurn(BaseModel):
+    """One completed Q-SQL-Answer turn for multi-turn context."""
+
+    question: str
+    sql: Optional[str] = None
+    answer: Optional[str] = None
+
+
 class QueryRequest(BaseModel):
     connection_id: str
     question: str
+    conversation_history: list[ConversationTurn] = Field(default_factory=list)
 
 
 class AgentStateOut(BaseModel):

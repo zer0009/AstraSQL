@@ -1,6 +1,11 @@
 import { useCallback, useRef, useState } from "react";
 import { streamQuery } from "../services/api";
-import type { AgentStep, QueryResult, StreamQueryEvent } from "../types/api";
+import type {
+  AgentStep,
+  ConversationHistoryTurn,
+  QueryResult,
+  StreamQueryEvent,
+} from "../types/api";
 
 export type ChatMessage = {
   id: string;
@@ -26,8 +31,37 @@ export type StreamLastResult = {
   steps?: AgentStep[];
 };
 
+/** Working-memory window size (mirrors backend MAX_CONVERSATION_TURNS default). */
+const MAX_TURNS = 3;
+
 function newId(): string {
   return crypto.randomUUID();
+}
+
+/**
+ * Pair completed user/assistant turns into a compact history payload.
+ * Only turns with a non-empty assistant answer and no error are included.
+ */
+function buildTurnHistory(messages: ChatMessage[]): ConversationHistoryTurn[] {
+  const turns: ConversationHistoryTurn[] = [];
+  for (let i = 0; i + 1 < messages.length; i++) {
+    const user = messages[i];
+    const assistant = messages[i + 1];
+    if (
+      user.role === "user" &&
+      assistant.role === "assistant" &&
+      assistant.content &&
+      !assistant.error
+    ) {
+      turns.push({
+        question: user.content,
+        sql: assistant.sql,
+        answer: assistant.content,
+      });
+      i++; // skip the assistant message on next iteration
+    }
+  }
+  return turns.slice(-MAX_TURNS);
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -262,6 +296,9 @@ export function useStreamQuery(connectionId: string | null) {
       const controller = new AbortController();
       abortRef.current = controller;
 
+      // Capture prior completed turns before appending the new pair.
+      const conversation_history = buildTurnHistory(messagesRef.current);
+
       const userMsg: ChatMessage = {
         id: newId(),
         role: "user",
@@ -285,7 +322,11 @@ export function useStreamQuery(connectionId: string | null) {
 
       try {
         await streamQuery(
-          { connection_id: connectionId, question: trimmed },
+          {
+            connection_id: connectionId,
+            question: trimmed,
+            conversation_history,
+          },
           handleEvent,
           controller.signal,
         );

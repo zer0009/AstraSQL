@@ -1,6 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _ROOT = Path(__file__).resolve().parents[3]  # AstraSQL_V2/
@@ -31,6 +32,7 @@ class Settings(BaseSettings):
     # Query
     max_result_rows: int = 500
     max_retries: int = 3
+    max_conversation_turns: int = Field(default=3, ge=1, le=10)
     schema_cache_ttl_days: int = 7
     faiss_top_k_tables: int = 20
     golden_records_top_k: int = 5

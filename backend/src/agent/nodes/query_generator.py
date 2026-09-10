@@ -6,7 +6,10 @@ from typing import Any
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 
-from src.agent.prompts.generator import render_generator_prompt
+from src.agent.prompts.generator import (
+    format_conversation_history,
+    render_generator_prompt,
+)
 from src.agent.state import AgentState
 from src.agent.utils import append_step, extract_json, get_configurable, message_text
 from src.config.settings import get_settings
@@ -52,11 +55,15 @@ async def query_generator(
         updates["retries"] = retries
 
     try:
+        history_text = format_conversation_history(
+            state.get("conversation_history") or []
+        )
         system = render_generator_prompt(
             dialect_name=db_provider.dialect_name(),
             enriched_schema=context.get("enriched_schema") or "",
             business_rules=context.get("business_rules") or "",
             golden_records=context.get("golden_records_text") or "",
+            conversation_history=history_text,
             dialect_prompt_rules=db_provider.dialect_prompt_rules(),
             max_rows=settings.max_result_rows,
             retry_context=retry_context,

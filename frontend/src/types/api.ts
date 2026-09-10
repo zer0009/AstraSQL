@@ -160,9 +160,16 @@ export interface QueryResult {
   row_count: number;
 }
 
+export interface ConversationHistoryTurn {
+  question: string;
+  sql?: string;
+  answer?: string;
+}
+
 export interface QueryRequest {
   connection_id: string;
   question: string;
+  conversation_history?: ConversationHistoryTurn[];
 }
 
 export interface ExportRequest {

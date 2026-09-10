@@ -1,5 +1,9 @@
 """Query generator prompt (dialect injected at runtime)."""
 
+from __future__ import annotations
+
+from typing import Any
+
 from .base import render
 
 QUERY_GENERATOR_SYSTEM_PROMPT = """\
@@ -22,6 +26,13 @@ Target dialect: {dialect_name}
 -- Q: [natural language question]
 -- SQL:
 -- SELECT ... FROM ... WHERE ...;
+
+━━━ CONVERSATION HISTORY ━━━
+{conversation_history}
+-- Only present when the user is continuing a prior conversation.
+-- Use prior SQL to re-apply correct table choices and join patterns.
+-- Use prior answers to resolve references ("those customers", "that year", "the same filter").
+-- If no history is shown, treat this as a fresh question.
 
 ━━━ DIALECT-SPECIFIC RULES ━━━
 {dialect_prompt_rules}
@@ -70,12 +81,35 @@ Return JSON only:
 """
 
 
+def format_conversation_history(turns: list[dict[str, Any]] | None) -> str:
+    """Render prior Q-SQL-Answer turns as prompt text. Empty list → empty string."""
+    if not turns:
+        return ""
+
+    blocks: list[str] = []
+    for index, turn in enumerate(turns, start=1):
+        if not isinstance(turn, dict):
+            continue
+        question = str(turn.get("question") or "").strip()
+        if not question:
+            continue
+        sql = str(turn.get("sql") or "").strip() or "(none)"
+        answer = str(turn.get("answer") or "").strip() or "(none)"
+        blocks.append(
+            f"Turn {index} — User: {question}\n"
+            f"          SQL: {sql}\n"
+            f"          Answer: {answer}"
+        )
+    return "\n\n".join(blocks)
+
+
 def render_generator_prompt(
     *,
     dialect_name: str = "",
     enriched_schema: str = "",
     business_rules: str = "",
     golden_records: str = "",
+    conversation_history: str = "",
     dialect_prompt_rules: str = "",
     max_rows: str | int = "",
     retry_context: str = "",
@@ -90,6 +124,7 @@ def render_generator_prompt(
         enriched_schema=enriched_schema,
         business_rules=business_rules,
         golden_records=golden_records,
+        conversation_history=conversation_history,
         dialect_prompt_rules=dialect_prompt_rules,
         max_rows=max_rows,
         retry_context=retry_context,
