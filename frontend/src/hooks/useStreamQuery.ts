@@ -31,18 +31,14 @@ export type StreamLastResult = {
   steps?: AgentStep[];
 };
 
-/** Working-memory window size (mirrors backend MAX_CONVERSATION_TURNS default). */
-const MAX_TURNS = 3;
-
-function newId(): string {
-  return crypto.randomUUID();
-}
-
 /**
  * Pair completed user/assistant turns into a compact history payload.
  * Only turns with a non-empty assistant answer and no error are included.
  */
-function buildTurnHistory(messages: ChatMessage[]): ConversationHistoryTurn[] {
+function buildTurnHistory(
+  messages: ChatMessage[],
+  maxTurns: number,
+): ConversationHistoryTurn[] {
   const turns: ConversationHistoryTurn[] = [];
   for (let i = 0; i + 1 < messages.length; i++) {
     const user = messages[i];
@@ -61,7 +57,7 @@ function buildTurnHistory(messages: ChatMessage[]): ConversationHistoryTurn[] {
       i++; // skip the assistant message on next iteration
     }
   }
-  return turns.slice(-MAX_TURNS);
+  return turns.slice(-Math.max(1, maxTurns));
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -185,25 +181,52 @@ function toLastResult(msg: ChatMessage): StreamLastResult {
   };
 }
 
-export function useStreamQuery(connectionId: string | null) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+function newId(): string {
+  return crypto.randomUUID();
+}
+
+export type UseStreamQueryOptions = {
+  initialMessages?: ChatMessage[];
+  conversationTurns?: number;
+  sessionId?: string | null;
+};
+
+export function useStreamQuery(
+  connectionId: string | null,
+  options: UseStreamQueryOptions = {},
+) {
+  const {
+    initialMessages = [],
+    conversationTurns = 3,
+    sessionId = null,
+  } = options;
+
+  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [isStreaming, setIsStreaming] = useState(false);
   const [lastResult, setLastResult] = useState<StreamLastResult | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const assistantIdRef = useRef<string | null>(null);
-  const messagesRef = useRef<ChatMessage[]>([]);
+  const messagesRef = useRef<ChatMessage[]>(initialMessages);
+  const conversationTurnsRef = useRef(conversationTurns);
+  const sessionIdRef = useRef(sessionId);
 
+  conversationTurnsRef.current = conversationTurns;
+  sessionIdRef.current = sessionId;
   messagesRef.current = messages;
 
-  const clear = useCallback(() => {
+  const reset = useCallback((next: ChatMessage[] = []) => {
     abortRef.current?.abort();
     abortRef.current = null;
     assistantIdRef.current = null;
-    messagesRef.current = [];
-    setMessages([]);
+    messagesRef.current = next;
+    setMessages(next);
     setIsStreaming(false);
     setLastResult(null);
   }, []);
+
+  const clear = useCallback(() => {
+    reset([]);
+  }, [reset]);
 
   const updateAssistant = useCallback(
     (updater: (msg: ChatMessage) => ChatMessage): ChatMessage | null => {
@@ -214,6 +237,24 @@ export function useStreamQuery(connectionId: string | null) {
       const updated = updater(current);
       const next = messagesRef.current.map((m) =>
         m.id === id ? updated : m,
+      );
+      messagesRef.current = next;
+      setMessages(next);
+      return updated;
+    },
+    [],
+  );
+
+  const updateMessage = useCallback(
+    (
+      messageId: string,
+      updater: (msg: ChatMessage) => ChatMessage,
+    ): ChatMessage | null => {
+      const current = messagesRef.current.find((m) => m.id === messageId);
+      if (!current) return null;
+      const updated = updater(current);
+      const next = messagesRef.current.map((m) =>
+        m.id === messageId ? updated : m,
       );
       messagesRef.current = next;
       setMessages(next);
@@ -288,7 +329,10 @@ export function useStreamQuery(connectionId: string | null) {
   );
 
   const send = useCallback(
-    async (question: string) => {
+    async (
+      question: string,
+      overrides?: { sessionId?: string | null },
+    ) => {
       const trimmed = question.trim();
       if (!trimmed || !connectionId || isStreaming) return;
 
@@ -297,7 +341,10 @@ export function useStreamQuery(connectionId: string | null) {
       abortRef.current = controller;
 
       // Capture prior completed turns before appending the new pair.
-      const conversation_history = buildTurnHistory(messagesRef.current);
+      const conversation_history = buildTurnHistory(
+        messagesRef.current,
+        conversationTurnsRef.current,
+      );
 
       const userMsg: ChatMessage = {
         id: newId(),
@@ -320,12 +367,18 @@ export function useStreamQuery(connectionId: string | null) {
       setIsStreaming(true);
       setLastResult(null);
 
+      const activeSessionId =
+        overrides?.sessionId !== undefined
+          ? overrides.sessionId
+          : sessionIdRef.current;
+
       try {
         await streamQuery(
           {
             connection_id: connectionId,
             question: trimmed,
             conversation_history,
+            session_id: activeSessionId || undefined,
           },
           handleEvent,
           controller.signal,
@@ -346,6 +399,6 @@ export function useStreamQuery(connectionId: string | null) {
     [connectionId, handleEvent, isStreaming, updateAssistant],
   );
 
-  return { messages, send, isStreaming, clear, lastResult };
+  return { messages, send, isStreaming, clear, reset, updateMessage, lastResult };
 }
 

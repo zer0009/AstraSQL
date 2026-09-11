@@ -1,13 +1,20 @@
 import { useState } from "react";
-import { Check, Copy, Pencil } from "lucide-react";
+import { Check, Copy, Pencil, Play } from "lucide-react";
 import { Button, Textarea } from "../ui";
 
 export interface SQLViewerProps {
   sql: string;
   onAskAgain?: () => void;
+  onRerunSql?: (sql?: string) => void;
+  isRerunning?: boolean;
 }
 
-export function SQLViewer({ sql, onAskAgain }: SQLViewerProps) {
+export function SQLViewer({
+  sql,
+  onAskAgain,
+  onRerunSql,
+  isRerunning = false,
+}: SQLViewerProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(sql);
   const [copied, setCopied] = useState(false);
@@ -17,20 +24,18 @@ export function SQLViewer({ sql, onAskAgain }: SQLViewerProps) {
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(displaySql);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1500);
     } catch {
       // ignore clipboard failures
     }
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1500);
   };
 
   const toggleEdit = () => {
     if (!editing) {
       setDraft(sql);
-      setEditing(true);
-    } else {
-      setEditing(false);
     }
+    setEditing((v) => !v);
   };
 
   return (
@@ -40,12 +45,7 @@ export function SQLViewer({ sql, onAskAgain }: SQLViewerProps) {
           SQL
         </span>
         <div className="flex items-center gap-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={toggleEdit}
-          >
+          <Button type="button" variant="ghost" size="sm" onClick={toggleEdit}>
             <Pencil className="h-3 w-3" strokeWidth={1.75} />
             {editing ? "Done" : "Edit"}
           </Button>
@@ -57,12 +57,27 @@ export function SQLViewer({ sql, onAskAgain }: SQLViewerProps) {
             )}
             {copied ? "Copied" : "Copy"}
           </Button>
-          {onAskAgain ? (
+          {onRerunSql ? (
             <Button
               type="button"
               variant="outline"
               size="sm"
+              onClick={() => onRerunSql(editing ? draft : sql)}
+              disabled={isRerunning}
+              title="Execute this SQL directly (no LLM)"
+            >
+              <Play className="h-3 w-3" strokeWidth={1.75} />
+              {isRerunning ? "Running…" : "Run SQL"}
+            </Button>
+          ) : null}
+          {onAskAgain ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
               onClick={onAskAgain}
+              disabled={isRerunning}
+              title="Re-ask the question through the AI agent"
             >
               Ask again
             </Button>

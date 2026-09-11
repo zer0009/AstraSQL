@@ -1,8 +1,9 @@
-import { useEffect, useState, type ReactNode } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState, type ReactNode } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PageHeader } from "../components/PageHeader";
 import {
   Badge,
+  Button,
   Card,
   CardContent,
   CardDescription,
@@ -11,21 +12,15 @@ import {
   Select,
   Spinner,
 } from "../components/ui";
-import { getPublicSettings } from "../services/api";
+import { useUserPrefs } from "../hooks/useUserPrefs";
+import {
+  deleteSession,
+  getPublicSettings,
+  listConnections,
+  listSessions,
+} from "../services/api";
 
-const DENSITY_KEY = "astrasql.ui.density";
-
-type Density = "comfortable" | "compact";
-
-function readDensity(): Density {
-  const raw = localStorage.getItem(DENSITY_KEY);
-  return raw === "compact" ? "compact" : "comfortable";
-}
-
-function applyDensity(density: Density) {
-  document.documentElement.dataset.density = density;
-  localStorage.setItem(DENSITY_KEY, density);
-}
+const CONNECTION_STORAGE_KEY = "astrasql.selectedConnectionId";
 
 function SettingRow({
   label,
@@ -43,18 +38,77 @@ function SettingRow({
 }
 
 export default function SettingsPage() {
-  const [density, setDensity] = useState<Density>(() => readDensity());
+  const { prefs, update } = useUserPrefs();
+  const queryClient = useQueryClient();
+
+  const [connectionId, setConnectionId] = useState(() => {
+    try {
+      return localStorage.getItem(CONNECTION_STORAGE_KEY) ?? "";
+    } catch {
+      return "";
+    }
+  });
+  const [clearMessage, setClearMessage] = useState<string | null>(null);
 
   const settingsQuery = useQuery({
     queryKey: ["settings", "public"],
     queryFn: getPublicSettings,
   });
 
-  useEffect(() => {
-    applyDensity(density);
-  }, [density]);
+  const connectionsQuery = useQuery({
+    queryKey: ["connections"],
+    queryFn: listConnections,
+  });
+
+  const connections = connectionsQuery.data ?? [];
+  const effectiveConnectionId = useMemo(() => {
+    if (connectionId && connections.some((c) => c.id === connectionId)) {
+      return connectionId;
+    }
+    return connections[0]?.id ?? "";
+  }, [connectionId, connections]);
+
+  const sessionsQuery = useQuery({
+    queryKey: ["sessions", effectiveConnectionId],
+    queryFn: () =>
+      listSessions({ connection_id: effectiveConnectionId, limit: 200 }),
+    enabled: Boolean(effectiveConnectionId),
+  });
+
+  const clearSessionsMutation = useMutation({
+    mutationFn: async () => {
+      const sessions = sessionsQuery.data ?? [];
+      for (const s of sessions) {
+        await deleteSession(s.id);
+      }
+      return sessions.length;
+    },
+    onSuccess: (count) => {
+      void queryClient.invalidateQueries({
+        queryKey: ["sessions", effectiveConnectionId],
+      });
+      try {
+        if (effectiveConnectionId) {
+          localStorage.removeItem(
+            `astrasql.currentSessionId.${effectiveConnectionId}`,
+          );
+        }
+      } catch {
+        // ignore
+      }
+      setClearMessage(
+        count === 0
+          ? "No sessions to clear."
+          : `Cleared ${count} session${count === 1 ? "" : "s"}.`,
+      );
+    },
+    onError: () => {
+      setClearMessage("Failed to clear sessions.");
+    },
+  });
 
   const settings = settingsQuery.data;
+  const sessionCount = sessionsQuery.data?.length ?? 0;
 
   return (
     <div className="flex h-full flex-col">
@@ -140,13 +194,121 @@ export default function SettingsPage() {
                 Theme density
               </span>
               <Select
-                value={density}
-                onChange={(e) => setDensity(e.target.value as Density)}
+                value={prefs.density}
+                onChange={(e) =>
+                  update({
+                    density: e.target.value as "comfortable" | "compact",
+                  })
+                }
               >
                 <option value="comfortable">Comfortable</option>
                 <option value="compact">Compact</option>
               </Select>
             </label>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Chat & Memory</CardTitle>
+            <CardDescription>
+              Controls multi-turn context and persisted chat sessions on the
+              server
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="max-w-md space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <label
+                  htmlFor="conversation-turns"
+                  className="text-xs font-medium text-zinc-500"
+                >
+                  Conversation memory depth
+                </label>
+                <span className="text-xs text-zinc-600">
+                  Last {prefs.conversationTurns} turn
+                  {prefs.conversationTurns === 1 ? "" : "s"} sent as context
+                </span>
+              </div>
+              <input
+                id="conversation-turns"
+                type="range"
+                min={1}
+                max={10}
+                step={1}
+                value={prefs.conversationTurns}
+                onChange={(e) =>
+                  update({ conversationTurns: Number(e.target.value) })
+                }
+                className="w-full accent-zinc-900"
+              />
+            </div>
+
+            <div className="space-y-2 border-t border-zinc-100 pt-4">
+              <label className="flex max-w-xs flex-col gap-1">
+                <span className="text-xs font-medium text-zinc-500">
+                  Connection
+                </span>
+                {connectionsQuery.isLoading ? (
+                  <Spinner size="sm" />
+                ) : (
+                  <Select
+                    value={effectiveConnectionId}
+                    onChange={(e) => {
+                      setConnectionId(e.target.value);
+                      setClearMessage(null);
+                    }}
+                    disabled={connections.length === 0}
+                  >
+                    {connections.length === 0 ? (
+                      <option value="">No connections</option>
+                    ) : (
+                      connections.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))
+                    )}
+                  </Select>
+                )}
+              </label>
+
+              <p className="text-xs text-zinc-500">
+                {sessionsQuery.isLoading
+                  ? "Loading sessions…"
+                  : `${sessionCount} saved session${sessionCount === 1 ? "" : "s"} for this connection.`}
+              </p>
+
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={
+                  !effectiveConnectionId ||
+                  clearSessionsMutation.isPending ||
+                  sessionsQuery.isLoading
+                }
+                onClick={() => {
+                  if (
+                    !window.confirm(
+                      `Delete all ${sessionCount} chat session${sessionCount === 1 ? "" : "s"} for this connection? Query history rows are kept.`,
+                    )
+                  ) {
+                    return;
+                  }
+                  setClearMessage(null);
+                  clearSessionsMutation.mutate();
+                }}
+              >
+                {clearSessionsMutation.isPending
+                  ? "Clearing…"
+                  : "Clear all sessions for this connection"}
+              </Button>
+
+              {clearMessage ? (
+                <p className="text-xs text-zinc-600">{clearMessage}</p>
+              ) : null}
+            </div>
           </CardContent>
         </Card>
       </div>

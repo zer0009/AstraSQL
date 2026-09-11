@@ -129,6 +129,8 @@ export interface BusinessRuleUpdate {
 export interface QueryHistoryItem {
   id: string;
   connection_id: string;
+  session_id?: string | null;
+  turn_index?: number | null;
   question: string;
   sql: string;
   result_row_count: number | null;
@@ -137,6 +139,18 @@ export interface QueryHistoryItem {
   explanation: string | null;
   follow_ups: string | null;
   created_at: string;
+}
+
+export interface ChatSession {
+  id: string;
+  connection_id: string;
+  title: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ChatSessionDetail extends ChatSession {
+  queries: QueryHistoryItem[];
 }
 
 export interface FeedbackRequest {
@@ -170,6 +184,19 @@ export interface QueryRequest {
   connection_id: string;
   question: string;
   conversation_history?: ConversationHistoryTurn[];
+  session_id?: string;
+}
+
+export interface ExecuteSqlRequest {
+  connection_id: string;
+  sql: string;
+}
+
+export interface ExecuteSqlResult {
+  sql: string;
+  columns: string[];
+  rows: Record<string, unknown>[];
+  row_count: number;
 }
 
 export interface ExportRequest {

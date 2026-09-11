@@ -181,6 +181,21 @@ class QueryRequest(BaseModel):
     connection_id: str
     question: str
     conversation_history: list[ConversationTurn] = Field(default_factory=list)
+    session_id: Optional[str] = None
+
+
+class ExecuteSqlRequest(BaseModel):
+    """Re-run a previously generated SQL statement with no LLM involvement."""
+
+    connection_id: str
+    sql: str
+
+
+class ExecuteSqlOut(BaseModel):
+    sql: str
+    columns: list[str] = Field(default_factory=list)
+    rows: list[dict[str, Any]] = Field(default_factory=list)
+    row_count: int = 0
 
 
 class AgentStateOut(BaseModel):
@@ -208,6 +223,30 @@ class AgentStateOut(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Chat sessions
+# ---------------------------------------------------------------------------
+
+
+class SessionCreate(BaseModel):
+    connection_id: str
+    title: Optional[str] = None
+
+
+class SessionRename(BaseModel):
+    title: str
+
+
+class SessionOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    connection_id: str
+    title: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+
+# ---------------------------------------------------------------------------
 # History
 # ---------------------------------------------------------------------------
 
@@ -217,6 +256,8 @@ class HistoryOut(BaseModel):
 
     id: str
     connection_id: str
+    session_id: Optional[str] = None
+    turn_index: Optional[int] = None
     question: str
     sql: str
     result_row_count: Optional[int] = None
@@ -225,6 +266,10 @@ class HistoryOut(BaseModel):
     explanation: Optional[str] = None
     follow_ups: Optional[str] = None
     created_at: datetime
+
+
+class SessionDetailOut(SessionOut):
+    queries: list[HistoryOut] = Field(default_factory=list)
 
 
 class FeedbackRequest(BaseModel):

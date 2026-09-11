@@ -4,6 +4,7 @@ from src.api.routers import (
     export,
     history,
     query,
+    sessions,
     settings,
 )
 
@@ -13,5 +14,6 @@ __all__ = [
     "export",
     "history",
     "query",
+    "sessions",
     "settings",
 ]

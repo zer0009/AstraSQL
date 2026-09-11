@@ -1,16 +1,20 @@
 import { Badge, Spinner } from "../ui";
 import type { ChatMessage } from "../../hooks/useStreamQuery";
-import { AgentSteps } from "./AgentSteps";
-import { FeedbackBar } from "./FeedbackBar";
-import { ResultsTable } from "./ResultsTable";
-import { SQLViewer } from "./SQLViewer";
-import { SuggestedFollowUps } from "./SuggestedFollowUps";
+import { AgentSteps } from "./AgentSteps.tsx";
+import { FeedbackBar } from "./FeedbackBar.tsx";
+import { ResultsTable } from "./ResultsTable.tsx";
+import { SQLViewer } from "./SQLViewer.tsx";
+import { SuggestedFollowUps } from "./SuggestedFollowUps.tsx";
 
 export interface AgentMessageProps {
   message: ChatMessage;
   isStreaming?: boolean;
+  isRerunning?: boolean;
   onFollowUp?: (question: string) => void;
+  /** Re-ask the natural-language question through the LLM pipeline. */
   onAskAgain?: () => void;
+  /** Re-execute SQL directly (no LLM). Optional override for edited SQL. */
+  onRerunSql?: (sql?: string) => void;
 }
 
 function formatConfidence(value: string | number | undefined): string | null {
@@ -26,8 +30,10 @@ function formatConfidence(value: string | number | undefined): string | null {
 export function AgentMessage({
   message,
   isStreaming = false,
+  isRerunning = false,
   onFollowUp,
   onAskAgain,
+  onRerunSql,
 }: AgentMessageProps) {
   const confidence = formatConfidence(message.confidence);
   const showBody =
@@ -57,7 +63,7 @@ export function AgentMessage({
               {confidence}
             </Badge>
           ) : null}
-          {isStreaming ? <Spinner size="sm" /> : null}
+          {isStreaming || isRerunning ? <Spinner size="sm" /> : null}
         </div>
 
         {message.steps && message.steps.length > 0 ? (
@@ -79,18 +85,31 @@ export function AgentMessage({
         ) : null}
 
         {message.sql ? (
-          <SQLViewer sql={message.sql} onAskAgain={onAskAgain} />
+          <SQLViewer
+            sql={message.sql}
+            onAskAgain={onAskAgain}
+            onRerunSql={onRerunSql}
+            isRerunning={isRerunning}
+          />
         ) : null}
 
         {message.results && message.results.columns.length > 0 ? (
           <ResultsTable results={message.results} />
         ) : null}
 
-        {!isStreaming && message.historyId ? (
+        {isRerunning && message.results == null ? (
+          <p className="text-sm text-zinc-500">Executing saved SQL…</p>
+        ) : null}
+
+        {!isStreaming && !isRerunning && message.historyId ? (
           <FeedbackBar historyId={message.historyId} />
         ) : null}
 
-        {!isStreaming && message.followUps && message.followUps.length > 0 && onFollowUp ? (
+        {!isStreaming &&
+        !isRerunning &&
+        message.followUps &&
+        message.followUps.length > 0 &&
+        onFollowUp ? (
           <SuggestedFollowUps
             questions={message.followUps}
             onSelect={onFollowUp}

@@ -8,12 +8,11 @@ import ConnectionsPage from "./pages/ConnectionsPage";
 import ContextPage from "./pages/ContextPage";
 import HistoryPage from "./pages/HistoryPage";
 import SettingsPage from "./pages/SettingsPage";
+import { userPrefs } from "./lib/userPrefs";
 import "./index.css";
 
-const savedDensity = localStorage.getItem("astrasql.ui.density");
-if (savedDensity === "compact" || savedDensity === "comfortable") {
-  document.documentElement.dataset.density = savedDensity;
-}
+const prefs = userPrefs.load();
+document.documentElement.dataset.density = prefs.density;
 
 const queryClient = new QueryClient({
   defaultOptions: {

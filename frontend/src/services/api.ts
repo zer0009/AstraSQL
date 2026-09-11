@@ -3,6 +3,8 @@ import type {
   BusinessRule,
   BusinessRuleCreate,
   BusinessRuleUpdate,
+  ChatSession,
+  ChatSessionDetail,
   Connection,
   ConnectionCreate,
   ConnectionScanResult,
@@ -11,6 +13,8 @@ import type {
   Enrichment,
   EnrichmentCreate,
   EnrichmentUpdate,
+  ExecuteSqlRequest,
+  ExecuteSqlResult,
   ExportRequest,
   FeedbackRequest,
   FeedbackResult,
@@ -218,6 +222,48 @@ export async function submitFeedback(
   return data;
 }
 
+// --- Chat sessions ---
+
+export interface SessionListParams {
+  connection_id?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export async function createSession(body: {
+  connection_id: string;
+  title?: string;
+}): Promise<ChatSession> {
+  const { data } = await api.post<ChatSession>("/api/sessions", body);
+  return data;
+}
+
+export async function listSessions(
+  params: SessionListParams = {},
+): Promise<ChatSession[]> {
+  const { data } = await api.get<ChatSession[]>("/api/sessions", { params });
+  return data;
+}
+
+export async function getSession(id: string): Promise<ChatSessionDetail> {
+  const { data } = await api.get<ChatSessionDetail>(`/api/sessions/${id}`);
+  return data;
+}
+
+export async function renameSession(
+  id: string,
+  title: string,
+): Promise<ChatSession> {
+  const { data } = await api.patch<ChatSession>(`/api/sessions/${id}`, {
+    title,
+  });
+  return data;
+}
+
+export async function deleteSession(id: string): Promise<void> {
+  await api.delete(`/api/sessions/${id}`);
+}
+
 // --- Export ---
 
 export async function exportData(body: ExportRequest): Promise<Blob> {
@@ -246,6 +292,15 @@ export async function getPublicSettings(): Promise<PublicSettings> {
     max_result_rows: data.max_rows,
     database_types: data.database_types,
   };
+}
+
+// --- Query (direct SQL execute — no LLM) ---
+
+export async function executeSql(
+  body: ExecuteSqlRequest,
+): Promise<ExecuteSqlResult> {
+  const { data } = await api.post<ExecuteSqlResult>("/api/query/execute", body);
+  return data;
 }
 
 // --- Query (SSE stream) ---

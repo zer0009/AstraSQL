@@ -1,28 +1,32 @@
 import { useEffect, useRef } from "react";
 import type { ChatMessage } from "../../hooks/useStreamQuery";
-import { AgentMessage } from "./AgentMessage";
-import { UserMessage } from "./UserMessage";
+import { AgentMessage } from "./AgentMessage.tsx";
+import { UserMessage } from "./UserMessage.tsx";
 
 export interface MessageListProps {
   messages: ChatMessage[];
   isStreaming?: boolean;
+  rerunningMessageId?: string | null;
   onFollowUp?: (question: string) => void;
   onAskAgain?: (question: string) => void;
+  onRerunSql?: (messageId: string, sql?: string) => void;
   originalQuestions?: Record<string, string>;
 }
 
 export function MessageList({
   messages,
   isStreaming = false,
+  rerunningMessageId = null,
   onFollowUp,
   onAskAgain,
+  onRerunSql,
   originalQuestions = {},
 }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages, isStreaming]);
+  }, [messages, isStreaming, rerunningMessageId]);
 
   if (messages.length === 0) {
     return (
@@ -55,10 +59,16 @@ export function MessageList({
               key={msg.id}
               message={msg}
               isStreaming={isStreaming && isLast}
+              isRerunning={rerunningMessageId === msg.id}
               onFollowUp={onFollowUp}
               onAskAgain={
                 onAskAgain && originalQuestion
                   ? () => onAskAgain(originalQuestion)
+                  : undefined
+              }
+              onRerunSql={
+                onRerunSql && msg.sql
+                  ? (sql?: string) => onRerunSql(msg.id, sql)
                   : undefined
               }
             />

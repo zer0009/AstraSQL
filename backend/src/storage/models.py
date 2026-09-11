@@ -57,6 +57,9 @@ class Connection(Base):
     query_history: Mapped[list[QueryHistory]] = relationship(
         back_populates="connection", cascade="all, delete-orphan"
     )
+    chat_sessions: Mapped[list[ChatSession]] = relationship(
+        back_populates="connection", cascade="all, delete-orphan"
+    )
     schema_cache: Mapped[list[SchemaCache]] = relationship(
         back_populates="connection", cascade="all, delete-orphan"
     )
@@ -121,6 +124,26 @@ class BusinessRule(Base):
     connection: Mapped[Connection] = relationship(back_populates="business_rules")
 
 
+class ChatSession(Base):
+    __tablename__ = "chat_sessions"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    connection_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("connections.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    title: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    connection: Mapped[Connection] = relationship(back_populates="chat_sessions")
+    queries: Mapped[list[QueryHistory]] = relationship(
+        back_populates="session",
+        order_by="QueryHistory.turn_index",
+    )
+
+
 class QueryHistory(Base):
     __tablename__ = "query_history"
 
@@ -128,6 +151,13 @@ class QueryHistory(Base):
     connection_id: Mapped[str] = mapped_column(
         String(36), ForeignKey("connections.id", ondelete="CASCADE"), nullable=False, index=True
     )
+    session_id: Mapped[Optional[str]] = mapped_column(
+        String(36),
+        ForeignKey("chat_sessions.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    turn_index: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     question: Mapped[str] = mapped_column(Text, nullable=False)
     sql: Mapped[str] = mapped_column(Text, nullable=False)
     result_row_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
@@ -138,6 +168,7 @@ class QueryHistory(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
 
     connection: Mapped[Connection] = relationship(back_populates="query_history")
+    session: Mapped[Optional[ChatSession]] = relationship(back_populates="queries")
 
 
 class SchemaCache(Base):

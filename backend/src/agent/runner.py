@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime
 from typing import Any, AsyncIterator, Optional
 
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.agent.graph import build_graph, get_graph
@@ -10,7 +12,7 @@ from src.agent.state import AgentState
 from src.agent.utils import confidence_to_float
 from src.config.settings import get_settings
 from src.providers.database.registry import provider_from_connection
-from src.storage.models import Connection, QueryHistory
+from src.storage.models import ChatSession, Connection, QueryHistory
 
 
 def _normalize_conversation_history(
@@ -116,6 +118,7 @@ async def _persist_history(
     session: AsyncSession,
     connection: Connection,
     state: AgentState,
+    session_id: str | None = None,
 ) -> Optional[QueryHistory]:
     """Persist a QueryHistory row when SQL was produced."""
     sql = (state.get("corrected_sql") or state.get("sql") or "").strip()
@@ -125,8 +128,26 @@ async def _persist_history(
     results = state.get("results") or {}
     row_count = results.get("row_count")
     follow_ups = state.get("follow_ups") or []
+
+    turn_index: int | None = None
+    chat_session: ChatSession | None = None
+    if session_id:
+        chat_session = await session.get(ChatSession, session_id)
+        if chat_session is None:
+            raise ValueError(f"Session not found: {session_id}")
+        if chat_session.connection_id != connection.id:
+            raise ValueError("Session does not belong to this connection")
+        count_result = await session.execute(
+            select(func.count())
+            .select_from(QueryHistory)
+            .where(QueryHistory.session_id == session_id)
+        )
+        turn_index = int(count_result.scalar_one() or 0)
+
     record = QueryHistory(
         connection_id=connection.id,
+        session_id=session_id,
+        turn_index=turn_index,
         question=state.get("question") or "",
         sql=sql,
         result_row_count=int(row_count) if row_count is not None else None,
@@ -135,6 +156,14 @@ async def _persist_history(
         follow_ups=json.dumps(follow_ups) if follow_ups else None,
     )
     session.add(record)
+
+    if chat_session is not None:
+        chat_session.updated_at = datetime.utcnow()
+        if not chat_session.title:
+            question = (state.get("question") or "").strip()
+            if question:
+                chat_session.title = question[:60]
+
     try:
         await session.commit()
         await session.refresh(record)
@@ -149,6 +178,7 @@ async def run_query(
     connection: Connection,
     question: str,
     conversation_history: list[dict[str, Any]] | None = None,
+    session_id: str | None = None,
 ) -> AgentState:
     """Run the full agent graph and persist QueryHistory on completion."""
     provider = provider_from_connection(connection)
@@ -159,7 +189,7 @@ async def run_query(
             initial,
             config=_run_config(session, connection, provider),
         )
-        await _persist_history(session, connection, result)
+        await _persist_history(session, connection, result, session_id=session_id)
         return result
     finally:
         await provider.close()
@@ -170,6 +200,7 @@ async def stream_query(
     connection: Connection,
     question: str,
     conversation_history: list[dict[str, Any]] | None = None,
+    session_id: str | None = None,
 ) -> AsyncIterator[dict[str, Any]]:
     """Stream SSE-friendly events for each graph node / agent step."""
     provider = provider_from_connection(connection)
@@ -210,7 +241,9 @@ async def stream_query(
                         "step": _sse_safe(step),
                     }
 
-        history = await _persist_history(session, connection, final_state)
+        history = await _persist_history(
+            session, connection, final_state, session_id=session_id
+        )
         done_payload = _compact_state(final_state)
         done_payload["history_id"] = history.id if history else None
         yield {

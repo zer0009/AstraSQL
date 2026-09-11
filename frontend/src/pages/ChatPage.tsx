@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ChatInput, MessageList } from "../components/chat";
-import { Button, Select, Spinner } from "../components/ui";
-import { useStreamQuery } from "../hooks/useStreamQuery";
+import { Button, Input, Select, Spinner } from "../components/ui";
+import { useChatSession } from "../hooks/useChatSession";
 import { listConnections } from "../services/api";
 
 const STORAGE_KEY = "astrasql.selectedConnectionId";
@@ -27,15 +27,26 @@ export default function ChatPage() {
     }
   });
   const [draft, setDraft] = useState("");
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState("");
 
   const connectionsQuery = useQuery({
     queryKey: ["connections"],
     queryFn: listConnections,
   });
 
-  const { messages, send, isStreaming, clear } = useStreamQuery(
-    connectionId || null,
-  );
+  const {
+    messages,
+    send,
+    rerunSql,
+    isStreaming,
+    rerunningMessageId,
+    clear,
+    newChat,
+    rename,
+    session,
+    isLoadingSession,
+  } = useChatSession(connectionId || null);
 
   useEffect(() => {
     try {
@@ -65,14 +76,30 @@ export default function ChatPage() {
 
   useEffect(() => {
     const q = pendingRerun.current;
-    if (!q || !connectionId || isStreaming) return;
+    if (!q || !connectionId || isStreaming || isLoadingSession) return;
     pendingRerun.current = null;
     setDraft("");
     void send(q);
-  }, [connectionId, isStreaming, send]);
+  }, [connectionId, isStreaming, isLoadingSession, send]);
+
+  useEffect(() => {
+    setTitleDraft(session?.title ?? "");
+    setEditingTitle(false);
+  }, [session?.id, session?.title]);
 
   const hasConnection = Boolean(connectionId);
   const connections = connectionsQuery.data ?? [];
+
+  const commitTitle = async () => {
+    const next = titleDraft.trim();
+    setEditingTitle(false);
+    if (!session || !next || next === (session.title ?? "")) return;
+    try {
+      await rename(next);
+    } catch {
+      setTitleDraft(session.title ?? "");
+    }
+  };
 
   return (
     <div className="flex h-full flex-col">
@@ -97,7 +124,6 @@ export default function ChatPage() {
                 value={connectionId}
                 onChange={(e) => {
                   setConnectionId(e.target.value);
-                  clear();
                 }}
                 disabled={connections.length === 0}
               >
@@ -113,18 +139,66 @@ export default function ChatPage() {
               </Select>
             )}
           </div>
+
+          {session ? (
+            <div className="hidden min-w-0 items-center gap-2 md:flex">
+              <span className="text-zinc-300">|</span>
+              {editingTitle ? (
+                <Input
+                  className="h-8 w-48"
+                  value={titleDraft}
+                  autoFocus
+                  onChange={(e) => setTitleDraft(e.target.value)}
+                  onBlur={() => void commitTitle()}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      void commitTitle();
+                    }
+                    if (e.key === "Escape") {
+                      setTitleDraft(session.title ?? "");
+                      setEditingTitle(false);
+                    }
+                  }}
+                />
+              ) : (
+                <button
+                  type="button"
+                  className="truncate text-xs text-zinc-600 hover:text-zinc-900"
+                  title="Click to rename"
+                  onClick={() => setEditingTitle(true)}
+                >
+                  {session.title || "Untitled chat"}
+                </button>
+              )}
+            </div>
+          ) : null}
         </div>
-        {messages.length > 0 ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={clear}
-            disabled={isStreaming}
-          >
-            Clear
-          </Button>
-        ) : null}
+
+        <div className="flex shrink-0 items-center gap-1">
+          {hasConnection ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => void newChat()}
+              disabled={isStreaming}
+            >
+              New Chat
+            </Button>
+          ) : null}
+          {messages.length > 0 ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => void clear()}
+              disabled={isStreaming}
+            >
+              Clear
+            </Button>
+          ) : null}
+        </div>
       </header>
 
       {!hasConnection ? (
@@ -133,23 +207,32 @@ export default function ChatPage() {
             Select a connection to start querying, or add one under Connections.
           </p>
         </div>
+      ) : isLoadingSession ? (
+        <div className="flex flex-1 items-center justify-center gap-2 p-6 text-sm text-zinc-500">
+          <Spinner size="sm" />
+          Loading chat session…
+        </div>
       ) : (
         <>
           <MessageList
             messages={messages}
             isStreaming={isStreaming}
+            rerunningMessageId={rerunningMessageId}
             onFollowUp={(q) => void send(q)}
             onAskAgain={(q) => void send(q)}
+            onRerunSql={(id, sql) => void rerunSql(id, sql)}
           />
           <ChatInput
             value={draft}
             onChange={setDraft}
             onSend={(q) => void send(q)}
-            disabled={!hasConnection || isStreaming}
+            disabled={!hasConnection || isStreaming || Boolean(rerunningMessageId)}
             placeholder={
               isStreaming
                 ? "Waiting for response…"
-                : "Ask a question about your data…"
+                : rerunningMessageId
+                  ? "Executing SQL…"
+                  : "Ask a question about your data…"
             }
           />
         </>
