@@ -155,6 +155,7 @@ export interface ChatSessionDetail extends ChatSession {
 
 export interface FeedbackRequest {
   rating: 1 | -1;
+  corrected_sql?: string;
 }
 
 export interface FeedbackResult {

@@ -5,5 +5,6 @@ export { AgentMessage } from "./AgentMessage";
 export { AgentSteps } from "./AgentSteps";
 export { SQLViewer } from "./SQLViewer";
 export { ResultsTable } from "./ResultsTable";
+export { ResultTabs } from "./ResultTabs";
 export { FeedbackBar } from "./FeedbackBar";
 export { SuggestedFollowUps } from "./SuggestedFollowUps";

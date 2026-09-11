@@ -71,7 +71,13 @@ export function useChatSession(connectionId: string | null) {
   const [rerunningMessageId, setRerunningMessageId] = useState<string | null>(
     null,
   );
+  /** When set, the next load effect prefers this session id over localStorage. */
+  const pendingSessionIdRef = useRef<string | null>(null);
+  /** Bumped by switchTo / connection changes to re-run the load effect. */
+  const [loadKey, setLoadKey] = useState(0);
   const sessionIdRef = useRef<string | null>(null);
+  const connectionRef = useRef(connectionId);
+  connectionRef.current = connectionId;
 
   const {
     messages,
@@ -88,7 +94,7 @@ export function useChatSession(connectionId: string | null) {
   // Keep ref in sync for ensureSession / clear without stale closures.
   sessionIdRef.current = session?.id ?? null;
 
-  // Load persisted session when connection changes.
+  // Load persisted or requested session when connection / loadKey changes.
   useEffect(() => {
     const key = connectionId ?? null;
     let cancelled = false;
@@ -101,12 +107,14 @@ export function useChatSession(connectionId: string | null) {
     async function load() {
       if (!key) return;
 
-      const storedId = readCurrentSessionId(key);
-      if (!storedId) return;
+      const targetId =
+        pendingSessionIdRef.current ?? readCurrentSessionId(key);
+      pendingSessionIdRef.current = null;
+      if (!targetId) return;
 
       if (!cancelled) setIsLoadingSession(true);
       try {
-        const detail = await getSession(storedId);
+        const detail = await getSession(targetId);
         if (cancelled) return;
         if (detail.connection_id !== key) {
           writeCurrentSessionId(key, null);
@@ -120,6 +128,7 @@ export function useChatSession(connectionId: string | null) {
           updated_at: detail.updated_at,
         });
         sessionIdRef.current = detail.id;
+        writeCurrentSessionId(key, detail.id);
         reset(reconstructMessages(detail.queries ?? []));
       } catch {
         if (cancelled) return;
@@ -133,7 +142,7 @@ export function useChatSession(connectionId: string | null) {
     return () => {
       cancelled = true;
     };
-  }, [connectionId, reset]);
+  }, [connectionId, loadKey, reset]);
 
   const ensureSession = useCallback(
     async (firstQuestion: string): Promise<string | null> => {
@@ -213,13 +222,17 @@ export function useChatSession(connectionId: string | null) {
     [connectionId, isStreaming, messages, rerunningMessageId, updateMessage],
   );
 
-  const clear = useCallback(async () => {
-    const id = sessionIdRef.current;
-    const conn = connectionId;
+  const resetSession = useCallback(() => {
+    const conn = connectionRef.current;
     reset([]);
     setSession(null);
     sessionIdRef.current = null;
     if (conn) writeCurrentSessionId(conn, null);
+  }, [reset]);
+
+  const clear = useCallback(async () => {
+    const id = sessionIdRef.current;
+    resetSession();
     if (id) {
       try {
         await deleteSession(id);
@@ -227,17 +240,43 @@ export function useChatSession(connectionId: string | null) {
         // Session may already be gone — ignore
       }
     }
-  }, [connectionId, reset]);
+  }, [resetSession]);
 
   const newChat = useCallback(async () => {
     // Start a fresh local transcript without deleting the previous session
     // from history — user can still find it via sessions list later.
-    const conn = connectionId;
-    reset([]);
-    setSession(null);
-    sessionIdRef.current = null;
-    if (conn) writeCurrentSessionId(conn, null);
-  }, [connectionId, reset]);
+    resetSession();
+  }, [resetSession]);
+
+  const switchTo = useCallback(
+    (sessionId: string) => {
+      if (!connectionId || !sessionId) return;
+      if (sessionIdRef.current === sessionId) return;
+      writeCurrentSessionId(connectionId, sessionId);
+      pendingSessionIdRef.current = sessionId;
+      setLoadKey((k) => k + 1);
+    },
+    [connectionId],
+  );
+
+  /**
+   * Delete a session from the backend. If it is the active session, reset
+   * local state without a second delete (resetSession only clears UI).
+   */
+  const deleteSessionById = useCallback(
+    async (sessionId: string) => {
+      const wasActive = sessionIdRef.current === sessionId;
+      try {
+        await deleteSession(sessionId);
+      } catch {
+        // May already be gone
+      }
+      if (wasActive) {
+        resetSession();
+      }
+    },
+    [resetSession],
+  );
 
   const rename = useCallback(async (title: string) => {
     const id = sessionIdRef.current;
@@ -257,6 +296,9 @@ export function useChatSession(connectionId: string | null) {
     clear,
     newChat,
     rename,
+    switchTo,
+    resetSession,
+    deleteSessionById,
     session,
     isLoadingSession,
     lastResult,

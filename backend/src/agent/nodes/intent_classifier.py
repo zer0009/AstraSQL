@@ -5,6 +5,7 @@ from typing import Any
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 
+from src.agent.prompts.generator import format_conversation_history
 from src.agent.prompts.intent import render_intent_prompt
 from src.agent.state import AgentState
 from src.agent.utils import append_step, extract_json, message_text
@@ -22,9 +23,15 @@ async def intent_classifier(
     """Classify the user question into SQL vs non-SQL intents."""
     question = (state.get("question") or "").strip()
     settings = get_settings()
+    history_text = format_conversation_history(
+        state.get("conversation_history") or []
+    )
 
     try:
-        system, user = render_intent_prompt(question)
+        system, user = render_intent_prompt(
+            question,
+            conversation_history=history_text,
+        )
         llm = get_llm_provider().get_chat_model(
             temperature=0.0,
             max_tokens=settings.llm_max_tokens,

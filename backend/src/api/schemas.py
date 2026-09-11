@@ -274,6 +274,7 @@ class SessionDetailOut(SessionOut):
 
 class FeedbackRequest(BaseModel):
     rating: Literal[1, -1]
+    corrected_sql: Optional[str] = None
 
 
 class FeedbackOut(BaseModel):

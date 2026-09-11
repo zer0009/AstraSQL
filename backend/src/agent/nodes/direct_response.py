@@ -5,6 +5,7 @@ from typing import Any
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 
+from src.agent.prompts.generator import format_conversation_history
 from src.agent.state import AgentState
 from src.agent.utils import append_step, extract_json, message_text
 from src.config.settings import get_settings
@@ -19,7 +20,7 @@ Reason: {reason}
 
 Respond helpfully in plain language.
 - For META: answer about the database/product capabilities without inventing schema facts you do not know. If schema details are needed, ask the user to rephrase as a data question or check the Context page.
-- For CLARIFICATION_NEEDED: ask 1–3 precise clarifying questions.
+- For CLARIFICATION_NEEDED: ask 1–3 precise clarifying questions. If conversation history already answers part of the ambiguity, acknowledge what you know and only ask for what is still missing.
 - For CHIT_CHAT: reply briefly and offer to help with data questions.
 
 Return JSON only:
@@ -38,6 +39,17 @@ async def direct_response(
     intent = (state.get("intent") or "CHIT_CHAT").upper()
     reason = state.get("intent_reason") or ""
     question = state.get("question") or ""
+    history_text = format_conversation_history(
+        state.get("conversation_history") or []
+    )
+
+    user_content = question
+    if history_text:
+        user_content = (
+            "CONVERSATION HISTORY:\n"
+            f"{history_text}\n\n"
+            f"Current question:\n{question}"
+        )
 
     try:
         system = _DIRECT_SYSTEM.format(intent=intent, reason=reason)
@@ -46,7 +58,7 @@ async def direct_response(
             max_tokens=settings.llm_max_tokens,
         )
         response = await llm.ainvoke(
-            [SystemMessage(content=system), HumanMessage(content=question)],
+            [SystemMessage(content=system), HumanMessage(content=user_content)],
             config=config,
         )
         parsed = extract_json(message_text(response))

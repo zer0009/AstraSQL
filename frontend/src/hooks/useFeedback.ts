@@ -6,9 +6,16 @@ export function useFeedback() {
   return useMutation<
     FeedbackResult,
     Error,
-    { historyId: string; rating: FeedbackRequest["rating"] }
+    {
+      historyId: string;
+      rating: FeedbackRequest["rating"];
+      corrected_sql?: string;
+    }
   >({
-    mutationFn: ({ historyId, rating }) =>
-      submitFeedback(historyId, { rating }),
+    mutationFn: ({ historyId, rating, corrected_sql }) =>
+      submitFeedback(historyId, {
+        rating,
+        ...(corrected_sql ? { corrected_sql } : {}),
+      }),
   });
 }

@@ -3,6 +3,7 @@ export type Density = "comfortable" | "compact";
 export interface UserPrefs {
   conversationTurns: number;
   density: Density;
+  sidebarOpen: boolean;
 }
 
 const PREFS_KEY = "astrasql.prefs";
@@ -11,6 +12,7 @@ const LEGACY_DENSITY_KEY = "astrasql.ui.density";
 export const DEFAULT_PREFS: UserPrefs = {
   conversationTurns: 3,
   density: "comfortable",
+  sidebarOpen: true,
 };
 
 function clampTurns(value: unknown): number {
@@ -44,6 +46,10 @@ export const userPrefs = {
             parsed.conversationTurns ?? DEFAULT_PREFS.conversationTurns,
           ),
           density: normalizeDensity(parsed.density ?? DEFAULT_PREFS.density),
+          sidebarOpen:
+            typeof parsed.sidebarOpen === "boolean"
+              ? parsed.sidebarOpen
+              : DEFAULT_PREFS.sidebarOpen,
         };
       }
     } catch {
@@ -64,6 +70,10 @@ export const userPrefs = {
     };
     next.conversationTurns = clampTurns(next.conversationTurns);
     next.density = normalizeDensity(next.density);
+    next.sidebarOpen =
+      typeof next.sidebarOpen === "boolean"
+        ? next.sidebarOpen
+        : DEFAULT_PREFS.sidebarOpen;
 
     try {
       localStorage.setItem(PREFS_KEY, JSON.stringify(next));

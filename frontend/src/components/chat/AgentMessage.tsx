@@ -2,7 +2,7 @@ import { Badge, Spinner } from "../ui";
 import type { ChatMessage } from "../../hooks/useStreamQuery";
 import { AgentSteps } from "./AgentSteps.tsx";
 import { FeedbackBar } from "./FeedbackBar.tsx";
-import { ResultsTable } from "./ResultsTable.tsx";
+import { ResultTabs } from "./ResultTabs.tsx";
 import { SQLViewer } from "./SQLViewer.tsx";
 import { SuggestedFollowUps } from "./SuggestedFollowUps.tsx";
 
@@ -94,7 +94,7 @@ export function AgentMessage({
         ) : null}
 
         {message.results && message.results.columns.length > 0 ? (
-          <ResultsTable results={message.results} />
+          <ResultTabs results={message.results} />
         ) : null}
 
         {isRerunning && message.results == null ? (
@@ -102,7 +102,7 @@ export function AgentMessage({
         ) : null}
 
         {!isStreaming && !isRerunning && message.historyId ? (
-          <FeedbackBar historyId={message.historyId} />
+          <FeedbackBar historyId={message.historyId} sql={message.sql} />
         ) : null}
 
         {!isStreaming &&

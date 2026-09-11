@@ -61,6 +61,17 @@ async def submit_feedback(
         )
         await golden_store.rebuild_index(db, row.connection_id)
         golden_record_id = golden.id
+    elif body.rating == -1 and body.corrected_sql:
+        corrected = body.corrected_sql.strip()
+        if corrected:
+            golden = await golden_store.add(
+                db,
+                connection_id=row.connection_id,
+                question=row.question,
+                sql=corrected,
+            )
+            await golden_store.rebuild_index(db, row.connection_id)
+            golden_record_id = golden.id
 
     await db.flush()
     return FeedbackOut(

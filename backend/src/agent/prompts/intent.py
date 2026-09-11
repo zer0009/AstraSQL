@@ -15,6 +15,8 @@ Rules:
 - Prefer SQL_QUERY for ordinary data questions even if slightly vague ("how many partners", "latest orders", "revenue in 2025"). The SQL generator can apply sensible defaults.
 - Use CLARIFICATION_NEEDED only when two or more interpretations would produce materially different queries and no default is safe.
 - Do NOT invent example account numbers, IDs, or dates in the reason field.
+- When CONVERSATION HISTORY is present, resolve pronouns and references using that history ("these customers", "them", "that period", "same filter", "for each of those"). If prior turns already identify the entities or filters, classify as SQL_QUERY — do not ask the user to repeat what is already in history.
+- Only use CLARIFICATION_NEEDED for follow-ups when history does not resolve the ambiguity.
 
 Return JSON only:
 {{
@@ -24,9 +26,25 @@ Return JSON only:
 """
 
 INTENT_USER_PROMPT = """\
+{conversation_history_block}Current question:
 {user_question}
 """
 
 
-def render_intent_prompt(user_question: str) -> tuple[str, str]:
-    return INTENT_SYSTEM_PROMPT, render(INTENT_USER_PROMPT, user_question=user_question)
+def render_intent_prompt(
+    user_question: str,
+    conversation_history: str = "",
+) -> tuple[str, str]:
+    history = (conversation_history or "").strip()
+    if history:
+        history_block = (
+            "CONVERSATION HISTORY (prior turns — use to resolve references):\n"
+            f"{history}\n\n"
+        )
+    else:
+        history_block = ""
+    return INTENT_SYSTEM_PROMPT, render(
+        INTENT_USER_PROMPT,
+        user_question=user_question,
+        conversation_history_block=history_block,
+    )
