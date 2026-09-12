@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Check, Copy, Pencil, Play } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Check, ChevronDown, ChevronRight, Copy, Pencil, Play } from "lucide-react";
 import { Button, Textarea } from "../ui";
 
 export interface SQLViewerProps {
@@ -7,6 +7,8 @@ export interface SQLViewerProps {
   onAskAgain?: () => void;
   onRerunSql?: (sql?: string) => void;
   isRerunning?: boolean;
+  /** When false (default), SQL body is collapsed like Wren/Snowflake View SQL. */
+  defaultExpanded?: boolean;
 }
 
 export function SQLViewer({
@@ -14,10 +16,16 @@ export function SQLViewer({
   onAskAgain,
   onRerunSql,
   isRerunning = false,
+  defaultExpanded = false,
 }: SQLViewerProps) {
+  const [expanded, setExpanded] = useState(defaultExpanded);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(sql);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    setDraft(sql);
+  }, [sql]);
 
   const displaySql = editing ? draft : sql;
 
@@ -34,29 +42,27 @@ export function SQLViewer({
   const toggleEdit = () => {
     if (!editing) {
       setDraft(sql);
+      setExpanded(true);
     }
     setEditing((v) => !v);
   };
 
   return (
     <div className="overflow-hidden rounded-md border border-zinc-200">
-      <div className="flex items-center justify-between gap-2 border-b border-zinc-200 bg-zinc-50 px-3 py-1.5">
-        <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-          SQL
-        </span>
-        <div className="flex items-center gap-1">
-          <Button type="button" variant="ghost" size="sm" onClick={toggleEdit}>
-            <Pencil className="h-3 w-3" strokeWidth={1.75} />
-            {editing ? "Done" : "Edit"}
-          </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={copy}>
-            {copied ? (
-              <Check className="h-3 w-3" strokeWidth={1.75} />
-            ) : (
-              <Copy className="h-3 w-3" strokeWidth={1.75} />
-            )}
-            {copied ? "Copied" : "Copy"}
-          </Button>
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-200 bg-zinc-50 px-3 py-1.5">
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="inline-flex items-center gap-1 text-xs font-medium text-zinc-600 hover:text-zinc-900"
+        >
+          {expanded ? (
+            <ChevronDown className="h-3.5 w-3.5" strokeWidth={1.75} />
+          ) : (
+            <ChevronRight className="h-3.5 w-3.5" strokeWidth={1.75} />
+          )}
+          {expanded ? "Hide SQL" : "View SQL"}
+        </button>
+        <div className="flex flex-wrap items-center gap-1">
           {onRerunSql ? (
             <Button
               type="button"
@@ -70,6 +76,18 @@ export function SQLViewer({
               {isRerunning ? "Running…" : "Run SQL"}
             </Button>
           ) : null}
+          <Button type="button" variant="ghost" size="sm" onClick={toggleEdit}>
+            <Pencil className="h-3 w-3" strokeWidth={1.75} />
+            {editing ? "Done" : "Edit"}
+          </Button>
+          <Button type="button" variant="ghost" size="sm" onClick={copy}>
+            {copied ? (
+              <Check className="h-3 w-3" strokeWidth={1.75} />
+            ) : (
+              <Copy className="h-3 w-3" strokeWidth={1.75} />
+            )}
+            {copied ? "Copied" : "Copy"}
+          </Button>
           {onAskAgain ? (
             <Button
               type="button"
@@ -85,18 +103,20 @@ export function SQLViewer({
         </div>
       </div>
 
-      {editing ? (
-        <Textarea
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          className="min-h-[120px] rounded-none border-0 font-mono text-xs leading-relaxed focus-visible:ring-0 focus-visible:ring-offset-0"
-          spellCheck={false}
-        />
-      ) : (
-        <pre className="overflow-x-auto bg-white px-3 py-2.5 font-mono text-xs leading-relaxed text-zinc-800 whitespace-pre-wrap">
-          {sql}
-        </pre>
-      )}
+      {expanded ? (
+        editing ? (
+          <Textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            className="min-h-[120px] rounded-none border-0 font-mono text-xs leading-relaxed focus-visible:ring-0 focus-visible:ring-offset-0"
+            spellCheck={false}
+          />
+        ) : (
+          <pre className="overflow-x-auto bg-white px-3 py-2.5 font-mono text-xs leading-relaxed text-zinc-800 whitespace-pre-wrap">
+            {sql}
+          </pre>
+        )
+      ) : null}
     </div>
   );
 }

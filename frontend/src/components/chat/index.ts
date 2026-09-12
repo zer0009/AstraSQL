@@ -1,4 +1,4 @@
-export { ChatInput } from "./ChatInput";
+export { ChatInput, type ChatInputHandle } from "./ChatInput";
 export { MessageList } from "./MessageList";
 export { UserMessage } from "./UserMessage";
 export { AgentMessage } from "./AgentMessage";

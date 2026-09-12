@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Badge } from "../ui";
 import type { AgentStep } from "../../types/api";
@@ -10,7 +10,14 @@ export interface AgentStepsProps {
 }
 
 export function AgentSteps({ steps, isStreaming = false }: AgentStepsProps) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(isStreaming);
+  const [userToggled, setUserToggled] = useState(false);
+
+  // Open while streaming for progress; collapse when stream ends unless user toggled.
+  useEffect(() => {
+    if (userToggled) return;
+    setOpen(isStreaming);
+  }, [isStreaming, userToggled]);
 
   if (steps.length === 0) return null;
 
@@ -18,7 +25,10 @@ export function AgentSteps({ steps, isStreaming = false }: AgentStepsProps) {
     <div className="rounded-md border border-zinc-200 bg-zinc-50/80">
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          setUserToggled(true);
+          setOpen((v) => !v);
+        }}
         className="flex w-full items-center gap-1.5 px-3 py-2 text-left text-xs font-medium text-zinc-600 hover:bg-zinc-100/80"
       >
         {open ? (
@@ -34,10 +44,7 @@ export function AgentSteps({ steps, isStreaming = false }: AgentStepsProps) {
         <ul className="space-y-1 border-t border-zinc-200 px-3 py-2">
           {steps.map((step, index) => {
             const isLast = index === steps.length - 1;
-            const status =
-              isStreaming && isLast
-                ? "running"
-                : "done";
+            const status = isStreaming && isLast ? "running" : "done";
 
             return (
               <li

@@ -166,7 +166,7 @@ export default function ChatPage() {
                 </button>
               )
             ) : (
-              <h1 className="text-sm font-semibold text-zinc-900">Query</h1>
+              <h1 className="text-sm font-semibold text-zinc-900">New chat</h1>
             )}
           </div>
 
@@ -179,7 +179,7 @@ export default function ChatPage() {
                 onClick={() => void clear()}
                 disabled={isStreaming}
               >
-                Clear
+                Clear chat
               </Button>
             ) : null}
           </div>

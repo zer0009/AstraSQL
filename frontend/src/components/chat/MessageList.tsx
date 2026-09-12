@@ -30,17 +30,26 @@ export function MessageList({
 
   if (messages.length === 0) {
     return (
-      <div className="flex flex-1 items-center justify-center px-6">
-        <p className="text-sm text-zinc-500">
-          Ask a natural-language question to generate SQL and results.
-        </p>
+      <div className="flex flex-1 items-center justify-center px-6 py-10">
+        <div className="mx-auto w-full max-w-lg text-center">
+          <h2 className="text-xl font-semibold tracking-tight text-zinc-900">
+            Ask your data
+          </h2>
+          <p className="mt-2 text-sm leading-relaxed text-zinc-600">
+            Ask in plain language. AstraSQL runs read-only SQL on your connected
+            database.
+          </p>
+          <p className="mt-1.5 text-xs text-zinc-400">
+            Live results from the DB. Row data is not stored in chat history.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-4">
-      <div className="mx-auto flex max-w-4xl flex-col gap-4">
+    <div className="flex-1 overflow-y-auto px-4 py-5">
+      <div className="mx-auto flex max-w-4xl flex-col gap-5">
         {messages.map((msg, index) => {
           if (msg.role === "user") {
             return <UserMessage key={msg.id} content={msg.content} />;
