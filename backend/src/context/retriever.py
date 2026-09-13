@@ -19,13 +19,24 @@ from src.providers.database.base import BaseDatabaseProvider
 from src.storage.models import Connection, SchemaCache
 
 # Cap how many FK-neighbor tables we add after fine_select.
-_FK_EXPAND_MAX_EXTRA = 10
+_FK_EXPAND_MAX_EXTRA = 15
+# Max FK-graph hop depth for neighbor expansion (BFS).
+_FK_EXPAND_MAX_DEPTH = 3
 # How many prior turns to fold into the FAISS / linker query text.
 _LINK_HISTORY_TURNS = 3
 # Generic column-name hints that a table is a human-label / lookup table.
 _LABEL_COLUMN_NAMES = frozenset(
     {"name", "title", "label", "code", "display_name", "displayname"}
 )
+
+
+def _dynamic_faiss_top_k(table_count: int, default: int) -> int:
+    """Scale FAISS candidate count by schema size for better large-DB recall."""
+    if table_count < 100:
+        return 30
+    if table_count <= 400:
+        return max(default, 50)
+    return max(default, 80)
 
 
 def _column_names(cache: SchemaCache | None) -> set[str]:
@@ -96,69 +107,41 @@ def _expand_fk_targets(
     cache_by_name: dict[str, SchemaCache],
     *,
     max_extra: int = _FK_EXPAND_MAX_EXTRA,
+    max_depth: int = _FK_EXPAND_MAX_DEPTH,
 ) -> list[str]:
-    """Add FK neighbor tables (2 passes, capped) using SchemaCache metadata only.
+    """Add FK neighbor tables via BFS (depth-limited, capped) using SchemaCache only.
 
-    Pass A: FK targets of the selected set (ranked: label tables first).
-    Pass B: FK targets of tables added in pass A (same ranking), so lookup
-    chains like entity → dimension resolve without hardcoded table names.
-
-    A few slots are reserved for pass B so high-degree fact tables cannot
-    consume the entire cap before dimension lookups are considered.
+    At each hop, prefer label-like lookup tables so dimension chains such as
+    fact → entity → geographic/category lookup resolve before high-degree noise
+    tables consume the budget.
     """
     if not selected_tables or max_extra <= 0:
         return list(selected_tables)
 
     ordered = list(selected_tables)
     selected_set = set(ordered)
-    # Keep room for a second hop (e.g. partner → country/state).
-    reserve_b = min(3, max_extra // 2) if max_extra >= 2 else 0
-    pass_a_budget = max_extra - reserve_b
     remaining = max_extra
+    # Frontier starts at the fine-selected set (depth 0).
+    frontier = list(selected_tables)
 
-    pass_a = _rank_fk_candidates(
-        _fk_targets_from_tables(ordered, cache_by_name, exclude=selected_set),
-        cache_by_name,
-    )
-    newly_added: list[str] = []
-    pass_a_leftover: list[str] = []
-
-    for target in pass_a:
-        if len(newly_added) >= pass_a_budget:
-            pass_a_leftover.append(target)
-            continue
-        if target in selected_set:
-            continue
-        selected_set.add(target)
-        ordered.append(target)
-        newly_added.append(target)
-        remaining -= 1
-
-    if newly_added and remaining > 0:
-        pass_b = _rank_fk_candidates(
-            _fk_targets_from_tables(
-                newly_added, cache_by_name, exclude=selected_set
-            ),
+    for _depth in range(max(1, max_depth)):
+        if remaining <= 0 or not frontier:
+            break
+        candidates = _rank_fk_candidates(
+            _fk_targets_from_tables(frontier, cache_by_name, exclude=selected_set),
             cache_by_name,
         )
-        for target in pass_b:
+        newly_added: list[str] = []
+        for target in candidates:
             if remaining <= 0:
                 break
             if target in selected_set:
                 continue
             selected_set.add(target)
             ordered.append(target)
+            newly_added.append(target)
             remaining -= 1
-
-    # Fill any leftover budget with unused pass-A candidates.
-    for target in pass_a_leftover:
-        if remaining <= 0:
-            break
-        if target in selected_set:
-            continue
-        selected_set.add(target)
-        ordered.append(target)
-        remaining -= 1
+        frontier = newly_added
 
     return ordered
 
@@ -266,6 +249,62 @@ def _format_history_for_linker(
             line += f"\n  Answer: {a[:180]}"
         blocks.append(line)
     return "\n".join(blocks)
+
+
+_QUERY_EXPAND_SYSTEM = """\
+You expand natural-language data questions into richer search phrases for schema retrieval.
+Do NOT invent specific table or column names from any product. Stay database-agnostic.
+
+Given a user question, return a short expansion that:
+1. Names the business entities involved (people, places, products, documents, etc.)
+2. Lists likely database representations as generic concepts
+   (e.g. "geographic state/province/region lookup", "customer/partner master data",
+   "product/item catalog", "order/transaction line items")
+3. Notes the relationship type (comparison, cross-join, grouping, trend, filter)
+
+Return plain text only — a single line or short paragraph of search keywords.
+No JSON, no markdown, no SQL.
+"""
+
+
+async def _expand_link_query(question: str) -> str:
+    """LLM-enrich the FAISS query with entity synonyms (database-agnostic).
+
+    Falls back to the original question on any failure so retrieval still runs.
+    """
+    text = (question or "").strip()
+    if not text:
+        return question
+
+    try:
+        from langchain_core.messages import HumanMessage, SystemMessage
+
+        from src.providers.llm import get_llm_provider
+
+        chat = get_llm_provider().get_chat_model(
+            temperature=0.0,
+            max_tokens=256,
+        )
+        response = await chat.ainvoke(
+            [
+                SystemMessage(content=_QUERY_EXPAND_SYSTEM),
+                HumanMessage(content=text),
+            ]
+        )
+        content = response.content
+        if isinstance(content, list):
+            expanded = "".join(
+                part.get("text", "") if isinstance(part, dict) else str(part)
+                for part in content
+            ).strip()
+        else:
+            expanded = str(content).strip()
+        if not expanded:
+            return text
+        # Combine original + expansion so exact terms still match embeddings.
+        return f"{text}\n{expanded}"
+    except Exception:
+        return text
 
 
 async def scan_connection_schema(
@@ -438,18 +477,23 @@ class ContextRetriever:
         cache_by_name = {c.table_name: c for c in caches}
         known_tables = set(all_table_names)
 
-        # 2. SchemaLinker coarse + fine (history-aware)
+        # 2. SchemaLinker coarse + fine (history-aware + semantic expansion)
         link_query = _build_link_query(question, conversation_history)
+        expanded_query = await _expand_link_query(link_query)
         history_text = _format_history_for_linker(conversation_history)
         prior_tables = _prior_tables_from_history(
             conversation_history, known_tables
         )
 
+        top_k = _dynamic_faiss_top_k(
+            len(all_table_names),
+            self._settings.faiss_top_k_tables,
+        )
         candidates = await self.linker.coarse_filter(
             connection_id,
-            link_query,
+            expanded_query,
             all_table_names,
-            top_k=self._settings.faiss_top_k_tables,
+            top_k=top_k,
         )
         # Keep prior-turn fact tables even if FAISS dropped them this turn.
         for name in prior_tables:
@@ -461,7 +505,7 @@ class ContextRetriever:
                 "step": "schema_coarse",
                 "detail": (
                     f"Coarse filter selected {len(candidates)} of "
-                    f"{len(all_table_names)} tables"
+                    f"{len(all_table_names)} tables (top_k={top_k})"
                     + (
                         f" (+{len(prior_tables)} from prior SQL)"
                         if prior_tables
@@ -470,6 +514,7 @@ class ContextRetriever:
                 ),
                 "tables": candidates,
                 "prior_tables": prior_tables,
+                "expanded_query": expanded_query[:300],
             }
         )
 
@@ -531,6 +576,7 @@ class ContextRetriever:
             selected_tables,
             cache_by_name,
             max_extra=_FK_EXPAND_MAX_EXTRA,
+            max_depth=_FK_EXPAND_MAX_DEPTH,
         )
         added_fk = [t for t in selected_tables if t not in before_expand]
         if added_fk:
@@ -539,7 +585,8 @@ class ContextRetriever:
                     "step": "schema_fk_expand",
                     "detail": (
                         f"Added {len(added_fk)} FK neighbor table(s) "
-                        f"(2-pass, label-preferring, cap {_FK_EXPAND_MAX_EXTRA})"
+                        f"(BFS depth={_FK_EXPAND_MAX_DEPTH}, "
+                        f"label-preferring, cap {_FK_EXPAND_MAX_EXTRA})"
                     ),
                     "tables": added_fk,
                 }

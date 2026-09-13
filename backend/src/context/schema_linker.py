@@ -45,6 +45,47 @@ def _normalize(vectors: np.ndarray) -> np.ndarray:
     return vectors
 
 
+def _extract_sample_values(
+    sample_rows_json: str | None,
+    *,
+    max_cols: int = 5,
+    max_values_per_col: int = 3,
+) -> str:
+    """Build a short 'Sample data' snippet from cached sample rows for embeddings."""
+    if not sample_rows_json:
+        return ""
+    try:
+        rows = json.loads(sample_rows_json)
+    except (json.JSONDecodeError, TypeError):
+        return ""
+    if not isinstance(rows, list) or not rows:
+        return ""
+
+    # Collect distinct string-ish values per column (skip pure ids / nulls).
+    by_col: dict[str, list[str]] = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        for key, value in row.items():
+            if value is None:
+                continue
+            key_l = str(key).lower()
+            if key_l == "id" or key_l.endswith("_id"):
+                continue
+            text = str(value).strip()
+            if not text or len(text) > 80:
+                continue
+            bucket = by_col.setdefault(str(key), [])
+            if text not in bucket and len(bucket) < max_values_per_col:
+                bucket.append(text)
+
+    parts: list[str] = []
+    for col_name, values in list(by_col.items())[:max_cols]:
+        if values:
+            parts.append(f"{col_name}=[{', '.join(values)}]")
+    return "; ".join(parts)
+
+
 class SchemaLinker:
     """Two-phase schema linker: FAISS coarse filter → LLM bidirectional fine select."""
 
@@ -121,6 +162,21 @@ class SchemaLinker:
             for e in enrich_result.scalars().all()
         }
 
+        # Column-level enrichments for richer embedding text.
+        col_enrich_result = await session.execute(
+            select(SchemaEnrichment).where(
+                SchemaEnrichment.connection_id == connection_id,
+                SchemaEnrichment.column_name.is_not(None),
+            )
+        )
+        col_desc: dict[str, dict[str, str]] = {}
+        for e in col_enrich_result.scalars().all():
+            if not e.column_name:
+                continue
+            col_desc.setdefault(e.table_name, {})[e.column_name] = (
+                e.description or e.alias or ""
+            )
+
         if not caches:
             index_path = self._index_path(connection_id)
             ids_path = self._ids_path(connection_id)
@@ -139,14 +195,29 @@ class SchemaLinker:
                 columns = json.loads(cache.columns_json) if cache.columns_json else []
             except (json.JSONDecodeError, TypeError):
                 columns = []
-            col_names = ", ".join(
-                c.get("name") or c.get("column_name") or ""
-                for c in columns
-                if c.get("name") or c.get("column_name")
-            )
+
+            col_details: list[str] = []
+            table_col_meta = col_desc.get(name, {})
+            for c in columns:
+                col_name = c.get("name") or c.get("column_name") or ""
+                if not col_name:
+                    continue
+                detail = str(col_name)
+                c_desc = (
+                    table_col_meta.get(col_name)
+                    or c.get("description")
+                    or ""
+                )
+                if c_desc:
+                    detail += f" ({c_desc})"
+                col_details.append(detail)
+
             text = f"{name}: {desc}".strip()
-            if col_names:
-                text = f"{text}. Columns: {col_names}"
+            if col_details:
+                text = f"{text}. Columns: {', '.join(col_details)}"
+            sample_vals = _extract_sample_values(cache.sample_rows_json)
+            if sample_vals:
+                text = f"{text}. Sample data: {sample_vals}"
             texts.append(text)
             names.append(name)
 

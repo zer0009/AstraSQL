@@ -27,14 +27,14 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-4o"
     openai_embedding_model: str = "text-embedding-3-small"
     llm_temperature: float = 0.0
-    llm_max_tokens: int = 4096
+    llm_max_tokens: int = 8192
 
     # Query
     max_result_rows: int = 500
     max_retries: int = 3
     max_conversation_turns: int = Field(default=3, ge=1, le=10)
     schema_cache_ttl_days: int = 7
-    faiss_top_k_tables: int = 20
+    faiss_top_k_tables: int = 60
     golden_records_top_k: int = 5
 
     # CORS

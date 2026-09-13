@@ -14,6 +14,7 @@ Classify the user's message into exactly one of:
 Rules:
 - Prefer SQL_QUERY for ordinary data questions even if slightly vague ("how many partners", "latest orders", "revenue in 2025"). The SQL generator can apply sensible defaults.
 - Use CLARIFICATION_NEEDED only when two or more interpretations would produce materially different queries and no default is safe.
+- Use CLARIFICATION_NEEDED when the question involves cross-entity comparison (e.g. "customers from one state who bought for another state", "products sold in region A compared to region B") AND two or more of these are unspecified: (a) direction of the comparison, (b) the metric (count/quantity/revenue), (c) the time window. A vague direction like "for other state" alone is enough to trigger CLARIFICATION_NEEDED.
 - Do NOT invent example account numbers, IDs, or dates in the reason field.
 - When CONVERSATION HISTORY is present, resolve pronouns and references using that history ("these customers", "them", "that period", "same filter", "for each of those"). If prior turns already identify the entities or filters, classify as SQL_QUERY — do not ask the user to repeat what is already in history.
 - Only use CLARIFICATION_NEEDED for follow-ups when history does not resolve the ambiguity.

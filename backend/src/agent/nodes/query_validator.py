@@ -9,10 +9,12 @@ from sqlglot import exp
 from sqlglot.errors import ParseError
 
 from src.agent.prompts.validator import render_validator_prompt
+from src.agent.sql_guards import rewrite_invalid_json_operators
 from src.agent.state import AgentState
 from src.agent.utils import (
     append_step,
     build_retry_context,
+    classify_retry_type,
     extract_json,
     get_configurable,
     max_retries,
@@ -107,6 +109,7 @@ async def query_validator(
             message=err or "Syntax validation failed",
             retries=retries,
             is_dml=is_dml,
+            retry_type="SYNTAX_ERROR",
         )
 
     # Layer 2 — LLM semantic validator
@@ -138,6 +141,7 @@ async def query_validator(
             issues = [str(issues)]
         corrected = str(parsed.get("corrected_sql") or sql).strip() or sql
         is_valid = bool(parsed.get("is_valid", True))
+        error_type = str(parsed.get("error_type") or "").strip() or None
     except Exception as exc:
         return _fail_or_retry(
             state,
@@ -145,10 +149,22 @@ async def query_validator(
             message=f"Semantic validation failed: {exc}",
             retries=retries,
             is_dml=False,
+            retry_type="OTHER",
         )
 
-    # Prefer corrected SQL; proceed when we have executable SQL.
+    # Prefer corrected SQL; apply deterministic type guards before execute.
     if corrected:
+        guarded, guard_issues = rewrite_invalid_json_operators(
+            corrected,
+            dialect=db_provider.sqlglot_dialect(),
+            enriched_schema=context.get("enriched_schema") or "",
+        )
+        if guard_issues:
+            corrected = guarded
+            issues = list(issues) + guard_issues
+            is_valid = False
+            error_type = error_type or "TYPE_MISMATCH"
+
         detail = (
             "SQL validated"
             if is_valid and not issues
@@ -164,10 +180,17 @@ async def query_validator(
                 detail,
                 issues=issues,
                 is_valid=is_valid,
+                error_type=error_type,
                 sql=corrected,
+                json_ops_rewritten=bool(guard_issues),
             ),
         }
 
+    retry_type = classify_retry_type(
+        error="Validator returned no corrected SQL",
+        issues=issues,
+        error_type=error_type,
+    )
     return _fail_or_retry(
         state,
         sql=sql,
@@ -175,6 +198,7 @@ async def query_validator(
         retries=retries,
         is_dml=False,
         issues=issues,
+        retry_type=retry_type,
     )
 
 
@@ -186,9 +210,16 @@ def _fail_or_retry(
     retries: int,
     is_dml: bool,
     issues: Optional[list] = None,
+    retry_type: Optional[str] = None,
 ) -> dict[str, Any]:
     """Set error/retry_context; exhaust retries immediately for DML blocks."""
     limit = max_retries()
+    typed = classify_retry_type(
+        error=message,
+        issues=issues,
+        error_type=retry_type,
+        is_syntax=(retry_type == "SYNTAX_ERROR"),
+    )
     steps = list(state.get("steps") or [])
     if not steps or steps[-1].get("name") not in {
         "validate_syntax_failed",
@@ -201,6 +232,7 @@ def _fail_or_retry(
             message,
             sql=sql,
             issues=issues or [],
+            retry_type=typed,
         )
 
     if is_dml:
@@ -211,23 +243,14 @@ def _fail_or_retry(
             "steps": steps,
         }
 
-    if retries < limit:
-        return {
-            "error": message,
-            "retry_context": build_retry_context(
-                previous_sql=sql,
-                error=message,
-                prior_context=state.get("retry_context") or "",
-            ),
-            "steps": steps,
-        }
-
+    retry_ctx = build_retry_context(
+        previous_sql=sql,
+        error=message,
+        prior_context=state.get("retry_context") or "",
+        retry_type=typed,
+    )
     return {
         "error": message,
-        "retry_context": build_retry_context(
-            previous_sql=sql,
-            error=message,
-            prior_context=state.get("retry_context") or "",
-        ),
+        "retry_context": retry_ctx,
         "steps": steps,
     }

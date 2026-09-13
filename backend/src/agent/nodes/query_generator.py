@@ -89,6 +89,7 @@ async def query_generator(
         gen_steps = {
             k: parsed.get(k)
             for k in (
+                "step0_entities",
                 "step1_metric",
                 "step2_tables",
                 "step3_joins",

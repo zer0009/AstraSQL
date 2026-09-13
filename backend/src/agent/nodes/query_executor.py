@@ -8,6 +8,7 @@ from src.agent.state import AgentState
 from src.agent.utils import (
     append_step,
     build_retry_context,
+    classify_retry_type,
     get_configurable,
     max_retries,
 )
@@ -81,6 +82,10 @@ def _execution_failure(
     retries: int,
 ) -> dict[str, Any]:
     limit = max_retries()
+    retry_type = classify_retry_type(error=message)
+    # EXPLAIN / execute failures are execution-class unless clearly column/table/syntax.
+    if retry_type == "OTHER":
+        retry_type = "EXECUTION_ERROR"
     steps = append_step(
         state,
         "execute_error",
@@ -88,6 +93,7 @@ def _execution_failure(
         sql=sql,
         retries=retries,
         will_retry=retries < limit,
+        retry_type=retry_type,
     )
     return {
         "error": message,
@@ -95,6 +101,7 @@ def _execution_failure(
             previous_sql=sql,
             error=message,
             prior_context=state.get("retry_context") or "",
+            retry_type=retry_type,
         ),
         "steps": steps,
     }

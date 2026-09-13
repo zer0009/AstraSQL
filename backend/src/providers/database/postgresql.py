@@ -62,12 +62,16 @@ class PostgreSQLProvider(BaseDatabaseProvider):
 - Concatenation: || operator or CONCAT()
 - Prefer CTEs (WITH clause) over deeply nested subqueries
 - Window functions: supported — ROW_NUMBER(), LAG(), LEAD(), RANK()
-- JSONB/JSON columns: columns typed jsonb or json store structured data, not plain text.
-  Never reference them bare in SELECT — that returns a raw JSON object. Always use ->>
-  to extract text (e.g. col->>'some_key'). When a JSONB column stores translated display
-  names, use COALESCE across keys that appear in the sample data shown in the schema
-  (COALESCE(col->>'key_a', col->>'key_b')), preferring the first non-null non-empty
-  string. Pick key names only from sample data — do not invent keys.
+- JSONB/JSON operators (->>, ->): ONLY on columns whose schema type is jsonb or json.
+  Never use ->> or -> on character varying, text, varchar, char, integer, or other
+  non-JSON types — PostgreSQL will raise "operator does not exist".
+  For plain text/varchar name columns, SELECT the column directly (e.g. rcs.name).
+  For jsonb/json columns only: never reference them bare in SELECT — that returns a
+  raw JSON object. Always use ->> to extract text (e.g. col->>'some_key'). When a
+  JSONB column stores translated display names, use COALESCE across keys that appear
+  in the sample data shown in the schema (COALESCE(col->>'key_a', col->>'key_b')),
+  preferring the first non-null non-empty string. Pick key names only from sample
+  data — do not invent keys.
 """.strip()
 
     def dialect_validator_checklist(self) -> list[str]:
@@ -77,6 +81,7 @@ class PostgreSQLProvider(BaseDatabaseProvider):
             "Column aliases in HAVING reference the expression, not the alias name",
             "LIMIT present for list queries unless aggregation covers all rows",
             "JSONB bare select: if any column in SELECT is typed jsonb/json and is referenced without ->> or ->, flag it — the result will be a raw JSON string, not a human-readable value",
+            "JSONB type guard: if ->> or -> is used on a column typed character varying, text, varchar, or any non-json/jsonb type, flag it and rewrite to use the column directly (no JSON operators)",
         ]
 
     def sqlglot_dialect(self) -> str:
