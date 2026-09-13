@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ChevronDown, ChevronRight, ShieldCheck } from "lucide-react";
 import { Badge, Spinner } from "../ui";
 import type { ChatMessage } from "../../hooks/useStreamQuery";
 import { AgentSteps } from "./AgentSteps.tsx";
@@ -29,6 +29,26 @@ function formatConfidence(value: string | number | undefined): string | null {
   return String(value).toUpperCase();
 }
 
+function tablesFromSteps(message: ChatMessage): string[] {
+  const steps = message.steps ?? [];
+  for (let i = steps.length - 1; i >= 0; i--) {
+    const step = steps[i];
+    if (
+      (step.name === "context_retrieved" || step.name === "schema_link") &&
+      step.tables &&
+      step.tables.length > 0
+    ) {
+      return step.tables;
+    }
+  }
+  // Fallback: any step that carried tables
+  for (let i = steps.length - 1; i >= 0; i--) {
+    const tables = steps[i].tables;
+    if (tables && tables.length > 0) return tables;
+  }
+  return [];
+}
+
 export function AgentMessage({
   message,
   isStreaming = false,
@@ -40,7 +60,9 @@ export function AgentMessage({
   const confidence = formatConfidence(message.confidence);
   const hasSql = Boolean(message.sql);
   const hasSteps = Boolean(message.steps && message.steps.length > 0);
-  const hasTrust = hasSql || hasSteps;
+  const tablesUsed = useMemo(() => tablesFromSteps(message), [message]);
+  const hasTables = tablesUsed.length > 0;
+  const hasTrust = hasSql || hasSteps || hasTables;
   const [trustOpen, setTrustOpen] = useState(false);
 
   // Auto-open trust panel while the agent is actively working so progress is visible.
@@ -60,7 +82,7 @@ export function AgentMessage({
   return (
     <div className="flex justify-start">
       <div className="w-full max-w-[95%] space-y-3">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-[11px] font-medium uppercase tracking-wide text-zinc-400">
             Assistant
           </span>
@@ -75,6 +97,16 @@ export function AgentMessage({
               }
             >
               {confidence}
+            </Badge>
+          ) : null}
+          {message.usedGolden ? (
+            <Badge
+              variant="success"
+              className="inline-flex items-center gap-1"
+              title="Answer used a verified golden query as a few-shot example"
+            >
+              <ShieldCheck className="h-3 w-3" strokeWidth={2} />
+              Verified
             </Badge>
           ) : null}
           {isStreaming || isRerunning ? <Spinner size="sm" /> : null}
@@ -115,9 +147,31 @@ export function AgentMessage({
                 <ChevronRight className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
               )}
               How this was answered
+              {hasTables && !trustOpen ? (
+                <span className="ml-1 font-normal text-zinc-400">
+                  · {tablesUsed.length} table{tablesUsed.length === 1 ? "" : "s"}
+                </span>
+              ) : null}
             </button>
             {trustOpen ? (
               <div className="space-y-2 border-t border-zinc-200 bg-white p-2.5">
+                {hasTables ? (
+                  <div className="space-y-1.5">
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-400">
+                      Tables used
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {tablesUsed.map((table) => (
+                        <span
+                          key={table}
+                          className="rounded-md border border-zinc-200 bg-zinc-50 px-2 py-0.5 font-mono text-[11px] text-zinc-700"
+                        >
+                          {table}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
                 {message.sql ? (
                   <SQLViewer
                     sql={message.sql}
@@ -140,6 +194,18 @@ export function AgentMessage({
 
         {!isStreaming && !isRerunning && message.historyId ? (
           <FeedbackBar historyId={message.historyId} sql={message.sql} />
+        ) : null}
+
+        {!isStreaming &&
+        !isRerunning &&
+        message.clarificationOptions &&
+        message.clarificationOptions.length > 0 &&
+        onFollowUp ? (
+          <SuggestedFollowUps
+            label="Did you mean?"
+            questions={message.clarificationOptions}
+            onSelect={onFollowUp}
+          />
         ) : null}
 
         {!isStreaming &&

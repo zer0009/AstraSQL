@@ -164,9 +164,23 @@ export interface FeedbackResult {
   golden_record_id: string | null;
 }
 
+export interface HistoryStats {
+  total: number;
+  high_confidence: number;
+  medium_confidence: number;
+  low_confidence: number;
+  unknown_confidence: number;
+  error_count: number;
+  negative_rated: number;
+  positive_rated: number;
+  unrated: number;
+}
+
 export interface AgentStep {
   name: string;
   detail: string;
+  /** Tables linked during context retrieval (present on context_retrieved). */
+  tables?: string[];
 }
 
 export interface QueryResult {

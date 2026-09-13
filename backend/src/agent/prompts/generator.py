@@ -47,6 +47,7 @@ Target dialect: {dialect_name}
 5. Do NOT generate INSERT, UPDATE, DELETE, DROP, TRUNCATE, CREATE, or ALTER statements.
 6. If the question is ambiguous, make the most conservative reasonable assumption and note it.
 7. Prefer CTEs (WITH clause) over nested subqueries for complex queries — they are more readable and debuggable.
+8. HUMAN-READABLE RESULTS: When the question references named entities (states, countries, categories, products, vendors, customers), always JOIN the lookup/reference table and SELECT its name or display_name column alongside or instead of the raw *_id. Never expose a bare *_id foreign key as the primary identifier in a result set intended for users. Example: GROUP BY rp.state_id → also JOIN res_country_state rcs ON rcs.id = rp.state_id and SELECT rcs.name AS state_name.
 
 ━━━ TASK ━━━
 Let's think step by step to build the SQL query.

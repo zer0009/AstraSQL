@@ -1,3 +1,4 @@
+from src.context.auto_enricher import SchemaAutoEnricher
 from src.context.business_rules import BusinessRulesStore
 from src.context.golden_records import GoldenRecordsStore
 from src.context.retriever import ContextRetriever, RetrievedContext, scan_connection_schema
@@ -9,6 +10,7 @@ __all__ = [
     "ContextRetriever",
     "GoldenRecordsStore",
     "RetrievedContext",
+    "SchemaAutoEnricher",
     "SchemaEnrichmentStore",
     "SchemaLinker",
     "extract_json",

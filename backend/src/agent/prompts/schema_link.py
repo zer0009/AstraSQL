@@ -17,6 +17,12 @@ Rules:
 - Select the minimum set of tables necessary and sufficient to answer the question.
 - Include tables needed for JOINs even if not directly mentioned.
 - If unsure between two tables, include both.
+- If the question groups, ranks, or filters by a named attribute of a related entity
+  (not a raw id), include the FK target / lookup table — do not stop at the fact table
+  that only stores *_id.
+- When conversation history is present, keep tables needed to continue the prior metric
+  (counts, quantities, amounts) while adding tables for any new dimension in the
+  current question. Do not drop the prior fact tables.
 - Think step by step before answering.
 
 Return JSON only:
@@ -27,7 +33,7 @@ Return JSON only:
 """
 
 TABLE_FIRST_USER_PROMPT = """\
-Question: {user_question}
+{conversation_history_block}Question: {user_question}
 Current date: {current_date}
 """
 
@@ -37,11 +43,17 @@ Your task: identify which specific columns are most relevant to the user's quest
 
 Full schema (all tables and columns):
 {compact_schema}
--- Format: table.column (type) [description if available]
+-- Format: table.column (type) [description if available] FK→target.col when known
 
 Rules:
 - Identify columns for: SELECT projection, WHERE filters, JOIN keys, GROUP BY dimensions, ORDER BY fields.
 - Think about what the question is measuring and what constraints it implies.
+- Prefer human-label columns (name, title, label, code, display_name) on referenced
+  tables over exposing raw FK id columns as the primary grouping dimension.
+- When a compact schema line shows FK→target.table, include that target table's label
+  columns if the question asks for a named dimension of that entity.
+- When conversation history is present, keep columns needed for the prior metric while
+  adding columns for the new dimension.
 
 Return JSON only:
 {{
@@ -55,21 +67,30 @@ Return JSON only:
 """
 
 COLUMN_FIRST_USER_PROMPT = """\
-Question: {user_question}
+{conversation_history_block}Question: {user_question}
 Current date: {current_date}
 """
+
+
+def _history_block(conversation_history: str = "") -> str:
+    history = (conversation_history or "").strip()
+    if not history:
+        return ""
+    return f"Conversation history (recent turns):\n{history}\n\n"
 
 
 def render_table_first_prompt(
     user_question: str,
     table_catalog: str,
     current_date: str,
+    conversation_history: str = "",
 ) -> tuple[str, str]:
     system = render(TABLE_FIRST_PROMPT, table_catalog=table_catalog)
     user = render(
         TABLE_FIRST_USER_PROMPT,
         user_question=user_question,
         current_date=current_date,
+        conversation_history_block=_history_block(conversation_history),
     )
     return system, user
 
@@ -78,11 +99,13 @@ def render_column_first_prompt(
     user_question: str,
     compact_schema: str,
     current_date: str,
+    conversation_history: str = "",
 ) -> tuple[str, str]:
     system = render(COLUMN_FIRST_PROMPT, compact_schema=compact_schema)
     user = render(
         COLUMN_FIRST_USER_PROMPT,
         user_question=user_question,
         current_date=current_date,
+        conversation_history_block=_history_block(conversation_history),
     )
     return system, user

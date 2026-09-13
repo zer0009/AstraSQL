@@ -199,6 +199,7 @@ class SchemaLinker:
         self,
         question: str,
         candidate_tables: list[dict[str, Any]],
+        conversation_history: str = "",
     ) -> dict[str, Any]:
         """Phase 2: parallel table-first + column-first LLM calls, union merge.
 
@@ -231,6 +232,14 @@ class SchemaLinker:
                     line += f" ({col_type})"
                 if col_desc:
                     line += f" [{col_desc}]"
+                fk = col.get("foreign_key")
+                if isinstance(fk, dict):
+                    fk_table = fk.get("table") or fk.get("foreign_table_name")
+                    fk_col = fk.get("column") or fk.get("foreign_column_name")
+                    if fk_table and fk_col:
+                        line += f" FK→{fk_table}.{fk_col}"
+                    elif fk_table:
+                        line += f" FK→{fk_table}"
                 compact_lines.append(line)
 
         current_date = date.today().isoformat()
@@ -238,11 +247,13 @@ class SchemaLinker:
             user_question=question,
             table_catalog="\n".join(table_catalog_lines),
             current_date=current_date,
+            conversation_history=conversation_history,
         )
         col_system, col_user = render_column_first_prompt(
             user_question=question,
             compact_schema="\n".join(compact_lines),
             current_date=current_date,
+            conversation_history=conversation_history,
         )
 
         chat = get_llm_provider().get_chat_model(temperature=0.0)

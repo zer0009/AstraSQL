@@ -22,6 +22,7 @@ Check each item. If any issue is found, fix it and return the corrected SQL.
 8. SUBQUERY CORRELATION: Correlated subqueries reference the outer query correctly.
 9. DATA TYPE MISMATCH: Filters compare compatible types (e.g., integer column not compared to string literal).
 10. LIMIT/TOP PRESENCE: For list queries, does the query have an appropriate row limit?
+11. HUMAN READABILITY: If SELECT or GROUP BY contains only *_id FK columns where the question asked for a named entity (state, country, product, category, vendor), flag this and suggest a JOIN to obtain the human-readable name column.
 
 ━━━ DIALECT-SPECIFIC CHECKLIST ({dialect_name}) ━━━
 {dialect_validator_checklist}

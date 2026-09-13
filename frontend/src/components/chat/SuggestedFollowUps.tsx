@@ -1,17 +1,20 @@
 export interface SuggestedFollowUpsProps {
   questions: string[];
   onSelect: (question: string) => void;
+  /** Override the section label (e.g. "Did you mean?"). */
+  label?: string;
 }
 
 export function SuggestedFollowUps({
   questions,
   onSelect,
+  label = "Continue exploring",
 }: SuggestedFollowUpsProps) {
   if (questions.length === 0) return null;
 
   return (
     <div className="space-y-2 pt-1">
-      <p className="text-xs font-medium text-zinc-500">Continue exploring</p>
+      <p className="text-xs font-medium text-zinc-500">{label}</p>
       <div className="flex flex-wrap gap-2">
         {questions.map((q) => (
           <button

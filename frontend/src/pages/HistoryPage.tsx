@@ -1,7 +1,14 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Copy, Download, RotateCcw } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  Download,
+  GraduationCap,
+  RotateCcw,
+} from "lucide-react";
 import { PageHeader } from "../components/PageHeader";
 import {
   Badge,
@@ -14,9 +21,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  Textarea,
 } from "../components/ui";
-import { listConnections, listHistory } from "../services/api";
-import type { QueryHistoryItem } from "../types/api";
+import { getHistoryStats, listConnections, listHistory, submitFeedback } from "../services/api";
+import type { HistoryStats, QueryHistoryItem } from "../types/api";
 import { cn } from "../lib/utils";
 
 const PAGE_SIZE = 25;
@@ -91,11 +99,72 @@ function downloadHistoryJson(item: QueryHistoryItem) {
   URL.revokeObjectURL(url);
 }
 
+function pct(part: number, total: number): string {
+  if (total <= 0) return "0%";
+  return `${Math.round((100 * part) / total)}%`;
+}
+
+function StatsStrip({
+  stats,
+  loading,
+}: {
+  stats?: HistoryStats;
+  loading: boolean;
+}) {
+  if (loading && !stats) {
+    return (
+      <div className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-500">
+        <Spinner size="sm" />
+        Loading stats…
+      </div>
+    );
+  }
+  if (!stats) return null;
+
+  const cards = [
+    { label: "Total queries", value: String(stats.total) },
+    {
+      label: "HIGH confidence",
+      value: `${stats.high_confidence} (${pct(stats.high_confidence, stats.total)})`,
+    },
+    {
+      label: "Errors / failed",
+      value: `${stats.error_count} (${pct(stats.error_count, stats.total)})`,
+    },
+    {
+      label: "Negative rated",
+      value: `${stats.negative_rated} (${pct(stats.negative_rated, stats.total)})`,
+    },
+  ];
+
+  return (
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {cards.map((card) => (
+        <div
+          key={card.label}
+          className="rounded-lg border border-zinc-200 bg-white px-4 py-3"
+        >
+          <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-400">
+            {card.label}
+          </p>
+          <p className="mt-1 text-lg font-semibold tabular-nums text-zinc-900">
+            {card.value}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function HistoryPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [connectionId, setConnectionId] = useState<string>("");
   const [ratingFilter, setRatingFilter] = useState<RatingFilter>("all");
   const [offset, setOffset] = useState(0);
+  const [teachId, setTeachId] = useState<string | null>(null);
+  const [teachSql, setTeachSql] = useState("");
+  const [teachMessage, setTeachMessage] = useState<string | null>(null);
 
   const connectionsQuery = useQuery({
     queryKey: ["connections"],
@@ -121,6 +190,34 @@ export default function HistoryPage() {
   const historyQuery = useQuery({
     queryKey: ["history", historyParams],
     queryFn: () => listHistory(historyParams),
+  });
+
+  const statsQuery = useQuery({
+    queryKey: ["history-stats", connectionId || "all"],
+    queryFn: () =>
+      getHistoryStats(connectionId ? { connection_id: connectionId } : {}),
+  });
+
+  const teachMutation = useMutation({
+    mutationFn: ({
+      historyId,
+      corrected_sql,
+    }: {
+      historyId: string;
+      corrected_sql: string;
+    }) =>
+      submitFeedback(historyId, {
+        rating: -1,
+        corrected_sql,
+      }),
+    onSuccess: () => {
+      setTeachMessage("Saved as golden record");
+      setTeachId(null);
+      setTeachSql("");
+      void queryClient.invalidateQueries({ queryKey: ["history"] });
+      void queryClient.invalidateQueries({ queryKey: ["history-stats"] });
+      window.setTimeout(() => setTeachMessage(null), 2500);
+    },
   });
 
   const items = historyQuery.data ?? [];
@@ -150,6 +247,19 @@ export default function HistoryPage() {
     setOffset(0);
   }
 
+  function openTeach(item: QueryHistoryItem) {
+    setTeachId(item.id);
+    setTeachSql(item.sql);
+    setTeachMessage(null);
+  }
+
+  function submitTeach() {
+    if (!teachId) return;
+    const trimmed = teachSql.trim();
+    if (!trimmed) return;
+    teachMutation.mutate({ historyId: teachId, corrected_sql: trimmed });
+  }
+
   return (
     <div className="flex h-full flex-col">
       <PageHeader
@@ -157,6 +267,8 @@ export default function HistoryPage() {
         description="Past queries and feedback"
       />
       <div className="flex-1 space-y-4 overflow-auto p-5">
+        <StatsStrip stats={statsQuery.data} loading={statsQuery.isLoading} />
+
         <div className="flex flex-wrap items-end gap-3">
           <label className="flex min-w-[180px] flex-col gap-1">
             <span className="text-xs font-medium text-zinc-500">Connection</span>
@@ -197,6 +309,12 @@ export default function HistoryPage() {
           </div>
         </div>
 
+        {teachMessage ? (
+          <p className="text-xs text-emerald-700" role="status">
+            {teachMessage}
+          </p>
+        ) : null}
+
         {historyQuery.isLoading ? (
           <div className="flex items-center justify-center gap-2 py-16 text-sm text-zinc-500">
             <Spinner />
@@ -219,7 +337,7 @@ export default function HistoryPage() {
                     <TableHead>SQL</TableHead>
                     <TableHead className="w-[90px]">Confidence</TableHead>
                     <TableHead className="w-[90px]">Rating</TableHead>
-                    <TableHead className="w-[160px]">Actions</TableHead>
+                    <TableHead className="w-[200px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -260,6 +378,17 @@ export default function HistoryPage() {
                             <RotateCcw className="h-3.5 w-3.5" />
                             Re-run
                           </Button>
+                          {item.user_rating === -1 ? (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              title="Promote a corrected SQL as a golden record"
+                              onClick={() => openTeach(item)}
+                            >
+                              <GraduationCap className="h-3.5 w-3.5" />
+                              Teach
+                            </Button>
+                          ) : null}
                           <Button
                             variant="ghost"
                             size="sm"
@@ -270,6 +399,52 @@ export default function HistoryPage() {
                             Export
                           </Button>
                         </div>
+                        {teachId === item.id ? (
+                          <div className="mt-2 space-y-2 rounded-md border border-zinc-200 bg-zinc-50 p-2.5">
+                            <p className="text-xs text-zinc-600">
+                              Edit the correct SQL. Saving stores it as a golden
+                              record for this question.
+                            </p>
+                            <Textarea
+                              value={teachSql}
+                              onChange={(e) => setTeachSql(e.target.value)}
+                              className="max-h-40 min-h-[5rem] resize-y font-mono text-xs"
+                              spellCheck={false}
+                              aria-label="Corrected SQL to teach"
+                            />
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                disabled={teachMutation.isPending}
+                                onClick={() => {
+                                  setTeachId(null);
+                                  setTeachSql("");
+                                }}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                disabled={
+                                  teachMutation.isPending || !teachSql.trim()
+                                }
+                                onClick={submitTeach}
+                              >
+                                {teachMutation.isPending ? (
+                                  <Spinner size="sm" />
+                                ) : null}
+                                Save golden
+                              </Button>
+                            </div>
+                            {teachMutation.isError ? (
+                              <p className="text-xs text-red-600">
+                                Could not save correction
+                              </p>
+                            ) : null}
+                          </div>
+                        ) : null}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -315,7 +490,8 @@ export default function HistoryPage() {
           <span className="inline-flex items-center gap-0.5">
             <Copy className="inline h-3 w-3" /> paste
           </span>{" "}
-          if the chat input is empty.
+          if the chat input is empty. Teach promotes corrected SQL into golden
+          records.
         </p>
       </div>
     </div>
