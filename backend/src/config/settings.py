@@ -29,6 +29,13 @@ class Settings(BaseSettings):
     llm_temperature: float = 0.0
     llm_max_tokens: int = 8192
 
+    # Schema enrichment (cheaper/faster path than query generation)
+    # Empty enrichment_model → use the provider's default chat model.
+    enrichment_model: str = "gpt-4o-mini"
+    enrichment_max_tokens: int = Field(default=1000, ge=256, le=8192)
+    enrichment_batch_size: int = Field(default=8, ge=1, le=20)
+    enrichment_concurrency: int = Field(default=6, ge=1, le=16)
+
     # Query
     max_result_rows: int = 500
     max_retries: int = 3

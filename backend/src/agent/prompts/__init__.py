@@ -1,7 +1,11 @@
 """Agent prompt templates and render helpers."""
 
 from .base import render
-from .enrichment import SCHEMA_ENRICHMENT_PROMPT, render_enrichment_prompt
+from .enrichment import (
+    SCHEMA_ENRICHMENT_PROMPT,
+    format_enrichment_table_block,
+    render_enrichment_prompt,
+)
 from .formatter import RESPONSE_FORMATTER_SYSTEM_PROMPT, render_formatter_prompt
 from .generator import (
     QUERY_GENERATOR_SYSTEM_PROMPT,
@@ -39,4 +43,5 @@ __all__ = [
     "render_formatter_prompt",
     "SCHEMA_ENRICHMENT_PROMPT",
     "render_enrichment_prompt",
+    "format_enrichment_table_block",
 ]

@@ -80,6 +80,7 @@ async def update_enrichment(
         setattr(row, field, value)
 
     await db.flush()
+    await db.refresh(row)
     return row
 
 

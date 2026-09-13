@@ -20,6 +20,10 @@ Rules:
 - If the question groups, ranks, or filters by a named attribute of a related entity
   (not a raw id), include the FK target / lookup table — do not stop at the fact table
   that only stores *_id.
+- When multiple candidate tables could represent the same concept, prefer the table
+  that other tables in this schema explicitly reference via FOREIGN KEY — it is the
+  authoritative source. A table that no other table references is likely derived or
+  secondary; use it only when no authoritative source exists for the required data.
 - When conversation history is present, keep tables needed to continue the prior metric
   (counts, quantities, amounts) while adding tables for any new dimension in the
   current question. Do not drop the prior fact tables.

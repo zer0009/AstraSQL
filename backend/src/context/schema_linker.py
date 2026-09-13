@@ -157,10 +157,14 @@ class SchemaLinker:
                 SchemaEnrichment.column_name.is_(None),
             )
         )
-        table_desc: dict[str, str] = {
-            e.table_name: (e.description or e.alias or "")
-            for e in enrich_result.scalars().all()
-        }
+        table_desc: dict[str, str] = {}
+        for e in enrich_result.scalars().all():
+            text = (e.description or "").strip()
+            if not text:
+                alias = (e.alias or "").strip()
+                if alias and not alias.startswith("ddl:"):
+                    text = alias
+            table_desc[e.table_name] = text
 
         # Column-level enrichments for richer embedding text.
         col_enrich_result = await session.execute(
