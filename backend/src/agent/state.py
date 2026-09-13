@@ -18,6 +18,8 @@ class AgentState(TypedDict, total=False):
     key_finding: str
     assumption: Optional[str]
     follow_ups: list[str]
+    clarification_options: list[str]
+    used_golden: bool
     steps: list[dict]  # agent step events for SSE
     # Prior completed turns for multi-turn follow-ups (working-memory window).
     conversation_history: list[dict]  # [{question, sql, answer}, ...]

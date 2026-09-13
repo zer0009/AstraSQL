@@ -10,12 +10,16 @@ class OpenAIProvider(BaseLLMProvider):
     """LLM provider backed by OpenAI via langchain-openai."""
 
     def get_chat_model(
-        self, *, temperature: float = 0.0, max_tokens: int = 4096
+        self,
+        *,
+        temperature: float = 0.0,
+        max_tokens: int = 4096,
+        model: str | None = None,
     ) -> BaseChatModel:
         settings = get_settings()
         return ChatOpenAI(
             api_key=settings.openai_api_key,
-            model=settings.openai_model,
+            model=(model or "").strip() or settings.openai_model,
             temperature=temperature,
             max_tokens=max_tokens,
         )

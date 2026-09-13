@@ -27,7 +27,8 @@ def _comment_parts(
     bits: list[str] = []
     if foreign_key:
         bits.append(f"FK to {foreign_key.get('table')}.{foreign_key.get('column')}")
-    if alias:
+    # Hide internal ddl: hashes stored in alias for change detection.
+    if alias and not str(alias).startswith("ddl:"):
         bits.append(f"alias: {alias}")
     if description:
         bits.append(description)
@@ -181,6 +182,8 @@ class SchemaEnrichmentStore:
             enrichment = enrichments.get(table_name, {})
             table_desc = enrichment.get("description")
             table_alias = enrichment.get("alias")
+            if table_alias and str(table_alias).startswith("ddl:"):
+                table_alias = None
             col_enrich = enrichment.get("columns") or {}
 
             header_lines = [f"-- TABLE: {table_name}"]

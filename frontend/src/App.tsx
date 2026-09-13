@@ -7,6 +7,7 @@ import {
   Settings,
 } from "lucide-react";
 import { cn } from "./lib/utils";
+import { AstraLogo } from "./components/brand";
 import { ScanStatusBanner } from "./components/ScanStatusBanner";
 
 const navItems = [
@@ -26,9 +27,7 @@ export default function App() {
       {!isChatRoute ? (
         <aside className="flex w-56 shrink-0 flex-col border-r border-zinc-200 bg-white">
           <div className="flex h-12 items-center border-b border-zinc-200 px-4">
-            <span className="text-sm font-semibold tracking-tight text-zinc-900">
-              AstraSQL
-            </span>
+            <AstraLogo size={22} />
           </div>
 
           <nav className="flex flex-1 flex-col gap-0.5 p-2">

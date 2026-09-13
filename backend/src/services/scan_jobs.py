@@ -42,9 +42,16 @@ class ScanJob:
             if self.status == ScanStatus.RUNNING and self.phase in (
                 "writing",
                 "indexing",
+                "enriching",
             ):
-                return 90
+                return 90 if self.phase != "enriching" else 95
             return 5 if self.status == ScanStatus.RUNNING else 0
+        if self.status == ScanStatus.RUNNING and self.phase == "enriching":
+            # Enrich phase: map table progress into 85–99% after schema scan.
+            base = 85
+            span = 14
+            done = min(self.tables_done, self.tables_total)
+            return min(99, base + int(round(span * done / self.tables_total)))
         return min(100, int(round(100 * self.tables_done / self.tables_total)))
 
     def to_dict(self) -> dict[str, Any]:

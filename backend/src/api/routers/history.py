@@ -1,16 +1,126 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Query
-from sqlalchemy import select
+from sqlalchemy import and_, case, func, or_, select
 
 from src.api.deps import DbSession
-from src.api.schemas import FeedbackOut, FeedbackRequest, HistoryOut
+from src.api.schemas import FeedbackOut, FeedbackRequest, HistoryOut, HistoryStatsOut
 from src.context import GoldenRecordsStore
 from src.storage.models import QueryHistory
 
 router = APIRouter(tags=["history"])
 
 golden_store = GoldenRecordsStore()
+
+# Matches frontend confidenceLevel / confidence_to_float mapping.
+_HIGH = 0.85
+_MEDIUM = 0.4
+
+
+@router.get("/stats", response_model=HistoryStatsOut)
+async def history_stats(
+    db: DbSession,
+    connection_id: str | None = Query(None),
+) -> HistoryStatsOut:
+    """Aggregate query-history health metrics for the History page."""
+    filters = []
+    if connection_id is not None:
+        filters.append(QueryHistory.connection_id == connection_id)
+
+    stmt = select(
+        func.count().label("total"),
+        func.coalesce(
+            func.sum(
+                case((QueryHistory.confidence >= _HIGH, 1), else_=0)
+            ),
+            0,
+        ).label("high_confidence"),
+        func.coalesce(
+            func.sum(
+                case(
+                    (
+                        and_(
+                            QueryHistory.confidence.is_not(None),
+                            QueryHistory.confidence >= _MEDIUM,
+                            QueryHistory.confidence < _HIGH,
+                        ),
+                        1,
+                    ),
+                    else_=0,
+                )
+            ),
+            0,
+        ).label("medium_confidence"),
+        func.coalesce(
+            func.sum(
+                case(
+                    (
+                        and_(
+                            QueryHistory.confidence.is_not(None),
+                            QueryHistory.confidence < _MEDIUM,
+                        ),
+                        1,
+                    ),
+                    else_=0,
+                )
+            ),
+            0,
+        ).label("low_confidence"),
+        func.coalesce(
+            func.sum(
+                case((QueryHistory.confidence.is_(None), 1), else_=0)
+            ),
+            0,
+        ).label("unknown_confidence"),
+        # Errors: low confidence or missing result row count.
+        func.coalesce(
+            func.sum(
+                case(
+                    (
+                        or_(
+                            and_(
+                                QueryHistory.confidence.is_not(None),
+                                QueryHistory.confidence < _MEDIUM,
+                            ),
+                            QueryHistory.result_row_count.is_(None),
+                        ),
+                        1,
+                    ),
+                    else_=0,
+                )
+            ),
+            0,
+        ).label("error_count"),
+        func.coalesce(
+            func.sum(case((QueryHistory.user_rating == -1, 1), else_=0)),
+            0,
+        ).label("negative_rated"),
+        func.coalesce(
+            func.sum(case((QueryHistory.user_rating == 1, 1), else_=0)),
+            0,
+        ).label("positive_rated"),
+        func.coalesce(
+            func.sum(case((QueryHistory.user_rating.is_(None), 1), else_=0)),
+            0,
+        ).label("unrated"),
+    ).select_from(QueryHistory)
+
+    for f in filters:
+        stmt = stmt.where(f)
+
+    row = (await db.execute(stmt)).one()
+
+    return HistoryStatsOut(
+        total=int(row.total or 0),
+        high_confidence=int(row.high_confidence or 0),
+        medium_confidence=int(row.medium_confidence or 0),
+        low_confidence=int(row.low_confidence or 0),
+        unknown_confidence=int(row.unknown_confidence or 0),
+        error_count=int(row.error_count or 0),
+        negative_rated=int(row.negative_rated or 0),
+        positive_rated=int(row.positive_rated or 0),
+        unrated=int(row.unrated or 0),
+    )
 
 
 @router.get("", response_model=list[HistoryOut])

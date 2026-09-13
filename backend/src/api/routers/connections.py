@@ -98,6 +98,9 @@ async def create_connection(body: ConnectionCreate, db: DbSession) -> Connection
     )
     db.add(conn)
     await db.flush()
+    # Refresh so server defaults (created_at/updated_at) are loaded in-async;
+    # accessing expired attrs in _to_out would raise MissingGreenlet.
+    await db.refresh(conn)
     return _to_out(conn)
 
 
@@ -125,6 +128,8 @@ async def update_connection(
         setattr(conn, field, value)
 
     await db.flush()
+    # onupdate=func.now() expires updated_at; refresh before sync attribute access.
+    await db.refresh(conn)
     return _to_out(conn)
 
 

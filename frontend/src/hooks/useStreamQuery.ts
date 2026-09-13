@@ -16,6 +16,8 @@ export type ChatMessage = {
   results?: QueryResult;
   confidence?: string | number;
   followUps?: string[];
+  clarificationOptions?: string[];
+  usedGolden?: boolean;
   historyId?: string;
   error?: string;
 };
@@ -26,6 +28,8 @@ export type StreamLastResult = {
   answer?: string;
   confidence?: string | number;
   followUps?: string[];
+  clarificationOptions?: string[];
+  usedGolden?: boolean;
   historyId?: string;
   error?: string;
   steps?: AgentStep[];
@@ -97,15 +101,23 @@ function parseResults(value: unknown): QueryResult | undefined {
   };
 }
 
+function parseStepTables(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const tables = value.map(String).filter(Boolean);
+  return tables.length > 0 ? tables : undefined;
+}
+
 function parseSteps(value: unknown): AgentStep[] | undefined {
   if (!Array.isArray(value)) return undefined;
   return value
     .map((item) => {
       const obj = asRecord(item);
       if (!obj || typeof obj.name !== "string") return null;
+      const tables = parseStepTables(obj.tables);
       return {
         name: obj.name,
         detail: typeof obj.detail === "string" ? obj.detail : String(obj.detail ?? ""),
+        ...(tables ? { tables } : {}),
       } satisfies AgentStep;
     })
     .filter((s): s is AgentStep => s !== null);
@@ -144,6 +156,13 @@ function applyStatePatch(
   const followUps = parseFollowUps(patch.follow_ups);
   if (followUps) next.followUps = followUps;
 
+  const clarificationOptions = parseFollowUps(patch.clarification_options);
+  if (clarificationOptions) next.clarificationOptions = clarificationOptions;
+
+  if (typeof patch.used_golden === "boolean") {
+    next.usedGolden = patch.used_golden;
+  }
+
   const steps = parseSteps(patch.steps);
   if (steps) next.steps = steps;
 
@@ -175,6 +194,8 @@ function toLastResult(msg: ChatMessage): StreamLastResult {
     answer: msg.content,
     confidence: msg.confidence,
     followUps: msg.followUps,
+    clarificationOptions: msg.clarificationOptions,
+    usedGolden: msg.usedGolden,
     historyId: msg.historyId,
     error: msg.error,
     steps: msg.steps,
@@ -273,12 +294,14 @@ export function useStreamQuery(
         const stepRaw = payload?.step ?? payload;
         const stepObj = asRecord(stepRaw);
         if (!stepObj || typeof stepObj.name !== "string") return;
+        const tables = parseStepTables(stepObj.tables);
         const step: AgentStep = {
           name: stepObj.name,
           detail:
             typeof stepObj.detail === "string"
               ? stepObj.detail
               : String(stepObj.detail ?? ""),
+          ...(tables ? { tables } : {}),
         };
         updateAssistant((msg) => ({
           ...msg,

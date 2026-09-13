@@ -20,12 +20,13 @@ Reason: {reason}
 
 Respond helpfully in plain language.
 - For META: answer about the database/product capabilities without inventing schema facts you do not know. If schema details are needed, ask the user to rephrase as a data question or check the Context page.
-- For CLARIFICATION_NEEDED: ask 1–3 precise clarifying questions. If conversation history already answers part of the ambiguity, acknowledge what you know and only ask for what is still missing.
+- For CLARIFICATION_NEEDED: ask 1–3 precise clarifying questions in "answer". Also provide 2–4 short rewritten question options the user can click in "clarification_options" (each option must be a complete, self-contained data question). If conversation history already answers part of the ambiguity, acknowledge what you know and only ask for what is still missing.
 - For CHIT_CHAT: reply briefly and offer to help with data questions.
 
 Return JSON only:
 {{
   "answer": "your response",
+  "clarification_options": ["optional rewritten question 1", "optional rewritten question 2"],
   "follow_up_suggestions": ["optional follow-up 1", "optional follow-up 2"]
 }}
 """
@@ -51,6 +52,7 @@ async def direct_response(
             f"Current question:\n{question}"
         )
 
+    clarification_options: list[str] = []
     try:
         system = _DIRECT_SYSTEM.format(intent=intent, reason=reason)
         llm = get_llm_provider().get_chat_model(
@@ -67,12 +69,21 @@ async def direct_response(
         if not isinstance(follow_ups, list):
             follow_ups = [str(follow_ups)]
         follow_ups = [str(x) for x in follow_ups if x]
+        raw_options = parsed.get("clarification_options") or []
+        if not isinstance(raw_options, list):
+            raw_options = [str(raw_options)]
+        clarification_options = [str(x).strip() for x in raw_options if str(x).strip()]
     except Exception as exc:
         if intent == "CLARIFICATION_NEEDED":
             answer = (
                 "I need a bit more detail to answer that accurately. "
                 f"{reason or str(exc)}"
             )
+            clarification_options = [
+                "What time period should I use?",
+                "Which metric should I measure?",
+                "Which tables or entities are you asking about?",
+            ]
         elif intent == "META":
             answer = (
                 "I can help explore your connected database schema and run "
@@ -80,7 +91,10 @@ async def direct_response(
                 "or filters on your data."
             )
         else:
-            answer = "Hello! Ask me a question about your data and I'll generate SQL to answer it."
+            answer = (
+                "Hello! Ask me a question about your data and I'll generate "
+                "SQL to answer it."
+            )
         follow_ups = [
             "What tables are available?",
             "Show me recent orders",
@@ -89,11 +103,16 @@ async def direct_response(
     if not answer:
         answer = reason or "How can I help with your data?"
 
+    # Only surface clickable clarifications for CLARIFICATION_NEEDED.
+    if intent != "CLARIFICATION_NEEDED":
+        clarification_options = []
+
     return {
         "answer": answer,
         "key_finding": "",
         "assumption": None,
         "follow_ups": follow_ups,
+        "clarification_options": clarification_options,
         "confidence": "HIGH",
         "sql": "",
         "results": {"columns": [], "rows": [], "row_count": 0},

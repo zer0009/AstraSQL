@@ -283,6 +283,18 @@ class FeedbackOut(BaseModel):
     golden_record_id: Optional[str] = None
 
 
+class HistoryStatsOut(BaseModel):
+    total: int = 0
+    high_confidence: int = 0
+    medium_confidence: int = 0
+    low_confidence: int = 0
+    unknown_confidence: int = 0
+    error_count: int = 0
+    negative_rated: int = 0
+    positive_rated: int = 0
+    unrated: int = 0
+
+
 # ---------------------------------------------------------------------------
 # Export
 # ---------------------------------------------------------------------------

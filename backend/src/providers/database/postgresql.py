@@ -32,6 +32,21 @@ def _format_type(data_type: str, char_max: int | None, numeric_precision: int | 
     return data_type or "UNKNOWN"
 
 
+def _flatten_cell(value: Any) -> Any:
+    """Turn dict-valued JSONB cells into a readable string (language-agnostic).
+
+    asyncpg returns jsonb as Python dict. Prefer the first non-empty string
+    value so UI/answers never show raw ``{"key": "..."}`` objects. No language
+    keys are hardcoded — insertion order from the DB driver is used.
+    """
+    if isinstance(value, dict):
+        for v in value.values():
+            if isinstance(v, str) and v.strip():
+                return v
+        return str(value)
+    return value
+
+
 class PostgreSQLProvider(BaseDatabaseProvider):
     """PostgreSQL access via SQLAlchemy + asyncpg."""
 
@@ -47,6 +62,16 @@ class PostgreSQLProvider(BaseDatabaseProvider):
 - Concatenation: || operator or CONCAT()
 - Prefer CTEs (WITH clause) over deeply nested subqueries
 - Window functions: supported — ROW_NUMBER(), LAG(), LEAD(), RANK()
+- JSONB/JSON operators (->>, ->): ONLY on columns whose schema type is jsonb or json.
+  Never use ->> or -> on character varying, text, varchar, char, integer, or other
+  non-JSON types — PostgreSQL will raise "operator does not exist".
+  For plain text/varchar name columns, SELECT the column directly (e.g. rcs.name).
+  For jsonb/json columns only: never reference them bare in SELECT — that returns a
+  raw JSON object. Always use ->> to extract text (e.g. col->>'some_key'). When a
+  JSONB column stores translated display names, use COALESCE across keys that appear
+  in the sample data shown in the schema (COALESCE(col->>'key_a', col->>'key_b')),
+  preferring the first non-null non-empty string. Pick key names only from sample
+  data — do not invent keys.
 """.strip()
 
     def dialect_validator_checklist(self) -> list[str]:
@@ -55,6 +80,8 @@ class PostgreSQLProvider(BaseDatabaseProvider):
             "ILIKE used for case-insensitive matching (not MySQL's implicit case-insensitivity)",
             "Column aliases in HAVING reference the expression, not the alias name",
             "LIMIT present for list queries unless aggregation covers all rows",
+            "JSONB bare select: if any column in SELECT is typed jsonb/json and is referenced without ->> or ->, flag it — the result will be a raw JSON string, not a human-readable value",
+            "JSONB type guard: if ->> or -> is used on a column typed character varying, text, varchar, or any non-json/jsonb type, flag it and rewrite to use the column directly (no JSON operators)",
         ]
 
     def sqlglot_dialect(self) -> str:
@@ -319,7 +346,13 @@ class PostgreSQLProvider(BaseDatabaseProvider):
                 result = await conn.execute(text(limited_sql))
                 columns = list(result.keys())
                 rows_raw = result.fetchmany(max_rows)
-                rows = [dict(zip(columns, row)) for row in rows_raw]
+                rows = [
+                    {
+                        col: _flatten_cell(val)
+                        for col, val in zip(columns, row)
+                    }
+                    for row in rows_raw
+                ]
         return {
             "columns": columns,
             "rows": rows,

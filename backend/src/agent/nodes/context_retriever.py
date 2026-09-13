@@ -31,6 +31,7 @@ async def context_retriever_node(
 
     connection_id = state.get("connection_id") or getattr(connection, "id", None)
     question = state.get("question") or ""
+    conversation_history = state.get("conversation_history") or []
 
     try:
         retrieved = await ContextRetriever().get(
@@ -38,6 +39,7 @@ async def context_retriever_node(
             connection_id,
             question,
             db_provider,
+            conversation_history=conversation_history,
         )
     except Exception as exc:
         return {
@@ -56,6 +58,7 @@ async def context_retriever_node(
         "golden_records_text": retrieved.golden_records_text,
         "selected_tables": retrieved.selected_tables,
         "selected_columns": retrieved.selected_columns,
+        "used_golden": retrieved.used_golden,
     }
 
     steps = list(state.get("steps") or [])
@@ -84,6 +87,7 @@ async def context_retriever_node(
 
     return {
         "context": context,
+        "used_golden": retrieved.used_golden,
         "error": None,
         "steps": steps,
     }

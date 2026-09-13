@@ -4,16 +4,17 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
 
+from sqlalchemy import select
+
+from src.context.auto_enricher import SchemaAutoEnricher
 from src.context.retriever import scan_connection_schema
+from src.context.schema_linker import SchemaLinker
 from src.providers.database.registry import provider_from_connection
 from src.services.scan_jobs import ScanJob, ScanStatus, update_job
 from src.storage.database import async_session_factory
-from src.storage.models import Connection
-
-if TYPE_CHECKING:
-    pass
+from src.storage.models import Connection, SchemaCache
 
 logger = logging.getLogger(__name__)
 
@@ -76,13 +77,63 @@ async def run_scan_job(job: ScanJob) -> None:
             )
             await session.commit()
 
+            # Re-load after commit so ORM attrs are available (expire_on_commit).
+            result = await session.execute(
+                select(SchemaCache).where(
+                    SchemaCache.connection_id == connection.id
+                )
+            )
+            caches = list(result.scalars().all())
+            table_count = len(caches)
+
+            # Auto-enrich descriptions (one LLM call per table), then rebuild FAISS.
+            update_job(
+                job,
+                phase="enriching",
+                message="Enriching table descriptions…",
+                current_table=None,
+                tables_done=0,
+                tables_total=table_count,
+            )
+            enriched = 0
+            enrich_note = ""
+            try:
+                enriched = await SchemaAutoEnricher().enrich_connection(
+                    session,
+                    connection.id,
+                    caches,
+                    progress=on_progress,
+                )
+                # Enrichments are committed per-table inside SchemaAutoEnricher.
+                if enriched > 0:
+                    update_job(
+                        job,
+                        phase="indexing",
+                        message="Rebuilding search index with descriptions…",
+                        current_table=None,
+                    )
+                    await SchemaLinker().build_table_index(
+                        session, connection.id
+                    )
+                enrich_note = (
+                    f", {enriched} enriched" if enriched > 0 else ""
+                )
+            except Exception:
+                # Enrichment is best-effort — scan itself already succeeded.
+                logger.exception(
+                    "Auto-enrich failed for connection %s (scan still kept)",
+                    job.connection_id,
+                )
+                await session.rollback()
+                enrich_note = " (description enrichment skipped)"
+
             update_job(
                 job,
                 status=ScanStatus.COMPLETED,
                 phase="done",
-                message=f"Scan complete — {len(caches)} tables cached",
-                tables_done=len(caches),
-                tables_total=max(job.tables_total, len(caches)),
+                message=f"Scan complete — {table_count} tables cached{enrich_note}",
+                tables_done=table_count,
+                tables_total=max(job.tables_total, table_count),
                 current_table=None,
                 last_scanned_at=connection.last_scanned_at,
                 finished_at=datetime.now(timezone.utc),

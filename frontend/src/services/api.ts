@@ -20,6 +20,7 @@ import type {
   FeedbackResult,
   GoldenRecord,
   GoldenRecordCreate,
+  HistoryStats,
   PublicSettings,
   QueryHistoryItem,
   QueryRequest,
@@ -208,6 +209,15 @@ export async function listHistory(
 
 export async function getHistory(id: string): Promise<QueryHistoryItem> {
   const { data } = await api.get<QueryHistoryItem>(`/api/history/${id}`);
+  return data;
+}
+
+export async function getHistoryStats(
+  params: { connection_id?: string } = {},
+): Promise<HistoryStats> {
+  const { data } = await api.get<HistoryStats>("/api/history/stats", {
+    params,
+  });
   return data;
 }
 

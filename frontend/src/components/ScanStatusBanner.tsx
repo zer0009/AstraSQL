@@ -31,7 +31,10 @@ export function ScanStatusBanner() {
             <span className="font-medium">{job.connection_name}</span>
             <span className="text-amber-800">
               {" "}
-              — {job.percent}% · {job.message}
+              — {job.percent}% ·{" "}
+              {job.phase === "enriching"
+                ? "Enriching descriptions"
+                : job.message}
               {job.current_table ? (
                 <>
                   {" "}

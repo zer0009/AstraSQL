@@ -14,6 +14,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { Button, Select, Spinner } from "../ui";
+import { AstraLogo } from "../brand";
 import { deleteSession, listSessions } from "../../services/api";
 import type { Connection } from "../../types/api";
 import { useUserPrefs } from "../../hooks/useUserPrefs";
@@ -54,12 +55,6 @@ function formatRelative(iso: string): string {
     month: "short",
     day: "numeric",
   });
-}
-
-function connectionInitial(name: string): string {
-  const trimmed = name.trim();
-  if (!trimmed) return "?";
-  return trimmed.charAt(0).toUpperCase();
 }
 
 export function SessionSidebar({
@@ -111,11 +106,11 @@ export function SessionSidebar({
       <aside className="flex w-12 shrink-0 flex-col items-center gap-2 border-r border-zinc-200 bg-white py-3">
         <button
           type="button"
-          title={activeConnection?.name ?? "Connection"}
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-xs font-semibold text-white"
+          title="AstraSQL"
+          className="flex h-8 w-8 items-center justify-center rounded-md"
           onClick={() => setOpen(true)}
         >
-          {connectionInitial(activeConnection?.name ?? "A")}
+          <AstraLogo variant="mark" size={28} />
         </button>
         <button
           type="button"
@@ -170,9 +165,7 @@ export function SessionSidebar({
   return (
     <aside className="flex w-60 shrink-0 flex-col border-r border-zinc-200 bg-white">
       <div className="flex h-12 shrink-0 items-center border-b border-zinc-200 px-4">
-        <span className="text-sm font-semibold tracking-tight text-zinc-900">
-          AstraSQL
-        </span>
+        <AstraLogo size={22} />
       </div>
 
       <div className="space-y-2 border-b border-zinc-200 p-3">

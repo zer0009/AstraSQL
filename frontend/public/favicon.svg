@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-label="AstraSQL">
+  <rect width="64" height="64" rx="14" fill="#18181B"/>
+  <!-- Top star point -->
+  <path fill="#FAFAFA" d="M32 10 L38 26 H26 Z"/>
+  <!-- Bottom star point -->
+  <path fill="#FAFAFA" d="M32 54 L26 38 H38 Z"/>
+  <!-- Table / SQL grid body -->
+  <rect x="18" y="26" width="28" height="12" rx="1.5" fill="#FAFAFA"/>
+  <!-- Column dividers (cut through white body) -->
+  <rect x="26.5" y="27.5" width="1.5" height="9" fill="#18181B"/>
+  <rect x="36" y="27.5" width="1.5" height="9" fill="#18181B"/>
+  <!-- Teal precision accent through the grid -->
+  <rect x="15" y="31" width="34" height="2" rx="1" fill="#0D9488"/>
+</svg>

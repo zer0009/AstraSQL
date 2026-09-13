@@ -22,6 +22,9 @@ Check each item. If any issue is found, fix it and return the corrected SQL.
 8. SUBQUERY CORRELATION: Correlated subqueries reference the outer query correctly.
 9. DATA TYPE MISMATCH: Filters compare compatible types (e.g., integer column not compared to string literal).
 10. LIMIT/TOP PRESENCE: For list queries, does the query have an appropriate row limit?
+11. HUMAN READABILITY: If SELECT or GROUP BY contains only *_id FK columns where the question asked for a named entity (state, country, product, category, vendor), flag this and suggest a JOIN to obtain the human-readable name column.
+12. ENTITY SEMANTICS: Does each conceptual entity in the question map to its dedicated lookup/reference table in the schema? If the question asks for a named dimension (geographic location, product category, status, currency, etc.) but the query groups or filters by a raw *_id foreign key column instead of JOINing the lookup table that holds the human-readable name, flag it as an entity mapping error and rewrite to include the proper JOIN.
+13. CROSS-DIMENSIONAL CHECK: If the question compares two instances of the same entity (state A vs state B, category X vs category Y), does the SQL implement a proper self-join or cross-comparison — not a single-dimension group-by?
 
 ━━━ DIALECT-SPECIFIC CHECKLIST ({dialect_name}) ━━━
 {dialect_validator_checklist}
@@ -40,6 +43,7 @@ Original question: {user_question}
 Return JSON only:
 {{
   "issues_found": ["list each issue, or empty array if none"],
+  "error_type": "NONE | WRONG_TABLE | WRONG_COLUMN | SYNTAX_ERROR | AGGREGATION_ERROR | ENTITY_MAPPING | CROSS_DIMENSIONAL | OTHER",
   "corrected_sql": "the corrected SQL, or the original SQL if no corrections needed",
   "is_valid": true | false
 }}

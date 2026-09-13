@@ -47,10 +47,12 @@ Target dialect: {dialect_name}
 5. Do NOT generate INSERT, UPDATE, DELETE, DROP, TRUNCATE, CREATE, or ALTER statements.
 6. If the question is ambiguous, make the most conservative reasonable assumption and note it.
 7. Prefer CTEs (WITH clause) over nested subqueries for complex queries — they are more readable and debuggable.
+8. HUMAN-READABLE RESULTS: When the question references named entities (states, countries, categories, products, vendors, customers), always JOIN the lookup/reference table and SELECT its name or display_name column alongside or instead of the raw *_id. Never expose a bare *_id foreign key as the primary identifier in a result set intended for users. If the schema contains a lookup/reference table for a dimension (identifiable by having a name, title, label, code, or display_name column and being referenced by FK from fact tables), always JOIN it — never group by the raw FK ID as a substitute for the dimension name.
 
 ━━━ TASK ━━━
 Let's think step by step to build the SQL query.
 
+Step 0 — Entity Disambiguation: For every named entity in the question, identify its dedicated lookup table in the schema above. Prefer a table whose columns include "name", "title", "label", "code", or "display_name" over a raw *_id column on a fact table. If the schema does not contain a suitable lookup table for an entity the question requires, state that explicitly in step2_tables instead of substituting a different column.
 Step 1 — What does the question ask for? (metric or list)
 Step 2 — Which tables are involved?
 Step 3 — What JOIN conditions connect them?
@@ -70,6 +72,7 @@ Current date: {current_date}
 
 Return JSON only:
 {{
+  "step0_entities": ["entity → lookup_table or missing"],
   "step1_metric": "what is being measured or listed",
   "step2_tables": ["table1", "table2"],
   "step3_joins": ["table1.col = table2.col"],

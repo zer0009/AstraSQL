@@ -137,7 +137,9 @@ export function ConnectionCard({
             {connection.db_type}
           </Badge>
           {scanning ? (
-            <Badge variant="warning">Scanning</Badge>
+            <Badge variant="warning">
+              {scan?.phase === "enriching" ? "Enriching" : "Scanning"}
+            </Badge>
           ) : scan?.status === "completed" ? (
             <Badge variant="success">Scan OK</Badge>
           ) : scan?.status === "failed" ? (
@@ -165,7 +167,13 @@ export function ConnectionCard({
           <div className="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2">
             <div className="flex items-center justify-between gap-2 text-xs">
               <span className="font-medium text-zinc-800">
-                {scanning ? "Schema scan in progress" : scan.status === "failed" ? "Schema scan failed" : "Schema scan finished"}
+                {scanning
+                  ? scan?.phase === "enriching"
+                    ? "Enriching descriptions…"
+                    : "Schema scan in progress"
+                  : scan.status === "failed"
+                    ? "Schema scan failed"
+                    : "Schema scan finished"}
               </span>
               <span className="tabular-nums text-zinc-500">{scan.percent}%</span>
             </div>
@@ -278,7 +286,11 @@ export function ConnectionCard({
           onClick={handleScan}
         >
           {action === "scan" || scanning ? <Spinner size="sm" /> : null}
-          {scanning ? "Scanning…" : "Scan schema"}
+          {scanning
+            ? scan?.phase === "enriching"
+              ? "Enriching…"
+              : "Scanning…"
+            : "Scan schema"}
         </Button>
         <Button
           size="sm"

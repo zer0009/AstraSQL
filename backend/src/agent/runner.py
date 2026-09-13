@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import asyncio
 import json
+import logging
 from datetime import datetime
 from typing import Any, AsyncIterator, Optional
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.agent.graph import build_graph, get_graph
@@ -13,6 +16,8 @@ from src.agent.utils import confidence_to_float
 from src.config.settings import get_settings
 from src.providers.database.registry import provider_from_connection
 from src.storage.models import ChatSession, Connection, QueryHistory
+
+logger = logging.getLogger(__name__)
 
 
 def _normalize_conversation_history(
@@ -104,6 +109,8 @@ def _compact_state(state: AgentState) -> dict[str, Any]:
         "key_finding": state.get("key_finding"),
         "assumption": state.get("assumption"),
         "follow_ups": state.get("follow_ups") or [],
+        "clarification_options": state.get("clarification_options") or [],
+        "used_golden": bool(state.get("used_golden")),
         # Steps stream via "step" events — omit from done to keep SSE JSON small
     }
 
@@ -241,9 +248,27 @@ async def stream_query(
                         "step": _sse_safe(step),
                     }
 
-        history = await _persist_history(
-            session, connection, final_state, session_id=session_id
-        )
+        history = None
+        for attempt in range(3):
+            try:
+                history = await _persist_history(
+                    session, connection, final_state, session_id=session_id
+                )
+                break
+            except OperationalError as exc:
+                # Do not let metadata write failures hide a successful answer.
+                if "database is locked" not in str(exc).lower() or attempt == 2:
+                    logger.warning(
+                        "Could not persist query history after %s attempt(s): %s",
+                        attempt + 1,
+                        exc,
+                    )
+                    break
+                await asyncio.sleep(0.5 * (attempt + 1))
+            except Exception as exc:
+                logger.warning("Could not persist query history: %s", exc)
+                break
+
         done_payload = _compact_state(final_state)
         done_payload["history_id"] = history.id if history else None
         yield {
@@ -262,6 +287,10 @@ async def stream_query(
                     "results": done_payload.get("results"),
                     "confidence": done_payload.get("confidence"),
                     "follow_ups": done_payload.get("follow_ups"),
+                    "clarification_options": done_payload.get(
+                        "clarification_options"
+                    ),
+                    "used_golden": done_payload.get("used_golden"),
                     "history_id": done_payload.get("history_id"),
                     "error": done_payload.get("error"),
                 }
@@ -273,7 +302,8 @@ async def stream_query(
             "error": str(exc),
             "data": _sse_safe(dict(final_state)),
         }
-        raise
+        # Do not re-raise — query.py event_generator would emit a duplicate
+        # error event plus an empty done payload.
     finally:
         await provider.close()
 
