@@ -11,9 +11,13 @@ export function useUserPrefs() {
     setPrefs(userPrefs.save(patch));
   }, []);
 
+  const reset = useCallback(() => {
+    setPrefs(userPrefs.load());
+  }, []);
+
   useEffect(() => {
     document.documentElement.dataset.density = prefs.density;
   }, [prefs.density]);
 
-  return { prefs, update };
+  return { prefs, update, reset };
 }

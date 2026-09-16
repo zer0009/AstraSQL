@@ -84,6 +84,11 @@ export const userPrefs = {
     }
     return next;
   },
+
+  /** Restore density, conversation turns, and sidebar to defaults. Does not delete sessions. */
+  reset(): UserPrefs {
+    return this.save({ ...DEFAULT_PREFS });
+  },
 };
 
 export function sessionStorageKey(connectionId: string): string {
