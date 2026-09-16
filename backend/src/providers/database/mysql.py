@@ -10,6 +10,8 @@ from src.providers.database.base import BaseDatabaseProvider
 class MySQLProvider(BaseDatabaseProvider):
     """MySQL stub — dialect metadata only until aiomysql support lands."""
 
+    available = False
+
     def dialect_name(self) -> str:
         return "MySQL 8.0"
 

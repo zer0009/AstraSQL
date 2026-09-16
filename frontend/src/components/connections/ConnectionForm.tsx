@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { isAxiosError } from "axios";
 import {
   createConnection,
+  getPublicSettings,
   testConnection,
   updateConnection,
 } from "../../services/api";
@@ -14,11 +15,16 @@ const DEFAULT_PORTS: Record<string, number> = {
   mssql: 1433,
 };
 
-const DB_TYPE_OPTIONS = [
-  { value: "postgresql", label: "PostgreSQL", disabled: false },
-  { value: "mysql", label: "MySQL (coming soon)", disabled: true },
-  { value: "mssql", label: "MSSQL (coming soon)", disabled: true },
-] as const;
+const FALLBACK_DB_TYPES = ["postgresql"];
+
+function formatDbTypeLabel(value: string): string {
+  const labels: Record<string, string> = {
+    postgresql: "PostgreSQL",
+    mysql: "MySQL",
+    mssql: "Microsoft SQL Server",
+  };
+  return labels[value] ?? value;
+}
 
 function getErrorMessage(err: unknown, fallback: string): string {
   if (isAxiosError(err)) {
@@ -84,6 +90,7 @@ export function ConnectionForm({
 }: ConnectionFormProps) {
   const isEdit = Boolean(connection?.id);
   const [form, setForm] = useState<FormState>(() => toFormState(connection));
+  const [dbTypes, setDbTypes] = useState<string[]>(FALLBACK_DB_TYPES);
   const [submitting, setSubmitting] = useState(false);
   const [testing, setTesting] = useState(false);
   const [status, setStatus] = useState<{
@@ -95,6 +102,34 @@ export function ConnectionForm({
     setForm(toFormState(connection));
     setStatus(null);
   }, [connection]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void getPublicSettings()
+      .then((settings) => {
+        if (cancelled) return;
+        const types =
+          settings.database_types.length > 0
+            ? settings.database_types
+            : FALLBACK_DB_TYPES;
+        setDbTypes(types);
+        setForm((prev) =>
+          types.includes(prev.db_type)
+            ? prev
+            : {
+                ...prev,
+                db_type: types[0],
+                port: String(DEFAULT_PORTS[types[0]] ?? prev.port),
+              },
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setDbTypes(FALLBACK_DB_TYPES);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -220,13 +255,9 @@ export function ConnectionForm({
             value={form.db_type}
             onChange={(e) => handleDbTypeChange(e.target.value)}
           >
-            {DB_TYPE_OPTIONS.map((opt) => (
-              <option
-                key={opt.value}
-                value={opt.value}
-                disabled={opt.disabled}
-              >
-                {opt.label}
+            {dbTypes.map((value) => (
+              <option key={value} value={value}>
+                {formatDbTypeLabel(value)}
               </option>
             ))}
           </Select>

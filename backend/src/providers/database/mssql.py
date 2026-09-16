@@ -10,6 +10,8 @@ from src.providers.database.base import BaseDatabaseProvider
 class MSSQLProvider(BaseDatabaseProvider):
     """Microsoft SQL Server stub — dialect metadata only until aioodbc support lands."""
 
+    available = False
+
     def dialect_name(self) -> str:
         return "Microsoft SQL Server 2022"
 

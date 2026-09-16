@@ -1,11 +1,14 @@
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _ROOT = Path(__file__).resolve().parents[3]  # AstraSQL_V2/
 _BACKEND = Path(__file__).resolve().parents[2]  # backend/
+
+# Placeholder only — refused at startup when DEBUG=false.
+DEFAULT_ENCRYPTION_KEY = "change-me-to-a-32-byte-secret!!"
 
 
 class Settings(BaseSettings):
@@ -15,11 +18,11 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    app_name: str = "AstraSQL V2"
+    app_name: str = "AstraSQL"
     debug: bool = False
     data_dir: Path = Path("./data")
     sqlite_url: str = "sqlite+aiosqlite:///./data/astrasql.db"
-    encryption_key: str = "change-me-to-a-32-byte-secret!!"
+    encryption_key: str = DEFAULT_ENCRYPTION_KEY
 
     # LLM
     llm_provider: str = "openai"
@@ -54,6 +57,17 @@ class Settings(BaseSettings):
     @property
     def faiss_dir(self) -> Path:
         return self.data_dir / "faiss"
+
+    @model_validator(mode="after")
+    def reject_insecure_encryption_key(self) -> "Settings":
+        key = (self.encryption_key or "").strip()
+        if not self.debug and (not key or key == DEFAULT_ENCRYPTION_KEY):
+            raise ValueError(
+                "ENCRYPTION_KEY must be set to a unique non-default value when "
+                "DEBUG=false. Copy .env.example to .env and set ENCRYPTION_KEY "
+                "(e.g. python -c \"import secrets; print(secrets.token_urlsafe(32))\")."
+            )
+        return self
 
 
 @lru_cache

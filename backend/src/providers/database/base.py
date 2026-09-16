@@ -9,6 +9,10 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 class BaseDatabaseProvider(ABC):
     """Abstract contract for dialect-aware database access."""
 
+    # When False, the type is registered for future work but hidden from
+    # public settings / connection creation.
+    available: bool = True
+
     def __init__(
         self,
         host: str,

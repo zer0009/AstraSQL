@@ -39,7 +39,8 @@ def get_database_provider(db_type: str, **kwargs) -> BaseDatabaseProvider:
 
 
 def list_database_types() -> list[str]:
-    return list(_REGISTRY.keys())
+    """Return database types that are available for new connections."""
+    return [name for name, cls in _REGISTRY.items() if getattr(cls, "available", True)]
 
 
 def provider_from_connection(connection: Connection) -> BaseDatabaseProvider:

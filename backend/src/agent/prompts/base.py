@@ -1,7 +1,3 @@
-import re
-from string import Formatter
-
-
 class _SafeDict(dict):
     def __missing__(self, key: str) -> str:
         return "{" + key + "}"

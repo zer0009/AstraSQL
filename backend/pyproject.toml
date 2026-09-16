@@ -1,6 +1,6 @@
 [project]
 name = "astrasql"
-version = "2.0.0"
+version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
   "fastapi>=0.115.0",
@@ -37,3 +37,11 @@ packages = ["src"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 pythonpath = ["."]
+
+# Keep CI focused on correctness; broader style cleanup can come later.
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E9", "F63", "F7", "F82", "F401", "F811"]

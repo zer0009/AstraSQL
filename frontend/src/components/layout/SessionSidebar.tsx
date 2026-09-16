@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import type { MouseEvent } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -79,10 +78,6 @@ export function SessionSidebar({
   });
 
   const sessions = sessionsQuery.data ?? [];
-  const activeConnection = useMemo(
-    () => connections.find((c) => c.id === connectionId),
-    [connections, connectionId],
-  );
 
   const setOpen = (next: boolean) => {
     update({ sidebarOpen: next });
@@ -291,7 +286,7 @@ export function SessionSidebar({
           ))}
         </div>
         <p className="mb-1 px-1 text-center text-[10px] text-zinc-400">
-          Enterprise NL2SQL
+          Self-hosted NL2SQL
         </p>
         <button
           type="button"

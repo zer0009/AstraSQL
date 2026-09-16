@@ -1,10 +1,19 @@
+import os
+
+# Must be set before importing application modules that call get_settings().
+os.environ.setdefault("DEBUG", "true")
+os.environ.setdefault("ENCRYPTION_KEY", "test-encryption-key-not-for-prod!!")
+
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from src.api.app import create_app
+from src.config.settings import get_settings
 from src.storage.models import Base
+
+get_settings.cache_clear()
 
 
 @pytest.fixture

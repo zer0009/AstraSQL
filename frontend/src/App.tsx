@@ -52,7 +52,7 @@ export default function App() {
           </nav>
 
           <div className="border-t border-zinc-200 px-3 py-2">
-            <p className="text-[11px] text-zinc-400">Enterprise NL2SQL</p>
+            <p className="text-[11px] text-zinc-400">Self-hosted NL2SQL</p>
           </div>
         </aside>
       ) : null}
