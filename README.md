@@ -107,7 +107,7 @@ Question → LangGraph agent → Context retrieval → Dialect SQL → Readonly 
 | Variable | Description | Default |
 | --- | --- | --- |
 | `OPENAI_API_KEY` | OpenAI API key | _(empty)_ |
-| `OPENAI_MODEL` | Chat model | `gpt-4o` |
+| `OPENAI_MODEL` | Chat model | `gpt-5.6-luna` |
 | `LLM_PROVIDER` | LLM provider key | `openai` |
 | `ENCRYPTION_KEY` | Secret used to derive Fernet key for DB passwords | _(must set when DEBUG=false)_ |
 | `SQLITE_URL` | Async SQLAlchemy URL for app metadata | `sqlite+aiosqlite:///./data/astrasql.db` |
