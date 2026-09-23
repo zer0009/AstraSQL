@@ -14,8 +14,14 @@ async def test_health_ok(client):
 
 
 @pytest.mark.asyncio
-async def test_public_settings_database_types(client):
+async def test_public_settings_requires_auth(client):
     response = await client.get("/api/settings/public")
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_public_settings_database_types(authed_client):
+    response = await authed_client.get("/api/settings/public")
     assert response.status_code == 200
     body = response.json()
     assert body["database_types"] == ["postgresql"]
@@ -28,6 +34,16 @@ def test_settings_reject_default_encryption_key_when_not_debug(monkeypatch):
     monkeypatch.setenv("ENCRYPTION_KEY", DEFAULT_ENCRYPTION_KEY)
     with pytest.raises(ValidationError):
         Settings()
+    get_settings.cache_clear()
+
+
+def test_settings_database_url_aliases_sqlite_url(monkeypatch):
+    get_settings.cache_clear()
+    monkeypatch.setenv("DEBUG", "true")
+    monkeypatch.setenv("SQLITE_URL", "sqlite+aiosqlite:///./data/from-sqlite.db")
+    monkeypatch.setenv("DATABASE_URL", "sqlite+aiosqlite:///./data/from-database.db")
+    settings = Settings()
+    assert settings.metadata_database_url == "sqlite+aiosqlite:///./data/from-database.db"
     get_settings.cache_clear()
 
 

@@ -21,6 +21,8 @@ import type {
   GoldenRecord,
   GoldenRecordCreate,
   HistoryStats,
+  AuthStatus,
+  AuthUser,
   PublicSettings,
   QueryHistoryItem,
   QueryRequest,
@@ -30,10 +32,98 @@ import type {
 
 const api = axios.create({
   baseURL: "",
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
 });
+
+type AuthRedirectHandler = (to: "/login" | "/change-password") => void;
+let authRedirectHandler: AuthRedirectHandler | null = null;
+
+export function setAuthRedirectHandler(handler: AuthRedirectHandler | null): void {
+  authRedirectHandler = handler;
+}
+
+function redirectAuth(to: "/login" | "/change-password"): void {
+  if (authRedirectHandler) {
+    authRedirectHandler(to);
+    return;
+  }
+  if (window.location.pathname !== to) {
+    window.location.assign(to);
+  }
+}
+
+function isPublicAuthUrl(url: string | undefined): boolean {
+  if (!url) return false;
+  return url.includes("/api/auth/login") || url.includes("/api/auth/status");
+}
+
+api.interceptors.response.use(
+  (response) => response,
+  (error: unknown) => {
+    const err = error as {
+      response?: { status?: number; data?: { code?: string } };
+      config?: { url?: string };
+    };
+    const url = err.config?.url;
+    const status = err.response?.status;
+    const code = err.response?.data?.code;
+    if (!isPublicAuthUrl(url)) {
+      if (status === 401) {
+        redirectAuth("/login");
+      } else if (status === 403 && code === "PASSWORD_CHANGE_REQUIRED") {
+        redirectAuth("/change-password");
+      }
+    }
+    return Promise.reject(error);
+  },
+);
+
+function redirectFromFetchStatus(status: number, body: unknown): void {
+  const code =
+    body && typeof body === "object" && "code" in body
+      ? (body as { code?: string }).code
+      : undefined;
+  if (status === 401) {
+    redirectAuth("/login");
+  } else if (status === 403 && code === "PASSWORD_CHANGE_REQUIRED") {
+    redirectAuth("/change-password");
+  }
+}
+
+// --- Auth ---
+
+export async function getAuthStatus(): Promise<AuthStatus> {
+  const { data } = await api.get<AuthStatus>("/api/auth/status");
+  return data;
+}
+
+export async function getMe(): Promise<AuthUser> {
+  const { data } = await api.get<AuthUser>("/api/auth/me");
+  return data;
+}
+
+export async function login(body: {
+  username: string;
+  password: string;
+}): Promise<AuthUser> {
+  const { data } = await api.post<AuthUser>("/api/auth/login", body);
+  return data;
+}
+
+export async function logout(): Promise<void> {
+  await api.post("/api/auth/logout");
+}
+
+export async function changePassword(body: {
+  current_password: string;
+  new_password: string;
+}): Promise<AuthUser> {
+  const { data } = await api.post<AuthUser>("/api/auth/change-password", body);
+  return data;
+}
 
 // --- Connections ---
 
@@ -358,6 +448,7 @@ export async function streamQuery(
 ): Promise<void> {
   const response = await fetch("/api/query", {
     method: "POST",
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       Accept: "text/event-stream",
@@ -368,7 +459,18 @@ export async function streamQuery(
 
   if (!response.ok) {
     const text = await response.text().catch(() => "");
-    throw new Error(text || `Query failed (${response.status})`);
+    let parsed: unknown = text;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      // keep raw
+    }
+    redirectFromFetchStatus(response.status, parsed);
+    const message =
+      parsed && typeof parsed === "object" && "detail" in parsed
+        ? String((parsed as { detail: unknown }).detail)
+        : text;
+    throw new Error(message || `Query failed (${response.status})`);
   }
 
   if (!response.body) {

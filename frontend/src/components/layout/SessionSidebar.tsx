@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Button, Select, Spinner } from "../ui";
 import { AstraLogo } from "../brand";
+import { UserMenu } from "./UserMenu";
 import { deleteSession, listSessions } from "../../services/api";
 import type { Connection } from "../../types/api";
 import { useUserPrefs } from "../../hooks/useUserPrefs";
@@ -144,6 +145,7 @@ export function SessionSidebar({
               <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />
             </Link>
           ))}
+          <UserMenu compact />
         </div>
         <button
           type="button"
@@ -285,6 +287,7 @@ export function SessionSidebar({
             </Link>
           ))}
         </div>
+        <UserMenu className="mb-1 justify-between px-1" />
         <p className="mb-1 px-1 text-center text-[10px] text-zinc-400">
           Self-hosted NL2SQL
         </p>

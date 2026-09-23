@@ -6,10 +6,11 @@ Self-hosted natural-language-to-SQL: ask questions in plain English, get dialect
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](backend/pyproject.toml)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED.svg)](docker-compose.yml)
 
-> **Security:** AstraSQL v0.1 has **no built-in authentication**. Run it on localhost, or behind your own reverse proxy / VPN / auth gateway. Do not expose the API or UI directly to the public internet.
+> **Security:** AstraSQL ships with a local admin account. Sign in as `admin` / `AstraSQL-change-me` and change the password on first use. Prefer TLS at a reverse proxy; do not expose the UI or API on the public internet without HTTPS.
 
 ## What it does
 
+- **Auth** — local admin login (HttpOnly session cookie), forced password change after first setup
 - **Chat** — natural-language questions with SSE streaming, SQL preview, results table/charts
 - **Connections** — connect to PostgreSQL, test, and scan schema metadata
 - **Context** — enrichments, business rules, and golden Q→SQL records (FAISS retrieval)
@@ -30,6 +31,10 @@ cp .env.example .env
 
 docker compose up --build
 ```
+
+1. Open the UI and sign in as `admin` / `AstraSQL-change-me`.
+2. Set a new password (12+ characters, not the default).
+3. Add a PostgreSQL connection and start chatting.
 
 - UI: [http://localhost:3000](http://localhost:3000)
 - API: [http://localhost:8000](http://localhost:8000)
@@ -97,9 +102,10 @@ Question → LangGraph agent → Context retrieval → Dialect SQL → Readonly 
 
 ## Security
 
-- **No authentication** in v0.1 — anyone who can reach the API can manage connections and run read-only SQL against configured databases.
+- **Local admin auth** — the API and UI require a session cookie. First boot creates `admin` with `DEFAULT_ADMIN_PASSWORD` (`AstraSQL-change-me`) and blocks the rest of the app until that password is changed.
+- Five failed logins lock the account for 15 minutes.
 - Set a unique `ENCRYPTION_KEY` before production-like use. The app **refuses to start** when `DEBUG=false` and the default placeholder key is still set.
-- Prefer TLS termination at a reverse proxy if you leave localhost.
+- Prefer TLS termination at a reverse proxy if you leave localhost. Session cookies are `Secure` when `DEBUG=false`.
 - See [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
 
 ## Environment variables
@@ -111,10 +117,14 @@ Question → LangGraph agent → Context retrieval → Dialect SQL → Readonly 
 | `LLM_PROVIDER` | LLM provider key | `openai` |
 | `ENCRYPTION_KEY` | Secret used to derive Fernet key for DB passwords | _(must set when DEBUG=false)_ |
 | `SQLITE_URL` | Async SQLAlchemy URL for app metadata | `sqlite+aiosqlite:///./data/astrasql.db` |
+| `DATABASE_URL` | Optional alias of `SQLITE_URL` (future Postgres metadata) | _(empty → use SQLITE_URL)_ |
+| `DEFAULT_ADMIN_USERNAME` | Bootstrap admin username | `admin` |
+| `DEFAULT_ADMIN_PASSWORD` | Bootstrap admin password (must change on first login) | `AstraSQL-change-me` |
+| `SESSION_TTL_DAYS` | Sliding session lifetime | `7` |
 | `DATA_DIR` | Data directory (SQLite path relative, FAISS indexes) | `./data` |
 | `CORS_ORIGINS` | Comma-separated browser origins | `http://localhost:5173,http://localhost:3000` |
 | `MAX_RESULT_ROWS` | Cap on query result rows | `500` |
-| `DEBUG` | SQL echo / allow default encryption key | `false` |
+| `DEBUG` | SQL echo / allow default encryption key / insecure cookies | `false` |
 
 Copy `.env.example` to `.env` before `docker compose up`. Never commit real API keys.
 
@@ -130,7 +140,7 @@ The new type appears in `GET /api/settings/public` → `database_types` and in t
 
 ## Roadmap
 
-- Auth / multi-user access control
+- Multi-user access control, SSO/OIDC, and API keys
 - MySQL and Microsoft SQL Server connectors
 - Additional LLM providers (Azure OpenAI, Anthropic, local models)
 - Stronger governance (audit log, row/column policies)

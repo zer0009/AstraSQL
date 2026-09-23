@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { cn } from "./lib/utils";
 import { AstraLogo } from "./components/brand";
+import { UserMenu } from "./components/layout/UserMenu";
 import { ScanStatusBanner } from "./components/ScanStatusBanner";
 
 const navItems = [
@@ -52,6 +53,7 @@ export default function App() {
           </nav>
 
           <div className="border-t border-zinc-200 px-3 py-2">
+            <UserMenu className="mb-1 justify-between" />
             <p className="text-[11px] text-zinc-400">Self-hosted NL2SQL</p>
           </div>
         </aside>

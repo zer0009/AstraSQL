@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ChatInput, MessageList } from "../components/chat";
 import { SessionSidebar } from "../components/layout/SessionSidebar";
+import { UserMenu } from "../components/layout/UserMenu";
 import { Button, Input, Spinner } from "../components/ui";
 import { useChatSession } from "../hooks/useChatSession";
 import { listConnections } from "../services/api";
@@ -170,7 +171,7 @@ export default function ChatPage() {
             )}
           </div>
 
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="flex shrink-0 items-center gap-2">
             {messages.length > 0 ? (
               <Button
                 type="button"
@@ -182,6 +183,7 @@ export default function ChatPage() {
                 Clear chat
               </Button>
             ) : null}
+            <UserMenu />
           </div>
         </header>
 

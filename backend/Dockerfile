@@ -10,7 +10,7 @@ ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
     UV_PYTHON_DOWNLOADS=never
 
-COPY pyproject.toml uv.lock ./
+COPY pyproject.toml uv.lock alembic.ini ./
 COPY src ./src
 
 RUN uv sync --frozen --no-dev
@@ -29,6 +29,7 @@ RUN groupadd --system --gid 1000 app \
 COPY --from=builder --chown=appuser:app /app/.venv /app/.venv
 COPY --from=builder --chown=appuser:app /app/src /app/src
 COPY --from=builder --chown=appuser:app /app/pyproject.toml /app/pyproject.toml
+COPY --from=builder --chown=appuser:app /app/alembic.ini /app/alembic.ini
 
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONPATH=/app \

@@ -1,4 +1,5 @@
 from src.api.routers import (
+    auth,
     connections,
     context,
     export,
@@ -9,6 +10,7 @@ from src.api.routers import (
 )
 
 __all__ = [
+    "auth",
     "connections",
     "context",
     "export",

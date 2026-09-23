@@ -10,8 +10,7 @@ from src.config.settings import get_settings
 from src.storage.models import Base
 
 config = context.config
-settings = get_settings()
-config.set_main_option("sqlalchemy.url", settings.sqlite_url)
+config.set_main_option("sqlalchemy.url", get_settings().metadata_database_url)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

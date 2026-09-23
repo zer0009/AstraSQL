@@ -308,6 +308,32 @@ class ExportRequest(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Auth
+# ---------------------------------------------------------------------------
+
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
+class AuthUserOut(BaseModel):
+    id: str
+    username: str
+    is_admin: bool
+    must_change_password: bool
+
+
+class AuthStatusOut(BaseModel):
+    setup_complete: bool
+
+
+# ---------------------------------------------------------------------------
 # Settings
 # ---------------------------------------------------------------------------
 

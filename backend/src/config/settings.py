@@ -22,7 +22,15 @@ class Settings(BaseSettings):
     debug: bool = False
     data_dir: Path = Path("./data")
     sqlite_url: str = "sqlite+aiosqlite:///./data/astrasql.db"
+    # Alias of SQLITE_URL so a later Postgres metadata URL is a config change.
+    database_url: str = ""
     encryption_key: str = DEFAULT_ENCRYPTION_KEY
+
+    # Auth (single local admin in this release)
+    default_admin_username: str = "admin"
+    default_admin_password: str = "AstraSQL-change-me"
+    session_ttl_days: int = Field(default=7, ge=1, le=90)
+    session_cookie_name: str = "astrasql_session"
 
     # LLM
     llm_provider: str = "openai"
@@ -53,6 +61,15 @@ class Settings(BaseSettings):
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+
+    @property
+    def metadata_database_url(self) -> str:
+        url = (self.database_url or "").strip()
+        return url or self.sqlite_url
+
+    @property
+    def auth_cookie_secure(self) -> bool:
+        return not self.debug
 
     @property
     def faiss_dir(self) -> Path:

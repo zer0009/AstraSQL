@@ -4,14 +4,17 @@
 
 Security fixes are applied on the latest `main` branch and the most recent `v0.x` release tag.
 
-## Deployment warnings (v0.1)
+## Deployment warnings
 
-AstraSQL currently has **no built-in authentication or authorization**.
+AstraSQL uses a **single local admin** with an HttpOnly session cookie.
 
-- Do **not** expose the UI or API on a public network without your own access control (reverse proxy auth, VPN, firewall, etc.).
-- Anyone who can reach the API can create database connections, run read-only queries, and read query history.
+- Change the default password (`admin` / `AstraSQL-change-me`) on first login. The API rejects all other routes until you do.
+- Override `DEFAULT_ADMIN_PASSWORD` in `.env` if you do not want the documented default on a fresh volume.
+- Prefer TLS at a reverse proxy. When `DEBUG=false`, the session cookie is marked `Secure`.
+- Do **not** expose the UI or API on a public network without HTTPS.
 - Always set a strong unique `ENCRYPTION_KEY`. When `DEBUG=false`, the process refuses to start if the placeholder default key is still configured.
 - Keep `OPENAI_API_KEY` and database credentials out of git; use `.env` locally and a secret store in production.
+- This release is still single-tenant: every signed-in admin can see all connections and history.
 
 ## Reporting a vulnerability
 

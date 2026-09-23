@@ -221,6 +221,17 @@ export interface ExportRequest {
   filename?: string;
 }
 
+export interface AuthUser {
+  id: string;
+  username: string;
+  is_admin: boolean;
+  must_change_password: boolean;
+}
+
+export interface AuthStatus {
+  setup_complete: boolean;
+}
+
 export interface PublicSettings {
   llm_provider: string;
   openai_model: string;

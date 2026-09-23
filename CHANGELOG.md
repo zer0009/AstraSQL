@@ -5,6 +5,20 @@ All notable changes to AstraSQL will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Local admin authentication: HttpOnly session cookie, default `admin` account, forced password change after first setup
+- Login lockout after five failed attempts (15 minutes)
+- Alembic migrations run on startup (`003_auth` adds `users` and `auth_sessions`)
+- `DATABASE_URL` as an optional alias of `SQLITE_URL`
+
+### Security
+
+- All `/api/*` routes except auth status/login require a valid session
+- Default bootstrap password cannot be reused as the new password
+
 ## [0.1.0] - 2026-09-16
 
 ### Added
