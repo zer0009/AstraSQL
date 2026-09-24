@@ -5,6 +5,7 @@ Self-hosted natural-language-to-SQL: ask questions in plain English, get dialect
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](backend/pyproject.toml)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED.svg)](docker-compose.yml)
+[![Website](https://img.shields.io/badge/Website-astrasql.com-0D9488.svg)](https://astrasql.com)
 
 > **Security:** AstraSQL ships with a local admin account. Sign in as `admin` / `AstraSQL-change-me` and change the password on first use. Prefer TLS at a reverse proxy; do not expose the UI or API on the public internet without HTTPS.
 
