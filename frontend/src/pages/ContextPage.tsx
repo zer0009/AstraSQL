@@ -7,9 +7,12 @@ import { GoldenRecordForm } from "../components/context/GoldenRecordForm";
 import {
   createRule,
   deleteRule,
+  exportContextPack,
+  importContextPack,
   listConnections,
   listRules,
 } from "../services/api";
+import type { ContextPackDocument } from "../types/api";
 import {
   Button,
   Select,
@@ -20,6 +23,122 @@ import {
   TabsTrigger,
   Textarea,
 } from "../components/ui";
+
+function PackPanel({ connectionId }: { connectionId: string }) {
+  const queryClient = useQueryClient();
+  const [status, setStatus] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
+
+  const exportMutation = useMutation({
+    mutationFn: () => exportContextPack(connectionId),
+    onSuccess: (pack) => {
+      const blob = new Blob([JSON.stringify(pack, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "astra-pack.json";
+      link.click();
+      URL.revokeObjectURL(url);
+      setStatus({ type: "success", message: "Pack downloaded" });
+    },
+    onError: (err) => {
+      setStatus({
+        type: "error",
+        message: getErrorMessage(err, "Export failed"),
+      });
+    },
+  });
+
+  const importMutation = useMutation({
+    mutationFn: (pack: ContextPackDocument) =>
+      importContextPack(connectionId, pack),
+    onSuccess: (counts) => {
+      queryClient.invalidateQueries({ queryKey: ["enrichments", connectionId] });
+      queryClient.invalidateQueries({ queryKey: ["golden-records", connectionId] });
+      queryClient.invalidateQueries({ queryKey: ["business-rules", connectionId] });
+      setStatus({
+        type: "success",
+        message: `Imported ${counts.enrichments} enrichments, ${counts.rules} rules, ${counts.goldens} goldens`,
+      });
+    },
+    onError: (err) => {
+      setStatus({
+        type: "error",
+        message: getErrorMessage(err, "Import failed"),
+      });
+    },
+  });
+
+  const onFile = (file: File | undefined) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(String(reader.result)) as ContextPackDocument;
+        importMutation.mutate(parsed);
+      } catch {
+        setStatus({ type: "error", message: "File is not valid JSON" });
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  return (
+    <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2">
+      <p className="mr-2 text-xs text-zinc-600">
+        Astra Pack — export or merge this project&apos;s language
+      </p>
+      <Button
+        type="button"
+        size="sm"
+        variant="secondary"
+        disabled={exportMutation.isPending}
+        onClick={() => exportMutation.mutate()}
+      >
+        Export
+      </Button>
+      <label className="inline-flex cursor-pointer items-center">
+        <span className="sr-only">Import pack</span>
+        <input
+          type="file"
+          accept="application/json,.json"
+          className="hidden"
+          onChange={(e) => {
+            onFile(e.target.files?.[0]);
+            e.target.value = "";
+          }}
+        />
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          disabled={importMutation.isPending}
+          onClick={(e) => {
+            const input = (e.currentTarget.parentElement?.querySelector(
+              "input[type=file]",
+            ) ?? null) as HTMLInputElement | null;
+            input?.click();
+          }}
+        >
+          Import
+        </Button>
+      </label>
+      {status ? (
+        <span
+          className={
+            status.type === "error" ? "text-xs text-red-600" : "text-xs text-emerald-700"
+          }
+        >
+          {status.message}
+        </span>
+      ) : null}
+    </div>
+  );
+}
 
 function getErrorMessage(err: unknown, fallback: string): string {
   if (isAxiosError(err)) {
@@ -206,7 +325,7 @@ export default function ContextPage() {
     <div className="flex h-full flex-col">
       <PageHeader
         title="Context"
-        description="Schema enrichments, golden records, and business rules"
+        description="Schema enrichments, golden records, business rules, and a portable pack"
       />
 
       <div className="flex-1 overflow-auto p-5">
@@ -255,6 +374,8 @@ export default function ContextPage() {
             </p>
           </div>
         ) : (
+          <>
+          <PackPanel connectionId={connectionId} />
           <Tabs defaultValue="enrichments" className="max-w-3xl">
             <TabsList>
               <TabsTrigger value="enrichments">Enrichments</TabsTrigger>
@@ -271,6 +392,7 @@ export default function ContextPage() {
               <BusinessRulesPanel connectionId={connectionId} />
             </TabsContent>
           </Tabs>
+          </>
         )}
       </div>
     </div>

@@ -164,6 +164,24 @@ class BusinessRuleOut(BaseModel):
     updated_at: datetime
 
 
+class ContextPackDocument(BaseModel):
+    version: int = 1
+    enrichments: list[dict[str, Any]] = Field(default_factory=list)
+    rules: list[dict[str, Any]] = Field(default_factory=list)
+    goldens: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class ContextPackImport(BaseModel):
+    connection_id: str
+    pack: ContextPackDocument
+
+
+class ContextPackImportResult(BaseModel):
+    enrichments: int
+    rules: int
+    goldens: int
+
+
 # ---------------------------------------------------------------------------
 # Query
 # ---------------------------------------------------------------------------
@@ -211,7 +229,9 @@ class AgentStateOut(BaseModel):
     results: Optional[dict[str, Any]] = None
     answer: Optional[str] = None
     key_finding: Optional[str] = None
+    assumption: Optional[str] = None
     confidence: Optional[Any] = None  # "HIGH"|"MEDIUM"|"LOW" or float
+    trust_level: Optional[str] = None
     explanation: Optional[str] = None
     follow_ups: Optional[list[str]] = None
     steps: Optional[list[dict[str, Any]]] = None
@@ -275,12 +295,14 @@ class SessionDetailOut(SessionOut):
 class FeedbackRequest(BaseModel):
     rating: Literal[1, -1]
     corrected_sql: Optional[str] = None
+    new_rule: Optional[str] = None
 
 
 class FeedbackOut(BaseModel):
     id: str
     user_rating: int
     golden_record_id: Optional[str] = None
+    rule_id: Optional[str] = None
 
 
 class HistoryStatsOut(BaseModel):

@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "enrichments": [
+    {
+      "table_name": "customers",
+      "column_name": "status",
+      "description": "A = paying active, I = inactive, T = internal test account",
+      "alias": "customer status",
+      "example_values": "[\"A\",\"I\",\"T\"]"
+    },
+    {
+      "table_name": "payments",
+      "column_name": "kind",
+      "description": "charge or refund",
+      "alias": null,
+      "example_values": "[\"charge\",\"refund\"]"
+    }
+  ],
+  "rules": [
+    {
+      "content": "gross revenue means SUM(order_items.qty * order_items.unit_price)"
+    },
+    {
+      "content": "net revenue means gross revenue minus SUM(payments.amount) where kind = 'refund'"
+    },
+    {
+      "content": "active customers means status = 'A'"
+    }
+  ],
+  "goldens": [
+    {
+      "question": "How many customers live in Texas?",
+      "sql": "SELECT COUNT(*) AS n FROM customers WHERE state = 'TX'"
+    },
+    {
+      "question": "What is total gross revenue from order line items?",
+      "sql": "SELECT SUM(qty * unit_price) AS gross FROM order_items"
+    },
+    {
+      "question": "What is total net revenue after refunds?",
+      "sql": "SELECT (SELECT COALESCE(SUM(qty * unit_price), 0) FROM order_items) - (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE kind = 'refund') AS net"
+    },
+    {
+      "question": "How many customers have status A?",
+      "sql": "SELECT COUNT(*) AS n FROM customers WHERE status = 'A'"
+    }
+  ]
+}

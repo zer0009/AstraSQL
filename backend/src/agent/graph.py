@@ -26,9 +26,19 @@ def route_intent(state: AgentState) -> Literal["sql", "direct"]:
     return "direct"
 
 
+def route_after_context(state: AgentState) -> Literal["generate", "clarify"]:
+    ambiguity = state.get("ambiguity") or {}
+    if isinstance(ambiguity, dict) and ambiguity.get("should_clarify"):
+        return "clarify"
+    return "generate"
+
+
 def route_after_validate(
     state: AgentState,
-) -> Literal["execute", "retry", "fail"]:
+) -> Literal["execute", "retry", "fail", "clarify"]:
+    ambiguity = state.get("ambiguity") or {}
+    if isinstance(ambiguity, dict) and ambiguity.get("should_clarify"):
+        return "clarify"
     if not state.get("error"):
         return "execute"
     if int(state.get("retries") or 0) < max_retries():
@@ -38,7 +48,10 @@ def route_after_validate(
 
 def route_after_execute(
     state: AgentState,
-) -> Literal["format", "retry", "fail"]:
+) -> Literal["format", "retry", "fail", "clarify"]:
+    ambiguity = state.get("ambiguity") or {}
+    if isinstance(ambiguity, dict) and ambiguity.get("should_clarify"):
+        return "clarify"
     if not state.get("error"):
         return "format"
     if int(state.get("retries") or 0) < max_retries():
@@ -63,7 +76,11 @@ def build_graph():
         route_intent,
         {"sql": "context_retriever", "direct": "direct_response"},
     )
-    g.add_edge("context_retriever", "query_generator")
+    g.add_conditional_edges(
+        "context_retriever",
+        route_after_context,
+        {"generate": "query_generator", "clarify": "direct_response"},
+    )
     g.add_edge("query_generator", "query_validator")
     g.add_conditional_edges(
         "query_validator",
@@ -72,6 +89,7 @@ def build_graph():
             "execute": "query_executor",
             "retry": "query_generator",
             "fail": "response_formatter",
+            "clarify": "direct_response",
         },
     )
     g.add_conditional_edges(
@@ -81,6 +99,7 @@ def build_graph():
             "format": "response_formatter",
             "retry": "query_generator",
             "fail": "response_formatter",
+            "clarify": "direct_response",
         },
     )
     g.add_edge("response_formatter", END)
@@ -88,12 +107,6 @@ def build_graph():
     return g.compile()
 
 
-# Module-level compiled graph (nodes read session/connection from config).
-_GRAPH = None
-
-
 def get_graph():
-    global _GRAPH
-    if _GRAPH is None:
-        _GRAPH = build_graph()
-    return _GRAPH
+    """Compile a fresh graph so node code is never a stale process-level cache."""
+    return build_graph()

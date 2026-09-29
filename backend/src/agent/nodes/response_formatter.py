@@ -8,8 +8,10 @@ from langchain_core.runnables import RunnableConfig
 
 from src.agent.prompts.formatter import render_formatter_prompt
 from src.agent.state import AgentState
+from src.agent.trust import compute_trust_level
 from src.agent.utils import (
     append_step,
+    classify_retry_type,
     compute_confidence,
     extract_json,
     message_text,
@@ -60,12 +62,28 @@ async def response_formatter(
 
     if error and not results:
         confidence = "LOW" if retries >= 2 else "MEDIUM"
-        answer = (
-            "I couldn't complete this query successfully. "
-            f"Last error: {error}"
+        if classify_retry_type(error=str(error)) == "BIND_PARAMETER":
+            answer = (
+                "This question filters a person or account, but no id or name "
+                "was given. This runner cannot bind a login or a $1 parameter. "
+                "Name the person, give an id, or ask for every matching row."
+            )
+        else:
+            answer = (
+                "I couldn't complete this query successfully. "
+                f"Last error: {error}"
+            )
+        context = state.get("context") or {}
+        trust_level = compute_trust_level(
+            intent=str(state.get("intent") or ""),
+            error=error,
+            generated_sql=sql,
+            golden_sqls=list(context.get("golden_sqls") or []),
+            used_golden=bool(state.get("used_golden")),
         )
         return {
             "confidence": confidence,
+            "trust_level": trust_level,
             "answer": answer,
             "key_finding": "Query did not succeed",
             "assumption": None,
@@ -78,6 +96,7 @@ async def response_formatter(
                 "response_formatted",
                 f"Failure response (confidence={confidence})",
                 confidence=confidence,
+                trust_level=trust_level,
             ),
         }
 
@@ -118,8 +137,17 @@ async def response_formatter(
         assumption = None
         follow_ups = []
 
+    context = state.get("context") or {}
+    trust_level = compute_trust_level(
+        intent=str(state.get("intent") or ""),
+        error=error,
+        generated_sql=sql,
+        golden_sqls=list(context.get("golden_sqls") or []),
+        used_golden=bool(state.get("used_golden")),
+    )
     return {
         "confidence": confidence,
+        "trust_level": trust_level,
         "answer": answer,
         "key_finding": key_finding,
         "assumption": assumption,
@@ -127,7 +155,8 @@ async def response_formatter(
         "steps": append_step(
             state,
             "response_formatted",
-            f"Formatted answer (confidence={confidence})",
+            f"Formatted answer (confidence={confidence} trust={trust_level})",
             confidence=confidence,
+            trust_level=trust_level,
         ),
     }

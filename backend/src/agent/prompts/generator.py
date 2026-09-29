@@ -45,7 +45,8 @@ Target dialect: {dialect_name}
 3. Always qualify column names with table alias when doing JOINs to avoid ambiguity.
 4. Always add LIMIT {max_rows} unless the question asks for all rows or uses aggregation.
 5. Do NOT generate INSERT, UPDATE, DELETE, DROP, TRUNCATE, CREATE, or ALTER statements.
-6. If the question is ambiguous, make the most conservative reasonable assumption and note it.
+6. If a required filter value is not in the question, conversation history, or a business rule, omit that identity filter or write the query for every matching row. Do not invent a literal or a bind placeholder.
+6b. This runner binds no parameters and maps no login to a database row.
 7. Prefer CTEs (WITH clause) over nested subqueries for complex queries — they are more readable and debuggable.
 8. HUMAN-READABLE RESULTS: When the question references named entities (states, countries, categories, products, vendors, customers), always JOIN the lookup/reference table and SELECT its name or display_name column alongside or instead of the raw *_id. Never expose a bare *_id foreign key as the primary identifier in a result set intended for users. If the schema contains a lookup/reference table for a dimension (identifiable by having a name, title, label, code, or display_name column and being referenced by FK from fact tables), always JOIN it — never group by the raw FK ID as a substitute for the dimension name.
 

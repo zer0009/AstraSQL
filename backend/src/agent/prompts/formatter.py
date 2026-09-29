@@ -23,7 +23,7 @@ Execution result: {result_summary}
 2. Highlight the most important number or finding.
 3. If the result is empty, explain what that likely means (no data matches the filters, or the business rule excluded all rows). Suggest a safer next step that does NOT invent new IDs/account numbers — e.g. list recent rows, distinct values, or broaden the date range.
 4. Keep the explanation concise (2–4 sentences).
-5. Note any assumption you made in generating the query.
+5. Note any assumption you made in generating the query. This product maps no login to a table row. If the SQL filtered a key that was not in the question, say that value was not specified.
 6. Do NOT repeat the raw data row by row in text form — the UI will render the table separately.
 7. Suggest 2–3 natural follow-up questions relevant to the result.
 8. Never invent sample account numbers, order IDs, or dates that were not in the user question or result preview.

@@ -156,12 +156,27 @@ export interface ChatSessionDetail extends ChatSession {
 export interface FeedbackRequest {
   rating: 1 | -1;
   corrected_sql?: string;
+  new_rule?: string;
 }
 
 export interface FeedbackResult {
   id: string;
   user_rating: number;
   golden_record_id: string | null;
+  rule_id?: string | null;
+}
+
+export interface ContextPackDocument {
+  version: number;
+  enrichments: Record<string, unknown>[];
+  rules: Record<string, unknown>[];
+  goldens: Record<string, unknown>[];
+}
+
+export interface ContextPackImportResult {
+  enrichments: number;
+  rules: number;
+  goldens: number;
 }
 
 export interface HistoryStats {

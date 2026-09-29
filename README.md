@@ -1,6 +1,6 @@
 # AstraSQL
 
-Self-hosted natural-language-to-SQL: ask questions in plain English, get dialect-aware SQL, results, and a feedback loop that improves future answers.
+The living data language of a project: ask in plain English, see whether an answer is certified / taught / guessed, and export the project's definitions as an Astra Pack. Chat is the interface; the pack is the product.
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](backend/pyproject.toml)
@@ -14,8 +14,9 @@ Self-hosted natural-language-to-SQL: ask questions in plain English, get dialect
 - **Auth** — local admin login (HttpOnly session cookie), forced password change after first setup
 - **Chat** — natural-language questions with SSE streaming, SQL preview, results table/charts
 - **Connections** — connect to PostgreSQL, test, and scan schema metadata
-- **Context** — enrichments, business rules, and golden Q→SQL records (FAISS retrieval)
-- **Feedback** — thumbs up/down promotes useful answers into golden records
+- **Context** — enrichments, business rules, golden Q→SQL records (FAISS), and Astra Pack export/import
+- **Feedback** — thumbs up/down promotes useful answers into golden records; thumbs-down can also add a business rule
+- **Trust** — answers show Certified / Taught / Guessed / Clarifying instead of a fake “Verified” badge
 - **History** — review past queries, re-run, export CSV/JSON/XLSX
 
 ## Requirements
@@ -80,7 +81,22 @@ Vite proxies `/api` to the backend in development. Open the printed local URL (t
 - **Enrichments** — human descriptions, aliases, and example values for tables/columns so the agent links schema more accurately.
 - **Business rules** — free-text constraints (e.g. “active customers means status = 'A'”) injected into generation.
 - **Golden records** — curated question → SQL pairs; indexed with FAISS and retrieved as few-shot examples.
-- **Feedback loop** — thumbs-up on History promotes that Q/SQL into golden records and rebuilds the index; thumbs-down records a negative rating for filtering and review.
+- **Feedback loop** — thumbs-up promotes that Q/SQL into golden records; thumbs-down can save corrected SQL and/or a new business rule.
+- **Astra Pack** — export enrichments, rules, and goldens from **Context** as `astra-pack.json` and merge them into another connection. The project's language travels with the repo.
+
+When a term has two meanings (gross vs net revenue) and no taught definition, AstraSQL asks instead of guessing.
+
+## Measuring the agent
+
+Gold-file eval uses the same `run_query` path as chat (no second agent). Company-like fixture: `backend/eval/datasets/project_shop/`.
+
+```bash
+cd backend
+uv run python -m src.eval.run --gold eval/datasets/project_shop/gold.json \
+  --connection-id <id> --model gpt-4o --out eval/results/baseline.json
+```
+
+Scores: execution match on `expect=answer`, clarify-hit and silent-wrong on `expect=clarify`. Re-run the same file after a model or graph change. Optional `--pack astra-pack.json` is the taught pass. This is not a Spider score.
 
 Manage context under **Context**; review past runs under **History**.
 
@@ -145,7 +161,6 @@ The new type appears in `GET /api/settings/public` → `database_types` and in t
 - MySQL and Microsoft SQL Server connectors
 - Additional LLM providers (Azure OpenAI, Anthropic, local models)
 - Stronger governance (audit log, row/column policies)
-- Evaluation tooling around golden records
 
 ## Project layout
 

@@ -9,6 +9,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from sqlglot import exp
 
+from src.agent.sql_guards import refuse_unbound_sql
 from src.providers.database.base import BaseDatabaseProvider
 
 _IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
@@ -61,6 +62,7 @@ class PostgreSQLProvider(BaseDatabaseProvider):
 - Pagination: LIMIT {n} OFFSET {m}
 - Concatenation: || operator or CONCAT()
 - Prefer CTEs (WITH clause) over deeply nested subqueries
+- This runner binds no parameters and maps no login to a row. Write a literal only when the question supplies the value.
 - Window functions: supported — ROW_NUMBER(), LAG(), LEAD(), RANK()
 - JSONB/JSON operators (->>, ->): ONLY on columns whose schema type is jsonb or json.
   Never use ->> or -> on character varying, text, varchar, char, integer, or other
@@ -82,6 +84,7 @@ class PostgreSQLProvider(BaseDatabaseProvider):
             "LIMIT present for list queries unless aggregation covers all rows",
             "JSONB bare select: if any column in SELECT is typed jsonb/json and is referenced without ->> or ->, flag it — the result will be a raw JSON string, not a human-readable value",
             "JSONB type guard: if ->> or -> is used on a column typed character varying, text, varchar, or any non-json/jsonb type, flag it and rewrite to use the column directly (no JSON operators)",
+            "No bind placeholders: reject $1, $2, :name, or ? — this runner binds no parameters",
         ]
 
     def sqlglot_dialect(self) -> str:
@@ -110,6 +113,13 @@ class PostgreSQLProvider(BaseDatabaseProvider):
         return self._engine
 
     async def explain_query(self, sql: str) -> str:
+        # Inline as well as refuse_unbound_sql: asyncpg treats $1 as a bind
+        # even when SQLAlchemy text() does not register a bindparam.
+        if re.search(r"\$\s*\d+\b", sql or ""):
+            raise ValueError(
+                "Unbound parameter $n: this runner binds no parameters"
+            )
+        refuse_unbound_sql(sql)
         engine = self.get_async_engine()
         cleaned = sql.strip().rstrip(";")
         async with engine.connect() as conn:
@@ -337,6 +347,11 @@ class PostgreSQLProvider(BaseDatabaseProvider):
     async def execute_readonly(
         self, sql: str, max_rows: int = 500
     ) -> dict[str, Any]:
+        if re.search(r"\$\s*\d+\b", sql or ""):
+            raise ValueError(
+                "Unbound parameter $n: this runner binds no parameters"
+            )
+        refuse_unbound_sql(sql)
         limited_sql = self._ensure_limit(sql, max_rows)
         engine = self.get_async_engine()
         async with engine.connect() as conn:

@@ -119,6 +119,11 @@ _RETRY_FIX_HINTS: dict[str, str] = {
         "character varying columns — SELECT the column directly (e.g. rcs.name). "
         "Only use JSON operators on columns whose schema type is json or jsonb."
     ),
+    "BIND_PARAMETER": (
+        "SQL used an unbound placeholder ($1, :name, or ?). Replace it with a "
+        "literal that appears in the question, history, or a business rule. "
+        "If no such value exists, omit the identity filter — do not invent an id."
+    ),
     "EXECUTION_ERROR": (
         "Database execution failed. Fix the exact error from the engine while "
         "keeping the query aligned with the schema and question."
@@ -187,6 +192,19 @@ def classify_retry_type(
         )
     ):
         return "WRONG_TABLE"
+    if any(
+        token in blob
+        for token in (
+            "unbound parameter",
+            "expects 1 argument",
+            "0 were passed",
+            "bind parameter",
+            "interfaceerror",
+            "$1",
+            ":name placeholder",
+        )
+    ):
+        return "BIND_PARAMETER"
     if any(
         token in blob
         for token in (

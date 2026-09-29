@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronRight, ShieldCheck } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { Badge, Spinner } from "../ui";
 import type { ChatMessage } from "../../hooks/useStreamQuery";
 import { AgentSteps } from "./AgentSteps.tsx";
@@ -7,6 +7,7 @@ import { FeedbackBar } from "./FeedbackBar.tsx";
 import { ResultTabs } from "./ResultTabs.tsx";
 import { SQLViewer } from "./SQLViewer.tsx";
 import { SuggestedFollowUps } from "./SuggestedFollowUps.tsx";
+import { TrustBadge, TrustCard } from "./TrustCard.tsx";
 
 export interface AgentMessageProps {
   message: ChatMessage;
@@ -99,16 +100,7 @@ export function AgentMessage({
               {confidence}
             </Badge>
           ) : null}
-          {message.usedGolden ? (
-            <Badge
-              variant="success"
-              className="inline-flex items-center gap-1"
-              title="Answer used a verified golden query as a few-shot example"
-            >
-              <ShieldCheck className="h-3 w-3" strokeWidth={2} />
-              Verified
-            </Badge>
-          ) : null}
+          <TrustBadge level={message.trustLevel} />
           {isStreaming || isRerunning ? <Spinner size="sm" /> : null}
         </div>
 
@@ -124,6 +116,13 @@ export function AgentMessage({
           </p>
         ) : isStreaming && !showBody ? (
           <p className="text-sm text-zinc-500">Working…</p>
+        ) : null}
+
+        {!isStreaming ? (
+          <TrustCard
+            assumption={message.assumption}
+            keyFinding={message.keyFinding}
+          />
         ) : null}
 
         {message.results && message.results.columns.length > 0 ? (

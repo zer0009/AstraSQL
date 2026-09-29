@@ -14,12 +14,14 @@ class AgentState(TypedDict, total=False):
     retry_context: str
     error: Optional[str]
     confidence: str  # HIGH|MEDIUM|LOW
+    trust_level: str  # certified|taught|guessed|clarifying|failed
     answer: str
     key_finding: str
     assumption: Optional[str]
     follow_ups: list[str]
     clarification_options: list[str]
     used_golden: bool
+    ambiguity: dict  # {should_clarify, reason, options}
     steps: list[dict]  # agent step events for SSE
     # Prior completed turns for multi-turn follow-ups (working-memory window).
     conversation_history: list[dict]  # [{question, sql, answer}, ...]

@@ -4,9 +4,21 @@ from typing import Any
 
 from langchain_core.runnables import RunnableConfig
 
+from src.agent.ambiguity import decide_ambiguity
 from src.agent.state import AgentState
 from src.agent.utils import append_step, get_configurable, max_retries
 from src.context.retriever import ContextRetriever
+
+
+def _rules_from_text(text: str) -> list[str]:
+    if not text or text.strip() == "(none)":
+        return []
+    out: list[str] = []
+    for line in text.splitlines():
+        stripped = line.strip().lstrip("-").strip()
+        if stripped and stripped != "(none)":
+            out.append(stripped)
+    return out
 
 
 async def context_retriever_node(
@@ -58,7 +70,10 @@ async def context_retriever_node(
         "golden_records_text": retrieved.golden_records_text,
         "selected_tables": retrieved.selected_tables,
         "selected_columns": retrieved.selected_columns,
+        "identity_keys": retrieved.identity_keys,
         "used_golden": retrieved.used_golden,
+        "golden_sqls": retrieved.golden_sqls,
+        "golden_questions": retrieved.golden_questions,
     }
 
     steps = list(state.get("steps") or [])
@@ -74,6 +89,16 @@ async def context_retriever_node(
                 },
             }
         )
+    decision = decide_ambiguity(
+        question,
+        rules=_rules_from_text(retrieved.business_rules),
+        golden_questions=retrieved.golden_questions,
+    )
+    ambiguity = {
+        "should_clarify": decision.should_clarify,
+        "reason": decision.reason,
+        "options": decision.options,
+    }
     steps.append(
         {
             "name": "context_retrieved",
@@ -84,10 +109,24 @@ async def context_retriever_node(
             "tables": retrieved.selected_tables,
         }
     )
+    if decision.should_clarify:
+        steps.append(
+            {
+                "name": "ambiguity_gate",
+                "detail": decision.reason,
+            }
+        )
 
-    return {
+    update: dict[str, Any] = {
         "context": context,
         "used_golden": retrieved.used_golden,
+        "ambiguity": ambiguity,
         "error": None,
         "steps": steps,
     }
+    if decision.should_clarify:
+        update["intent"] = "CLARIFICATION_NEEDED"
+        update["intent_reason"] = decision.reason
+        if decision.options:
+            update["clarification_options"] = decision.options
+    return update

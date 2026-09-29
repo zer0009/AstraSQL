@@ -10,6 +10,8 @@ import type {
   ConnectionScanResult,
   ConnectionTestResult,
   ConnectionUpdate,
+  ContextPackDocument,
+  ContextPackImportResult,
   Enrichment,
   EnrichmentCreate,
   EnrichmentUpdate,
@@ -277,6 +279,26 @@ export async function updateRule(
 
 export async function deleteRule(id: string): Promise<void> {
   await api.delete(`/api/context/rules/${id}`);
+}
+
+export async function exportContextPack(
+  connectionId: string,
+): Promise<ContextPackDocument> {
+  const { data } = await api.get<ContextPackDocument>("/api/context/pack", {
+    params: { connection_id: connectionId },
+  });
+  return data;
+}
+
+export async function importContextPack(
+  connectionId: string,
+  pack: ContextPackDocument,
+): Promise<ContextPackImportResult> {
+  const { data } = await api.post<ContextPackImportResult>("/api/context/pack", {
+    connection_id: connectionId,
+    pack,
+  });
+  return data;
 }
 
 // --- History ---

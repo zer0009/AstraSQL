@@ -4,6 +4,8 @@ from typing import Any
 
 from langchain_core.runnables import RunnableConfig
 
+from src.agent.provenance import clarify_or_none, clarify_unbound
+from src.agent.sql_guards import find_bind_placeholders
 from src.agent.state import AgentState
 from src.agent.utils import (
     append_step,
@@ -36,7 +38,17 @@ async def query_executor(
             "steps": append_step(state, "execute_error", "Empty SQL"),
         }
 
-    # Layer 3 — EXPLAIN (plan only)
+    dialect = (
+        db_provider.sqlglot_dialect()
+        if hasattr(db_provider, "sqlglot_dialect")
+        else "postgres"
+    )
+    if find_bind_placeholders(sql):
+        return clarify_unbound(state, sql, dialect)
+    clarify = clarify_or_none(state, sql, dialect)
+    if clarify is not None:
+        return clarify
+
     explain_text = ""
     try:
         explain_text = await db_provider.explain_query(sql)
@@ -48,10 +60,13 @@ async def query_executor(
         )
         state = {**state, "steps": steps}
     except Exception as exc:
+        if find_bind_placeholders(sql) or classify_retry_type(
+            error=str(exc)
+        ) == "BIND_PARAMETER":
+            return clarify_unbound(state, sql, dialect)
         message = f"EXPLAIN failed: {exc}"
         return _execution_failure(state, sql=sql, message=message, retries=retries)
 
-    # Layer 4 — read-only execution
     try:
         results = await db_provider.execute_readonly(
             sql, max_rows=settings.max_result_rows
@@ -71,6 +86,8 @@ async def query_executor(
         }
     except Exception as exc:
         message = str(exc)
+        if classify_retry_type(error=message) == "BIND_PARAMETER":
+            return clarify_unbound(state, sql, dialect)
         return _execution_failure(state, sql=sql, message=message, retries=retries)
 
 
@@ -83,7 +100,6 @@ def _execution_failure(
 ) -> dict[str, Any]:
     limit = max_retries()
     retry_type = classify_retry_type(error=message)
-    # EXPLAIN / execute failures are execution-class unless clearly column/table/syntax.
     if retry_type == "OTHER":
         retry_type = "EXECUTION_ERROR"
     steps = append_step(

@@ -10,6 +10,7 @@ from sqlglot import exp
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.agent.catalog import identity_keys_from_tables, serialize_keys
 from src.config.settings import get_settings
 from src.context.business_rules import BusinessRulesStore
 from src.context.golden_records import GoldenRecordsStore
@@ -249,7 +250,10 @@ class RetrievedContext:
     golden_records_text: str
     selected_tables: list[str]
     selected_columns: list[dict]
+    identity_keys: list[dict] = field(default_factory=list)
     used_golden: bool = False
+    golden_sqls: list[str] = field(default_factory=list)
+    golden_questions: list[str] = field(default_factory=list)
     steps: list[dict] = field(default_factory=list)
 
 
@@ -782,6 +786,10 @@ class ContextRetriever:
         )
         golden_records_text = self.golden.format_few_shot(golden_hits)
         used_golden = len(golden_hits) > 0
+        golden_sqls = [str(h.get("sql") or "") for h in golden_hits if h.get("sql")]
+        golden_questions = [
+            str(h.get("question") or "") for h in golden_hits if h.get("question")
+        ]
         steps.append(
             {
                 "step": "golden_records",
@@ -796,6 +804,22 @@ class ContextRetriever:
             golden_records_text=golden_records_text,
             selected_tables=selected_tables,
             selected_columns=selected_columns,
+            identity_keys=serialize_keys(
+                identity_keys_from_tables(
+                    [
+                        {
+                            "table_name": cache.table_name,
+                            "columns": _safe_json_loads(
+                                cache.columns_json, default=[]
+                            )
+                            or [],
+                        }
+                        for cache in caches
+                    ]
+                )
+            ),
             used_golden=used_golden,
+            golden_sqls=golden_sqls,
+            golden_questions=golden_questions,
             steps=steps,
         )

@@ -46,8 +46,10 @@ async def intent_classifier(
             intent = "SQL_QUERY"
         reason = str(parsed.get("reason") or "").strip()
     except Exception as exc:
-        intent = "SQL_QUERY"
-        reason = f"Intent classification failed; defaulting to SQL_QUERY ({exc})"
+        intent = "CLARIFICATION_NEEDED"
+        reason = (
+            f"Intent classification failed; asking for clarification ({exc})"
+        )
 
     return {
         "intent": intent,

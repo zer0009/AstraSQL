@@ -9,6 +9,9 @@ from src.api.schemas import (
     BusinessRuleCreate,
     BusinessRuleOut,
     BusinessRuleUpdate,
+    ContextPackDocument,
+    ContextPackImport,
+    ContextPackImportResult,
     EnrichmentCreate,
     EnrichmentOut,
     EnrichmentUpdate,
@@ -16,6 +19,7 @@ from src.api.schemas import (
     GoldenRecordOut,
 )
 from src.context import BusinessRulesStore, GoldenRecordsStore, SchemaEnrichmentStore
+from src.context.pack import export_pack, import_pack
 from src.storage.models import BusinessRule, Connection, GoldenRecord, SchemaEnrichment
 
 router = APIRouter(tags=["context"])
@@ -156,3 +160,24 @@ async def delete_rule(rule_id: str, db: DbSession) -> None:
     deleted = await rules_store.delete(db, rule_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Business rule not found")
+
+
+@router.get("/pack", response_model=ContextPackDocument)
+async def get_context_pack(
+    db: DbSession,
+    connection_id: str = Query(...),
+) -> ContextPackDocument:
+    await _ensure_connection(db, connection_id)
+    return ContextPackDocument.model_validate(await export_pack(db, connection_id))
+
+
+@router.post("/pack", response_model=ContextPackImportResult)
+async def post_context_pack(
+    body: ContextPackImport, db: DbSession
+) -> ContextPackImportResult:
+    await _ensure_connection(db, body.connection_id)
+    try:
+        counts = await import_pack(db, body.connection_id, body.pack.model_dump())
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return ContextPackImportResult(**counts)

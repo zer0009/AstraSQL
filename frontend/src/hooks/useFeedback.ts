@@ -10,12 +10,14 @@ export function useFeedback() {
       historyId: string;
       rating: FeedbackRequest["rating"];
       corrected_sql?: string;
+      new_rule?: string;
     }
   >({
-    mutationFn: ({ historyId, rating, corrected_sql }) =>
+    mutationFn: ({ historyId, rating, corrected_sql, new_rule }) =>
       submitFeedback(historyId, {
         rating,
         ...(corrected_sql ? { corrected_sql } : {}),
+        ...(new_rule ? { new_rule } : {}),
       }),
   });
 }

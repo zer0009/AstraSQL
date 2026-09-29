@@ -9,7 +9,8 @@ from sqlglot import exp
 from sqlglot.errors import ParseError
 
 from src.agent.prompts.validator import render_validator_prompt
-from src.agent.sql_guards import rewrite_invalid_json_operators
+from src.agent.provenance import clarify_or_none, clarify_unbound
+from src.agent.sql_guards import find_bind_placeholders, rewrite_invalid_json_operators
 from src.agent.state import AgentState
 from src.agent.utils import (
     append_step,
@@ -47,6 +48,19 @@ def validate_syntax(
         return False, f"SQL syntax error: {e}", False
     except Exception as e:
         return False, f"SQL parse failed: {e}", False
+
+    placeholders = find_bind_placeholders(sql)
+    if placeholders:
+        shown = ", ".join(placeholders[:5])
+        return (
+            False,
+            (
+                f"Unbound parameter {shown}: never emit $1 / :name placeholders. "
+                "Write a literal only when the question names the value. "
+                "If the person or id is unknown, do not guess."
+            ),
+            False,
+        )
 
     if isinstance(tree, _DML_TYPES) or any(tree.find(t) for t in _DML_TYPES):
         kind = type(tree).__name__
@@ -92,8 +106,13 @@ async def query_validator(
             is_dml=False,
         )
 
+    dialect = db_provider.sqlglot_dialect()
+    clarify = clarify_or_none(state, sql, dialect)
+    if clarify is not None:
+        return clarify
+
     # Layer 1 — static AST / DML guard
-    ok, err, is_dml = validate_syntax(sql, db_provider.sqlglot_dialect())
+    ok, err, is_dml = validate_syntax(sql, dialect)
     if not ok:
         steps = append_step(
             state,
@@ -103,6 +122,9 @@ async def query_validator(
             dml_blocked=is_dml,
         )
         state_with_steps = {**state, "steps": steps}
+        bind_failed = "Unbound parameter" in (err or "")
+        if bind_failed:
+            return clarify_unbound(state_with_steps, sql, dialect)
         return _fail_or_retry(
             state_with_steps,
             sql=sql,
@@ -164,6 +186,25 @@ async def query_validator(
             issues = list(issues) + guard_issues
             is_valid = False
             error_type = error_type or "TYPE_MISMATCH"
+
+        merged = {**state, "sql": corrected, "corrected_sql": corrected}
+        clarify = clarify_or_none(merged, corrected, dialect)
+        if clarify is not None:
+            return clarify
+
+        ok, err, is_dml = validate_syntax(corrected, dialect)
+        if not ok:
+            bind_failed = "Unbound parameter" in (err or "")
+            if bind_failed:
+                return clarify_unbound(merged, corrected, dialect)
+            return _fail_or_retry(
+                state,
+                sql=corrected,
+                message=err or "Syntax validation failed",
+                retries=retries,
+                is_dml=is_dml,
+                retry_type="SYNTAX_ERROR",
+            )
 
         detail = (
             "SQL validated"

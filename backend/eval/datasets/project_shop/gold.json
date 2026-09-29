@@ -1,0 +1,216 @@
+{
+  "name": "project_shop",
+  "description": "Two revenues (gross vs net) and two actives (status A vs A+T). Clarify items must not silently pick one.",
+  "items": [
+    {
+      "id": "c-count",
+      "question": "How many customers are in the customers table?",
+      "gold_sql": "SELECT COUNT(*) AS n FROM customers",
+      "expect": "answer",
+      "tags": ["count"]
+    },
+    {
+      "id": "c-texas",
+      "question": "How many customers live in Texas?",
+      "gold_sql": "SELECT COUNT(*) AS n FROM customers WHERE state = 'TX'",
+      "expect": "answer",
+      "tags": ["filter"]
+    },
+    {
+      "id": "c-ca-names",
+      "question": "List customer names in California",
+      "gold_sql": "SELECT name FROM customers WHERE state = 'CA'",
+      "expect": "answer",
+      "tags": ["filter"]
+    },
+    {
+      "id": "c-status-a",
+      "question": "How many customers have status A?",
+      "gold_sql": "SELECT COUNT(*) AS n FROM customers WHERE status = 'A'",
+      "expect": "answer",
+      "tags": ["filter"]
+    },
+    {
+      "id": "o-count",
+      "question": "How many orders are there?",
+      "gold_sql": "SELECT COUNT(*) AS n FROM orders",
+      "expect": "answer",
+      "tags": ["count"]
+    },
+    {
+      "id": "o-2024",
+      "question": "How many orders were placed in 2024?",
+      "gold_sql": "SELECT COUNT(*) AS n FROM orders WHERE created_at >= DATE '2024-01-01' AND created_at < DATE '2025-01-01'",
+      "expect": "answer",
+      "tags": ["time"]
+    },
+    {
+      "id": "o-alice",
+      "question": "How many orders did Alice place?",
+      "gold_sql": "SELECT COUNT(*) AS n FROM orders o JOIN customers c ON c.id = o.customer_id WHERE c.name = 'Alice'",
+      "expect": "answer",
+      "tags": ["join"]
+    },
+    {
+      "id": "gross-all",
+      "question": "What is total gross revenue from order line items?",
+      "gold_sql": "SELECT SUM(qty * unit_price) AS gross FROM order_items",
+      "expect": "answer",
+      "tags": ["revenue", "gross"]
+    },
+    {
+      "id": "net-all",
+      "question": "What is total net revenue after refunds?",
+      "gold_sql": "SELECT (SELECT COALESCE(SUM(qty * unit_price), 0) FROM order_items) - (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE kind = 'refund') AS net",
+      "expect": "answer",
+      "tags": ["revenue", "net"]
+    },
+    {
+      "id": "refund-sum",
+      "question": "What is the sum of refund amounts in payments?",
+      "gold_sql": "SELECT SUM(amount) AS refunds FROM payments WHERE kind = 'refund'",
+      "expect": "answer",
+      "tags": ["payments"]
+    },
+    {
+      "id": "charge-sum",
+      "question": "What is the sum of charge amounts in payments?",
+      "gold_sql": "SELECT SUM(amount) AS charges FROM payments WHERE kind = 'charge'",
+      "expect": "answer",
+      "tags": ["payments"]
+    },
+    {
+      "id": "items-count",
+      "question": "How many order line items are there?",
+      "gold_sql": "SELECT COUNT(*) AS n FROM order_items",
+      "expect": "answer",
+      "tags": ["count"]
+    },
+    {
+      "id": "gross-2024",
+      "question": "What is gross revenue from order items for orders placed in 2024?",
+      "gold_sql": "SELECT SUM(i.qty * i.unit_price) AS gross FROM order_items i JOIN orders o ON o.id = i.order_id WHERE o.created_at >= DATE '2024-01-01' AND o.created_at < DATE '2025-01-01'",
+      "expect": "answer",
+      "tags": ["revenue", "time"]
+    },
+    {
+      "id": "orders-by-state",
+      "question": "How many orders were placed by customers in Texas?",
+      "gold_sql": "SELECT COUNT(*) AS n FROM orders o JOIN customers c ON c.id = o.customer_id WHERE c.state = 'TX'",
+      "expect": "answer",
+      "tags": ["join"]
+    },
+    {
+      "id": "customer-order-counts",
+      "question": "For each customer name, how many orders did they place?",
+      "gold_sql": "SELECT c.name, COUNT(o.id) AS n FROM customers c LEFT JOIN orders o ON o.customer_id = c.id GROUP BY c.name",
+      "expect": "answer",
+      "tags": ["group"]
+    },
+    {
+      "id": "avg-item-price",
+      "question": "What is the average unit price on order items?",
+      "gold_sql": "SELECT AVG(unit_price) AS avg_unit_price FROM order_items",
+      "expect": "answer",
+      "tags": ["agg"]
+    },
+    {
+      "id": "max-qty",
+      "question": "What is the highest qty on any order item?",
+      "gold_sql": "SELECT MAX(qty) AS max_qty FROM order_items",
+      "expect": "answer",
+      "tags": ["agg"]
+    },
+    {
+      "id": "inactive-names",
+      "question": "List names of customers with status I",
+      "gold_sql": "SELECT name FROM customers WHERE status = 'I'",
+      "expect": "answer",
+      "tags": ["filter"]
+    },
+    {
+      "id": "test-users",
+      "question": "How many customers have status T?",
+      "gold_sql": "SELECT COUNT(*) AS n FROM customers WHERE status = 'T'",
+      "expect": "answer",
+      "tags": ["filter"]
+    },
+    {
+      "id": "payments-count",
+      "question": "How many payment rows are there?",
+      "gold_sql": "SELECT COUNT(*) AS n FROM payments",
+      "expect": "answer",
+      "tags": ["count"]
+    },
+    {
+      "id": "orders-2025",
+      "question": "How many orders were placed in 2025?",
+      "gold_sql": "SELECT COUNT(*) AS n FROM orders WHERE created_at >= DATE '2025-01-01' AND created_at < DATE '2026-01-01'",
+      "expect": "answer",
+      "tags": ["time"]
+    },
+    {
+      "id": "dan-orders",
+      "question": "How many orders did Dan place?",
+      "gold_sql": "SELECT COUNT(*) AS n FROM orders o JOIN customers c ON c.id = o.customer_id WHERE c.name = 'Dan'",
+      "expect": "answer",
+      "tags": ["join"]
+    },
+    {
+      "id": "clarify-revenue",
+      "question": "What is revenue?",
+      "gold_sql": null,
+      "expect": "clarify",
+      "tags": ["revenue", "ambiguous"]
+    },
+    {
+      "id": "clarify-our-revenue",
+      "question": "what is our revenue",
+      "gold_sql": null,
+      "expect": "clarify",
+      "tags": ["revenue", "ambiguous"]
+    },
+    {
+      "id": "clarify-active",
+      "question": "How many active customers?",
+      "gold_sql": null,
+      "expect": "clarify",
+      "tags": ["active", "ambiguous"]
+    },
+    {
+      "id": "clarify-sales",
+      "question": "What is sales?",
+      "gold_sql": null,
+      "expect": "clarify",
+      "tags": ["sales", "ambiguous"]
+    },
+    {
+      "id": "clarify-profit",
+      "question": "What is profit?",
+      "gold_sql": null,
+      "expect": "clarify",
+      "tags": ["profit", "ambiguous"]
+    },
+    {
+      "id": "clarify-churn",
+      "question": "What is churn?",
+      "gold_sql": null,
+      "expect": "clarify",
+      "tags": ["churn", "ambiguous"]
+    },
+    {
+      "id": "clarify-mrr",
+      "question": "What is MRR?",
+      "gold_sql": null,
+      "expect": "clarify",
+      "tags": ["mrr", "ambiguous"]
+    },
+    {
+      "id": "clarify-active-users",
+      "question": "how many active",
+      "gold_sql": null,
+      "expect": "clarify",
+      "tags": ["active", "ambiguous"]
+    }
+  ]
+}

@@ -18,6 +18,7 @@ Rules:
 - Do NOT invent example account numbers, IDs, or dates in the reason field.
 - When CONVERSATION HISTORY is present, resolve pronouns and references using that history ("these customers", "them", "that period", "same filter", "for each of those"). If prior turns already identify the entities or filters, classify as SQL_QUERY — do not ask the user to repeat what is already in history.
 - Only use CLARIFICATION_NEEDED for follow-ups when history does not resolve the ambiguity.
+- This product maps no login to a table row. Still classify data questions as SQL_QUERY — do not invent an id. The SQL gate refuses key filters whose value was never in the question, history, or a rule.
 
 Return JSON only:
 {{

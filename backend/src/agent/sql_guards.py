@@ -9,9 +9,60 @@ import sqlglot
 from sqlglot import exp
 
 _TABLE_HEADER_RE = re.compile(r"^--\s*TABLE:\s*(\S+)", re.IGNORECASE)
+# Postgres $1 — not the same as ::type casts.
+_DOLLAR_BIND_RE = re.compile(r"\$\s*\d+\b")
+# SQLAlchemy :name / :1 — skip Postgres ::cast (colon immediately before).
+_NAMED_BIND_RE = re.compile(r"(?<![:\w]):(?:[A-Za-z_][A-Za-z0-9_]*|\d+)")
+_QMARK_BIND_RE = re.compile(r"(^|[\s=(,])\?(?=\s|$|,|\))")
+_PYFORMAT_BIND_RE = re.compile(r"%(\([A-Za-z_][A-Za-z0-9_]*\))?s\b")
+
+
+def refuse_unbound_sql(sql: str) -> None:
+    """Raise before the driver sees a parameter this runner cannot bind."""
+    found = find_bind_placeholders(sql)
+    if found:
+        shown = ", ".join(found[:5])
+        raise ValueError(
+            f"Unbound parameter {shown}: this runner binds no parameters"
+        )
+
+
+def find_bind_placeholders(sql: str) -> list[str]:
+    """Return unbound parameter markers the driver cannot fill ($1, :name)."""
+    text = sql or ""
+    found: list[str] = []
+    for match in _DOLLAR_BIND_RE.finditer(text):
+        token = match.group(0)
+        if token not in found:
+            found.append(token)
+    for match in _NAMED_BIND_RE.finditer(text):
+        token = match.group(0)
+        if token not in found:
+            found.append(token)
+    if _QMARK_BIND_RE.search(text) and "?" not in found:
+        found.append("?")
+    for match in _PYFORMAT_BIND_RE.finditer(text):
+        token = match.group(0)
+        if token not in found:
+            found.append(token)
+    try:
+        tree = sqlglot.parse_one(text, dialect="postgres")
+    except Exception:
+        tree = None
+    if tree is not None:
+        for node in tree.find_all(exp.Placeholder, exp.Parameter):
+            name = node.this
+            if name is None:
+                token = "?"
+            else:
+                raw = str(name)
+                token = f"${raw}" if raw.isdigit() else f":{raw}"
+            if token not in found:
+                found.append(token)
+    return found
 # Matches: "    name  VARCHAR(64)," or "    name  character varying -- ..."
 _COL_DECL_RE = re.compile(
-    r"^\s+([A-Za-z_][A-Za-z0-9_]*)\s+"
+    r"^\s+(\w+)\s+"
     r"([A-Za-z][A-Za-z0-9_(),\s]*?)"
     r"(?:\s+PRIMARY|\s+NOT NULL|,|\s*--|$)",
     re.IGNORECASE,

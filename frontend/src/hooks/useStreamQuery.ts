@@ -18,6 +18,9 @@ export type ChatMessage = {
   followUps?: string[];
   clarificationOptions?: string[];
   usedGolden?: boolean;
+  trustLevel?: string;
+  assumption?: string;
+  keyFinding?: string;
   historyId?: string;
   error?: string;
 };
@@ -30,6 +33,9 @@ export type StreamLastResult = {
   followUps?: string[];
   clarificationOptions?: string[];
   usedGolden?: boolean;
+  trustLevel?: string;
+  assumption?: string;
+  keyFinding?: string;
   historyId?: string;
   error?: string;
   steps?: AgentStep[];
@@ -163,6 +169,16 @@ function applyStatePatch(
     next.usedGolden = patch.used_golden;
   }
 
+  if (typeof patch.trust_level === "string" && patch.trust_level) {
+    next.trustLevel = patch.trust_level;
+  }
+  if (typeof patch.assumption === "string" && patch.assumption) {
+    next.assumption = patch.assumption;
+  }
+  if (typeof patch.key_finding === "string" && patch.key_finding) {
+    next.keyFinding = patch.key_finding;
+  }
+
   const steps = parseSteps(patch.steps);
   if (steps) next.steps = steps;
 
@@ -196,6 +212,9 @@ function toLastResult(msg: ChatMessage): StreamLastResult {
     followUps: msg.followUps,
     clarificationOptions: msg.clarificationOptions,
     usedGolden: msg.usedGolden,
+    trustLevel: msg.trustLevel,
+    assumption: msg.assumption,
+    keyFinding: msg.keyFinding,
     historyId: msg.historyId,
     error: msg.error,
     steps: msg.steps,

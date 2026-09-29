@@ -5,12 +5,13 @@ from sqlalchemy import and_, case, func, or_, select
 
 from src.api.deps import DbSession
 from src.api.schemas import FeedbackOut, FeedbackRequest, HistoryOut, HistoryStatsOut
-from src.context import GoldenRecordsStore
+from src.context import BusinessRulesStore, GoldenRecordsStore
 from src.storage.models import QueryHistory
 
 router = APIRouter(tags=["history"])
 
 golden_store = GoldenRecordsStore()
+rules_store = BusinessRulesStore()
 
 # Matches frontend confidenceLevel / confidence_to_float mapping.
 _HIGH = 0.85
@@ -161,6 +162,7 @@ async def submit_feedback(
 
     row.user_rating = body.rating
     golden_record_id: str | None = None
+    rule_id: str | None = None
 
     if body.rating == 1:
         golden = await golden_store.add(
@@ -183,9 +185,15 @@ async def submit_feedback(
             await golden_store.rebuild_index(db, row.connection_id)
             golden_record_id = golden.id
 
+    new_rule = (body.new_rule or "").strip()
+    if new_rule:
+        rule = await rules_store.create(db, row.connection_id, new_rule)
+        rule_id = rule.id
+
     await db.flush()
     return FeedbackOut(
         id=row.id,
         user_rating=row.user_rating,
         golden_record_id=golden_record_id,
+        rule_id=rule_id,
     )

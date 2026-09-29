@@ -52,6 +52,11 @@ async def direct_response(
             f"Current question:\n{question}"
         )
 
+    preset_options = [
+        str(x).strip()
+        for x in (state.get("clarification_options") or [])
+        if str(x).strip()
+    ]
     clarification_options: list[str] = []
     try:
         system = _DIRECT_SYSTEM.format(intent=intent, reason=reason)
@@ -79,7 +84,7 @@ async def direct_response(
                 "I need a bit more detail to answer that accurately. "
                 f"{reason or str(exc)}"
             )
-            clarification_options = [
+            clarification_options = preset_options or [
                 "What time period should I use?",
                 "Which metric should I measure?",
                 "Which tables or entities are you asking about?",
@@ -106,6 +111,8 @@ async def direct_response(
     # Only surface clickable clarifications for CLARIFICATION_NEEDED.
     if intent != "CLARIFICATION_NEEDED":
         clarification_options = []
+    elif not clarification_options:
+        clarification_options = preset_options
 
     return {
         "answer": answer,
@@ -114,6 +121,7 @@ async def direct_response(
         "follow_ups": follow_ups,
         "clarification_options": clarification_options,
         "confidence": "HIGH",
+        "trust_level": "clarifying" if intent == "CLARIFICATION_NEEDED" else "guessed",
         "sql": "",
         "results": {"columns": [], "rows": [], "row_count": 0},
         "error": None,

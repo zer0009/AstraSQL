@@ -105,6 +105,7 @@ def _compact_state(state: AgentState) -> dict[str, Any]:
         "retries": state.get("retries"),
         "error": state.get("error"),
         "confidence": state.get("confidence"),
+        "trust_level": state.get("trust_level"),
         "answer": state.get("answer"),
         "key_finding": state.get("key_finding"),
         "assumption": state.get("assumption"),
@@ -286,6 +287,9 @@ async def stream_query(
                     or done_payload.get("sql"),
                     "results": done_payload.get("results"),
                     "confidence": done_payload.get("confidence"),
+                    "trust_level": done_payload.get("trust_level"),
+                    "assumption": done_payload.get("assumption"),
+                    "key_finding": done_payload.get("key_finding"),
                     "follow_ups": done_payload.get("follow_ups"),
                     "clarification_options": done_payload.get(
                         "clarification_options"
