@@ -208,6 +208,7 @@ export interface ConversationHistoryTurn {
   question: string;
   sql?: string;
   answer?: string;
+  trust_level?: string;
 }
 
 export interface QueryRequest {

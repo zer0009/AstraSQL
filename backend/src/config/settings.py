@@ -55,6 +55,11 @@ class Settings(BaseSettings):
     faiss_top_k_tables: int = 60
     golden_records_top_k: int = 5
 
+    # Schema-grounded clarification (ask vs proceed after context retrieval)
+    grounded_clarification_enabled: bool = True
+    # Empty → use enrichment_model if set, else the provider default chat model.
+    interpretation_model: str = ""
+
     # CORS
     cors_origins: str = "http://localhost:5173,http://localhost:3000"
 

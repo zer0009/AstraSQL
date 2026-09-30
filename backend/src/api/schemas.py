@@ -193,6 +193,7 @@ class ConversationTurn(BaseModel):
     question: str
     sql: Optional[str] = None
     answer: Optional[str] = None
+    trust_level: Optional[str] = None
 
 
 class QueryRequest(BaseModel):

@@ -17,6 +17,10 @@ from .intent import (
     INTENT_USER_PROMPT,
     render_intent_prompt,
 )
+from .interpretation import (
+    INTERPRETATION_SYSTEM_PROMPT,
+    render_interpretation_prompt,
+)
 from .schema_link import (
     COLUMN_FIRST_PROMPT,
     TABLE_FIRST_PROMPT,
@@ -30,6 +34,8 @@ __all__ = [
     "INTENT_SYSTEM_PROMPT",
     "INTENT_USER_PROMPT",
     "render_intent_prompt",
+    "INTERPRETATION_SYSTEM_PROMPT",
+    "render_interpretation_prompt",
     "TABLE_FIRST_PROMPT",
     "COLUMN_FIRST_PROMPT",
     "render_table_first_prompt",

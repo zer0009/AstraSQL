@@ -18,9 +18,20 @@ The user's message does not require running a SQL query right now.
 Intent: {intent}
 Reason: {reason}
 
+{schema_block}
+
 Respond helpfully in plain language.
-- For META: answer about the database/product capabilities without inventing schema facts you do not know. If schema details are needed, ask the user to rephrase as a data question or check the Context page.
-- For CLARIFICATION_NEEDED: ask 1–3 precise clarifying questions in "answer". Also provide 2–4 short rewritten question options the user can click in "clarification_options" (each option must be a complete, self-contained data question). If conversation history already answers part of the ambiguity, acknowledge what you know and only ask for what is still missing.
+- For META: answer using ONLY the schema digest above when present. Do not
+  invent tables, columns, or metrics that are not listed. If the digest is
+  empty, say you need a scanned connection / Context page.
+- For CLARIFICATION_NEEDED: ask 1–3 precise clarifying questions in "answer"
+  grounded ONLY in the schema digest and the provided options. Never suggest
+  metrics (e.g. sales, performance) that are not represented in the digest.
+  Prefer the provided clarification_options as clickable rewrites; you may
+  refine wording but must stay schema-faithful. Each option must be a complete,
+  self-contained data question. Always allow the user to rephrase.
+  If conversation history already answers part of the ambiguity, acknowledge
+  what you know and only ask for what is still missing.
 - For CHIT_CHAT: reply briefly and offer to help with data questions.
 
 Return JSON only:
@@ -30,6 +41,30 @@ Return JSON only:
   "follow_up_suggestions": ["optional follow-up 1", "optional follow-up 2"]
 }}
 """
+
+
+def _schema_block(context: dict[str, Any] | None, intent: str) -> str:
+    if intent not in {"CLARIFICATION_NEEDED", "META"}:
+        return ""
+    digest = ""
+    if isinstance(context, dict):
+        digest = str(context.get("schema_digest") or "").strip()
+        if not digest or digest == "(none)":
+            tables = context.get("selected_tables") or []
+            if tables:
+                digest = "Tables: " + ", ".join(str(t) for t in tables[:30])
+    if not digest:
+        return (
+            "━━━ SCHEMA DIGEST ━━━\n"
+            "(none available for this turn)\n"
+        )
+    # Bound prompt size.
+    if len(digest) > 6000:
+        digest = digest[:6000] + "\n…(truncated)"
+    return (
+        "━━━ SCHEMA DIGEST (retrieved only — do not invent beyond this) ━━━\n"
+        f"{digest}\n"
+    )
 
 
 async def direct_response(
@@ -43,6 +78,7 @@ async def direct_response(
     history_text = format_conversation_history(
         state.get("conversation_history") or []
     )
+    context = state.get("context") or {}
 
     user_content = question
     if history_text:
@@ -57,9 +93,26 @@ async def direct_response(
         for x in (state.get("clarification_options") or [])
         if str(x).strip()
     ]
+    ambiguity = state.get("ambiguity") or {}
+    if isinstance(ambiguity, dict):
+        for opt in ambiguity.get("options") or []:
+            text = str(opt).strip()
+            if text and text not in preset_options:
+                preset_options.append(text)
+
+    if preset_options and intent == "CLARIFICATION_NEEDED":
+        user_content += (
+            "\n\nPreferred clarification options (schema-validated; keep faithful):\n"
+            + "\n".join(f"- {o}" for o in preset_options[:6])
+        )
+
     clarification_options: list[str] = []
     try:
-        system = _DIRECT_SYSTEM.format(intent=intent, reason=reason)
+        system = _DIRECT_SYSTEM.format(
+            intent=intent,
+            reason=reason,
+            schema_block=_schema_block(context, intent),
+        )
         llm = get_llm_provider().get_chat_model(
             temperature=0.3,
             max_tokens=settings.llm_max_tokens,
@@ -77,7 +130,9 @@ async def direct_response(
         raw_options = parsed.get("clarification_options") or []
         if not isinstance(raw_options, list):
             raw_options = [str(raw_options)]
-        clarification_options = [str(x).strip() for x in raw_options if str(x).strip()]
+        clarification_options = [
+            str(x).strip() for x in raw_options if str(x).strip()
+        ]
     except Exception as exc:
         if intent == "CLARIFICATION_NEEDED":
             answer = (
@@ -85,16 +140,23 @@ async def direct_response(
                 f"{reason or str(exc)}"
             )
             clarification_options = preset_options or [
-                "What time period should I use?",
-                "Which metric should I measure?",
-                "Which tables or entities are you asking about?",
+                "Other — I'll rephrase the question",
             ]
         elif intent == "META":
-            answer = (
-                "I can help explore your connected database schema and run "
-                "read-only analytical questions. Ask about counts, trends, "
-                "or filters on your data."
-            )
+            digest = ""
+            if isinstance(context, dict):
+                digest = str(context.get("schema_digest") or "").strip()
+            if digest and digest != "(none)":
+                answer = (
+                    "Here is what I can see from the retrieved schema:\n"
+                    f"{digest[:2000]}"
+                )
+            else:
+                answer = (
+                    "I can help explore your connected database schema and run "
+                    "read-only analytical questions. Ask about counts, trends, "
+                    "or filters on your data."
+                )
         else:
             answer = (
                 "Hello! Ask me a question about your data and I'll generate "
@@ -102,7 +164,7 @@ async def direct_response(
             )
         follow_ups = [
             "What tables are available?",
-            "Show me recent orders",
+            "Show me a sample of recent rows",
         ]
 
     if not answer:
@@ -111,6 +173,9 @@ async def direct_response(
     # Only surface clickable clarifications for CLARIFICATION_NEEDED.
     if intent != "CLARIFICATION_NEEDED":
         clarification_options = []
+    elif preset_options:
+        # Prefer policy-validated options over free-form LLM inventions.
+        clarification_options = preset_options
     elif not clarification_options:
         clarification_options = preset_options
 

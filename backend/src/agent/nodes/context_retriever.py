@@ -4,7 +4,7 @@ from typing import Any
 
 from langchain_core.runnables import RunnableConfig
 
-from src.agent.ambiguity import decide_ambiguity
+from src.agent.ambiguity import build_schema_digest, decide_ambiguity
 from src.agent.state import AgentState
 from src.agent.utils import append_step, get_configurable, max_retries
 from src.context.retriever import ContextRetriever
@@ -74,6 +74,10 @@ async def context_retriever_node(
         "used_golden": retrieved.used_golden,
         "golden_sqls": retrieved.golden_sqls,
         "golden_questions": retrieved.golden_questions,
+        "schema_digest": build_schema_digest(
+            retrieved.selected_tables,
+            retrieved.selected_columns,
+        ),
     }
 
     steps = list(state.get("steps") or [])

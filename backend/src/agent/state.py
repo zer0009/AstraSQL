@@ -6,7 +6,7 @@ class AgentState(TypedDict, total=False):
     question: str
     intent: str
     intent_reason: str
-    context: dict  # serializable RetrievedContext fields
+    context: dict  # serializable RetrievedContext fields (+ schema_digest)
     sql: str
     corrected_sql: str
     results: dict  # {columns, rows, row_count}
@@ -21,9 +21,11 @@ class AgentState(TypedDict, total=False):
     follow_ups: list[str]
     clarification_options: list[str]
     used_golden: bool
-    ambiguity: dict  # {should_clarify, reason, options}
+    # {should_clarify, reason, options, status?, decision_why?, assumption?}
+    ambiguity: dict
     steps: list[dict]  # agent step events for SSE
     # Prior completed turns for multi-turn follow-ups (working-memory window).
-    conversation_history: list[dict]  # [{question, sql, answer}, ...]
+    # Optional trust_level helps clarification budget detection.
+    conversation_history: list[dict]  # [{question, sql, answer, trust_level?}, ...]
     # Injected by runner (not from LLM):
     # session and connection are handled outside graph or via config

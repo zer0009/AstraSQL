@@ -34,6 +34,12 @@ Target dialect: {dialect_name}
 -- Use prior answers to resolve references ("those customers", "that year", "the same filter").
 -- If no history is shown, treat this as a fresh question.
 
+━━━ RESOLVED INTERPRETATION ━━━
+{interpretation_assumption}
+-- When present, treat this as the chosen reading of any vague term in the question.
+-- Do not re-ask the user. Do not invent a different metric.
+-- If this section says "(none)", interpret the question normally from the schema.
+
 ━━━ DIALECT-SPECIFIC RULES ━━━
 {dialect_prompt_rules}
 -- Injected at runtime from the DatabaseProvider.dialect_prompt_rules() method.
@@ -114,6 +120,7 @@ def render_generator_prompt(
     business_rules: str = "",
     golden_records: str = "",
     conversation_history: str = "",
+    interpretation_assumption: str = "",
     dialect_prompt_rules: str = "",
     max_rows: str | int = "",
     retry_context: str = "",
@@ -122,6 +129,7 @@ def render_generator_prompt(
     **kwargs,
 ) -> str:
     """Render the query generator system prompt. User message is empty (question restated in system)."""
+    assumption = (interpretation_assumption or "").strip() or "(none)"
     return render(
         QUERY_GENERATOR_SYSTEM_PROMPT,
         dialect_name=dialect_name,
@@ -129,6 +137,7 @@ def render_generator_prompt(
         business_rules=business_rules,
         golden_records=golden_records,
         conversation_history=conversation_history,
+        interpretation_assumption=assumption,
         dialect_prompt_rules=dialect_prompt_rules,
         max_rows=max_rows,
         retry_context=retry_context,

@@ -39,6 +39,9 @@ def _normalize_conversation_history(
                 "question": question,
                 "sql": (str(turn.get("sql") or "").strip() or None),
                 "answer": (str(turn.get("answer") or "").strip() or None),
+                "trust_level": (
+                    str(turn.get("trust_level") or "").strip().lower() or None
+                ),
             }
         )
     return cleaned[-settings.max_conversation_turns :]

@@ -63,6 +63,7 @@ function buildTurnHistory(
         question: user.content,
         sql: assistant.sql,
         answer: assistant.content,
+        trust_level: assistant.trustLevel,
       });
       i++; // skip the assistant message on next iteration
     }

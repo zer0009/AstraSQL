@@ -58,12 +58,18 @@ async def query_generator(
         history_text = format_conversation_history(
             state.get("conversation_history") or []
         )
+        assumption = str(state.get("assumption") or "").strip()
+        if not assumption:
+            amb = state.get("ambiguity") or {}
+            if isinstance(amb, dict):
+                assumption = str(amb.get("assumption") or "").strip()
         system = render_generator_prompt(
             dialect_name=db_provider.dialect_name(),
             enriched_schema=context.get("enriched_schema") or "",
             business_rules=context.get("business_rules") or "",
             golden_records=context.get("golden_records_text") or "",
             conversation_history=history_text,
+            interpretation_assumption=assumption,
             dialect_prompt_rules=db_provider.dialect_prompt_rules(),
             max_rows=settings.max_result_rows,
             retry_context=retry_context,

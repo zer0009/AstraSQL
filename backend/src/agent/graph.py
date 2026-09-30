@@ -8,6 +8,7 @@ from src.agent.nodes import (
     context_retriever_node,
     direct_response,
     intent_classifier,
+    interpretation_resolver,
     query_executor,
     query_generator,
     query_validator,
@@ -26,7 +27,16 @@ def route_intent(state: AgentState) -> Literal["sql", "direct"]:
     return "direct"
 
 
-def route_after_context(state: AgentState) -> Literal["generate", "clarify"]:
+def route_after_context(state: AgentState) -> Literal["resolve", "clarify"]:
+    ambiguity = state.get("ambiguity") or {}
+    if isinstance(ambiguity, dict) and ambiguity.get("should_clarify"):
+        return "clarify"
+    return "resolve"
+
+
+def route_after_interpretation(
+    state: AgentState,
+) -> Literal["generate", "clarify"]:
     ambiguity = state.get("ambiguity") or {}
     if isinstance(ambiguity, dict) and ambiguity.get("should_clarify"):
         return "clarify"
@@ -64,6 +74,7 @@ def build_graph():
     g = StateGraph(AgentState)
     g.add_node("intent_classifier", intent_classifier)
     g.add_node("context_retriever", context_retriever_node)
+    g.add_node("interpretation_resolver", interpretation_resolver)
     g.add_node("query_generator", query_generator)
     g.add_node("query_validator", query_validator)
     g.add_node("query_executor", query_executor)
@@ -79,6 +90,11 @@ def build_graph():
     g.add_conditional_edges(
         "context_retriever",
         route_after_context,
+        {"resolve": "interpretation_resolver", "clarify": "direct_response"},
+    )
+    g.add_conditional_edges(
+        "interpretation_resolver",
+        route_after_interpretation,
         {"generate": "query_generator", "clarify": "direct_response"},
     )
     g.add_edge("query_generator", "query_validator")

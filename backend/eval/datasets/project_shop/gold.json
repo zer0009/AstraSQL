@@ -211,6 +211,34 @@
       "gold_sql": null,
       "expect": "clarify",
       "tags": ["active", "ambiguous"]
+    },
+    {
+      "id": "vague-best-customer",
+      "question": "Who is the best customer?",
+      "gold_sql": null,
+      "expect": "clarify",
+      "tags": ["vague", "schema-grounded"]
+    },
+    {
+      "id": "vague-top-product",
+      "question": "What is the top product?",
+      "gold_sql": null,
+      "expect": "clarify",
+      "tags": ["vague", "schema-grounded"]
+    },
+    {
+      "id": "unanswerable-churn-score",
+      "question": "What is each customer's churn risk score?",
+      "gold_sql": null,
+      "expect": "clarify",
+      "tags": ["unanswerable", "schema-grounded"]
+    },
+    {
+      "id": "clear-still-answers",
+      "question": "How many customers are in the customers table?",
+      "gold_sql": "SELECT COUNT(*) AS n FROM customers",
+      "expect": "answer",
+      "tags": ["count", "regression"]
     }
   ]
 }

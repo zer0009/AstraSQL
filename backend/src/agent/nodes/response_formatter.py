@@ -122,20 +122,37 @@ async def response_formatter(
         assumption = parsed.get("assumption")
         if assumption is not None:
             assumption = str(assumption).strip() or None
+        # Prefer schema-grounded interpretation assumption when present.
+        preset_assumption = str(state.get("assumption") or "").strip() or None
+        if preset_assumption:
+            assumption = preset_assumption
         follow_ups = parsed.get("follow_up_suggestions") or parsed.get(
             "follow_ups"
         ) or []
         if not isinstance(follow_ups, list):
             follow_ups = [str(follow_ups)]
         follow_ups = [str(x) for x in follow_ups if x]
+        # Merge alternative interpretations as one-click follow-ups.
+        preset_follow_ups = [
+            str(x).strip()
+            for x in (state.get("follow_ups") or [])
+            if str(x).strip()
+        ]
+        for alt in preset_follow_ups:
+            if alt not in follow_ups:
+                follow_ups.append(alt)
     except Exception as exc:
         answer = (
             f"Query returned {row_count} row(s). "
             f"(Formatter fallback: {exc})"
         )
         key_finding = f"{row_count} row(s)" if row_count else "No rows"
-        assumption = None
-        follow_ups = []
+        assumption = str(state.get("assumption") or "").strip() or None
+        follow_ups = [
+            str(x).strip()
+            for x in (state.get("follow_ups") or [])
+            if str(x).strip()
+        ]
 
     context = state.get("context") or {}
     trust_level = compute_trust_level(

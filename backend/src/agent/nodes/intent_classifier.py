@@ -12,15 +12,13 @@ from src.agent.utils import append_step, extract_json, message_text
 from src.config.settings import get_settings
 from src.providers.llm import get_llm_provider
 
-_VALID_INTENTS = frozenset(
-    {"SQL_QUERY", "META", "CLARIFICATION_NEEDED", "CHIT_CHAT"}
-)
+_VALID_INTENTS = frozenset({"SQL_QUERY", "META", "CHIT_CHAT"})
 
 
 async def intent_classifier(
     state: AgentState, config: RunnableConfig
 ) -> dict[str, Any]:
-    """Classify the user question into SQL vs non-SQL intents."""
+    """Classify the user question into SQL vs non-SQL intents (route-only)."""
     question = (state.get("question") or "").strip()
     settings = get_settings()
     history_text = format_conversation_history(
@@ -42,13 +40,18 @@ async def intent_classifier(
         )
         parsed = extract_json(message_text(response))
         intent = str(parsed.get("intent") or "SQL_QUERY").strip().upper()
+        # Legacy label from older prompts — treat as data and let the
+        # schema-grounded resolver decide whether to ask.
+        if intent == "CLARIFICATION_NEEDED":
+            intent = "SQL_QUERY"
         if intent not in _VALID_INTENTS:
             intent = "SQL_QUERY"
         reason = str(parsed.get("reason") or "").strip()
     except Exception as exc:
-        intent = "CLARIFICATION_NEEDED"
+        # Fail open: keep the SQL path so schema grounding can still run.
+        intent = "SQL_QUERY"
         reason = (
-            f"Intent classification failed; asking for clarification ({exc})"
+            f"Intent classification failed; defaulting to SQL_QUERY ({exc})"
         )
 
     return {
