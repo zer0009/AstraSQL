@@ -1,0 +1,623 @@
+{
+  "kind": "spider-rescore",
+  "source": "D:\\Projects\\2026\\AstraSQL_V2\\backend\\eval\\results\\pilot-20260930T202313Z.json",
+  "created_at": "2026-09-30T20:36:28.525899+00:00",
+  "n": 5,
+  "questions": [
+    {
+      "id": "concert_singer-0",
+      "question": "What are the locations and names of all stations with capacity between 5000 and 10000?",
+      "hardness": "easy",
+      "gold_sql": "SELECT LOCATION ,  name FROM stadium WHERE capacity BETWEEN 5000 AND 10000",
+      "generated_sql": "SELECT Location, Name FROM stadium WHERE Capacity BETWEEN 5000 AND 10000;",
+      "result_match": true,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "elapsed_ms": 17949,
+      "cost_usd": 0.002028,
+      "input_tokens": 4974,
+      "output_tokens": 861,
+      "reasoning_tokens": 175,
+      "cached_input_tokens": 0,
+      "calls": 8,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 350,
+          "output_tokens": 28,
+          "reasoning_tokens": 0,
+          "latency_ms": 1846,
+          "cost_usd": 0.0001036
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 1204,
+          "output_tokens": 277,
+          "reasoning_tokens": 28,
+          "latency_ms": 8474,
+          "cost_usd": 0.0005732
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 466,
+          "output_tokens": 91,
+          "reasoning_tokens": 0,
+          "latency_ms": 2378,
+          "cost_usd": 0.0002024
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1474,
+          "output_tokens": 124,
+          "reasoning_tokens": 0,
+          "latency_ms": 2055,
+          "cost_usd": 0.0004436
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1023,
+          "output_tokens": 239,
+          "reasoning_tokens": 147,
+          "latency_ms": 3297,
+          "cost_usd": 0.0004914
+        },
+        "response_formatter": {
+          "calls": 1,
+          "input_tokens": 457,
+          "output_tokens": 102,
+          "reasoning_tokens": 0,
+          "latency_ms": 2320,
+          "cost_usd": 0.0002138
+        }
+      },
+      "db_id": "concert_singer",
+      "result_match_values": true,
+      "failure_label": null,
+      "gold_result": {
+        "columns": [
+          "Location",
+          "Name"
+        ],
+        "row_count": 0,
+        "rows": [],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Location",
+          "Name"
+        ],
+        "row_count": 0,
+        "rows": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "concert_singer-1",
+      "question": "How many singers are from each country?",
+      "hardness": "medium",
+      "gold_sql": "SELECT country ,  count(*) FROM singer GROUP BY country",
+      "generated_sql": "SELECT singer.Country AS country, COUNT(*) AS singer_count\nFROM singer\nGROUP BY singer.Country\nORDER BY singer.Country ASC;",
+      "result_match": false,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "elapsed_ms": 24469,
+      "cost_usd": 0.0017036,
+      "input_tokens": 4846,
+      "output_tokens": 612,
+      "reasoning_tokens": 24,
+      "cached_input_tokens": 0,
+      "calls": 8,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 338,
+          "output_tokens": 30,
+          "reasoning_tokens": 0,
+          "latency_ms": 3055,
+          "cost_usd": 0.0001036
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 1168,
+          "output_tokens": 210,
+          "reasoning_tokens": 24,
+          "latency_ms": 8571,
+          "cost_usd": 0.0004856
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 451,
+          "output_tokens": 77,
+          "reasoning_tokens": 0,
+          "latency_ms": 1774,
+          "cost_usd": 0.0001826
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1409,
+          "output_tokens": 118,
+          "reasoning_tokens": 0,
+          "latency_ms": 3644,
+          "cost_usd": 0.0004234
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 979,
+          "output_tokens": 59,
+          "reasoning_tokens": 0,
+          "latency_ms": 3420,
+          "cost_usd": 0.0002666
+        },
+        "response_formatter": {
+          "calls": 1,
+          "input_tokens": 501,
+          "output_tokens": 118,
+          "reasoning_tokens": 0,
+          "latency_ms": 5611,
+          "cost_usd": 0.0002418
+        }
+      },
+      "db_id": "concert_singer",
+      "result_match_values": true,
+      "failure_label": "scorer_only",
+      "gold_result": {
+        "columns": [
+          "Country",
+          "count(*)"
+        ],
+        "row_count": 3,
+        "rows": [
+          {
+            "Country": "France",
+            "count(*)": 4
+          },
+          {
+            "Country": "Netherlands",
+            "count(*)": 1
+          },
+          {
+            "Country": "United States",
+            "count(*)": 1
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "country",
+          "singer_count"
+        ],
+        "row_count": 3,
+        "rows": [
+          {
+            "country": "France",
+            "singer_count": 4
+          },
+          {
+            "country": "Netherlands",
+            "singer_count": 1
+          },
+          {
+            "country": "United States",
+            "singer_count": 1
+          }
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "concert_singer-2",
+      "question": "What are the number of concerts that occurred in the stadium with the largest capacity ?",
+      "hardness": "hard",
+      "gold_sql": "select count(*) from concert where stadium_id = (select stadium_id from stadium order by capacity desc limit 1)",
+      "generated_sql": "SELECT COUNT(c.concert_ID) AS concert_count\nFROM concert AS c\nJOIN stadium AS s ON c.Stadium_ID = s.Stadium_ID\nWHERE s.Capacity = (SELECT MAX(Capacity) FROM stadium);",
+      "result_match": false,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "elapsed_ms": 14619,
+      "cost_usd": 0.0021382,
+      "input_tokens": 5279,
+      "output_tokens": 902,
+      "reasoning_tokens": 80,
+      "cached_input_tokens": 0,
+      "calls": 8,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 346,
+          "output_tokens": 36,
+          "reasoning_tokens": 0,
+          "latency_ms": 1124,
+          "cost_usd": 0.0001124
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 1192,
+          "output_tokens": 350,
+          "reasoning_tokens": 80,
+          "latency_ms": 8524,
+          "cost_usd": 0.0006584
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 471,
+          "output_tokens": 115,
+          "reasoning_tokens": 0,
+          "latency_ms": 2223,
+          "cost_usd": 0.0002322
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1601,
+          "output_tokens": 182,
+          "reasoning_tokens": 0,
+          "latency_ms": 2109,
+          "cost_usd": 0.0005386
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1183,
+          "output_tokens": 80,
+          "reasoning_tokens": 0,
+          "latency_ms": 1449,
+          "cost_usd": 0.0003326
+        },
+        "response_formatter": {
+          "calls": 1,
+          "input_tokens": 486,
+          "output_tokens": 139,
+          "reasoning_tokens": 0,
+          "latency_ms": 1940,
+          "cost_usd": 0.000264
+        }
+      },
+      "db_id": "concert_singer",
+      "result_match_values": true,
+      "failure_label": "scorer_only",
+      "gold_result": {
+        "columns": [
+          "count(*)"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "count(*)": 0
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "concert_count"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "concert_count": 0
+          }
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "concert_singer-3",
+      "question": "Find the name and location of the stadiums which some concerts happened in the years of both 2014 and 2015.",
+      "hardness": "extra",
+      "gold_sql": "SELECT T2.name ,  T2.location FROM concert AS T1 JOIN stadium AS T2 ON T1.stadium_id  =  T2.stadium_id WHERE T1.Year  =  2014 INTERSECT SELECT T2.name ,  T2.location FROM concert AS T1 JOIN stadium AS T2 ON T1.stadium_id  =  T2.stadium_id WHERE T1.Year  =  2015",
+      "generated_sql": "SELECT s.Name, s.Location\nFROM stadium AS s\nJOIN concert AS c\n  ON s.Stadium_ID = c.Stadium_ID\nWHERE c.Year IN ('2014', '2015')\nGROUP BY s.Stadium_ID, s.Name, s.Location\nHAVING COUNT(DISTINCT c.Year) = 2;",
+      "result_match": true,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "elapsed_ms": 17265,
+      "cost_usd": 0.0025076,
+      "input_tokens": 5470,
+      "output_tokens": 1178,
+      "reasoning_tokens": 173,
+      "cached_input_tokens": 0,
+      "calls": 8,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 356,
+          "output_tokens": 37,
+          "reasoning_tokens": 0,
+          "latency_ms": 1144,
+          "cost_usd": 0.0001156
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 1222,
+          "output_tokens": 409,
+          "reasoning_tokens": 80,
+          "latency_ms": 9492,
+          "cost_usd": 0.0007352
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 484,
+          "output_tokens": 202,
+          "reasoning_tokens": 42,
+          "latency_ms": 3030,
+          "cost_usd": 0.0003392
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1644,
+          "output_tokens": 233,
+          "reasoning_tokens": 0,
+          "latency_ms": 2145,
+          "cost_usd": 0.0006084
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1237,
+          "output_tokens": 159,
+          "reasoning_tokens": 51,
+          "latency_ms": 2357,
+          "cost_usd": 0.0004382
+        },
+        "response_formatter": {
+          "calls": 1,
+          "input_tokens": 527,
+          "output_tokens": 138,
+          "reasoning_tokens": 0,
+          "latency_ms": 1726,
+          "cost_usd": 0.000271
+        }
+      },
+      "db_id": "concert_singer",
+      "result_match_values": true,
+      "failure_label": null,
+      "gold_result": {
+        "columns": [
+          "Name",
+          "Location"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "Name": "Somerset Park",
+            "Location": "Ayr United"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Name",
+          "Location"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "Name": "Somerset Park",
+            "Location": "Ayr United"
+          }
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "concert_singer-4",
+      "question": "What are the names of the singers and number of concerts for each person?",
+      "hardness": "medium",
+      "gold_sql": "SELECT T2.name ,  count(*) FROM singer_in_concert AS T1 JOIN singer AS T2 ON T1.singer_id  =  T2.singer_id GROUP BY T2.singer_id",
+      "generated_sql": "SELECT s.Name, COUNT(sic.concert_ID) AS concert_count\nFROM singer AS s\nLEFT JOIN singer_in_concert AS sic\n  ON s.Singer_ID = sic.Singer_ID\nGROUP BY s.Singer_ID, s.Name;",
+      "result_match": false,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "elapsed_ms": 20352,
+      "cost_usd": 0.0027262,
+      "input_tokens": 6149,
+      "output_tokens": 1247,
+      "reasoning_tokens": 360,
+      "cached_input_tokens": 0,
+      "calls": 8,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 345,
+          "output_tokens": 37,
+          "reasoning_tokens": 0,
+          "latency_ms": 1163,
+          "cost_usd": 0.0001134
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 1189,
+          "output_tokens": 416,
+          "reasoning_tokens": 128,
+          "latency_ms": 7535,
+          "cost_usd": 0.000737
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 495,
+          "output_tokens": 187,
+          "reasoning_tokens": 45,
+          "latency_ms": 2970,
+          "cost_usd": 0.0003234
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 2000,
+          "output_tokens": 279,
+          "reasoning_tokens": 82,
+          "latency_ms": 3825,
+          "cost_usd": 0.0007348
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1588,
+          "output_tokens": 84,
+          "reasoning_tokens": 0,
+          "latency_ms": 3389,
+          "cost_usd": 0.0004184
+        },
+        "response_formatter": {
+          "calls": 1,
+          "input_tokens": 532,
+          "output_tokens": 244,
+          "reasoning_tokens": 105,
+          "latency_ms": 3642,
+          "cost_usd": 0.0003992
+        }
+      },
+      "db_id": "concert_singer",
+      "result_match_values": false,
+      "failure_label": "join_type",
+      "gold_result": {
+        "columns": [
+          "Name",
+          "count(*)"
+        ],
+        "row_count": 5,
+        "rows": [
+          {
+            "Name": "Timbaland",
+            "count(*)": 2
+          },
+          {
+            "Name": "Justin Brown",
+            "count(*)": 3
+          },
+          {
+            "Name": "Rose White",
+            "count(*)": 1
+          },
+          {
+            "Name": "John Nizinik",
+            "count(*)": 2
+          },
+          {
+            "Name": "Tribal King",
+            "count(*)": 2
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Name",
+          "concert_count"
+        ],
+        "row_count": 6,
+        "rows": [
+          {
+            "Name": "Joe Sharp",
+            "concert_count": 0
+          },
+          {
+            "Name": "Timbaland",
+            "concert_count": 2
+          },
+          {
+            "Name": "Justin Brown",
+            "concert_count": 3
+          },
+          {
+            "Name": "Rose White",
+            "concert_count": 1
+          },
+          {
+            "Name": "John Nizinik",
+            "concert_count": 2
+          },
+          {
+            "Name": "Tribal King",
+            "concert_count": 2
+          }
+        ],
+        "truncated": false
+      }
+    }
+  ],
+  "accuracy": {
+    "overall": {
+      "n": 5,
+      "strict_correct": 2,
+      "values_correct": 4,
+      "strict_accuracy": 0.4,
+      "values_accuracy": 0.8
+    },
+    "by_hardness": {
+      "easy": {
+        "n": 1,
+        "strict_correct": 1,
+        "values_correct": 1,
+        "strict_accuracy": 1.0,
+        "values_accuracy": 1.0
+      },
+      "extra": {
+        "n": 1,
+        "strict_correct": 1,
+        "values_correct": 1,
+        "strict_accuracy": 1.0,
+        "values_accuracy": 1.0
+      },
+      "hard": {
+        "n": 1,
+        "strict_correct": 0,
+        "values_correct": 1,
+        "strict_accuracy": 0.0,
+        "values_accuracy": 1.0
+      },
+      "medium": {
+        "n": 2,
+        "strict_correct": 0,
+        "values_correct": 1,
+        "strict_accuracy": 0.0,
+        "values_accuracy": 0.5
+      }
+    },
+    "by_database": {
+      "concert_singer": {
+        "n": 5,
+        "strict_correct": 2,
+        "values_correct": 4,
+        "strict_accuracy": 0.4,
+        "values_accuracy": 0.8
+      }
+    },
+    "failure_labels": {
+      "join_type": 1
+    },
+    "schema_linking_recall": {
+      "n": 0,
+      "full_hit": 0,
+      "rate": null
+    }
+  },
+  "original_totals": {
+    "cost_usd": 0.011104,
+    "elapsed_ms": 94654,
+    "input_tokens": 26718,
+    "output_tokens": 4800,
+    "reasoning_tokens": 812,
+    "calls": 40,
+    "estimated_calls": 0,
+    "correct": 2,
+    "n": 5
+  }
+}

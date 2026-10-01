@@ -6,6 +6,7 @@ from src.providers.database.base import BaseDatabaseProvider
 from src.providers.database.mssql import MSSQLProvider
 from src.providers.database.mysql import MySQLProvider
 from src.providers.database.postgresql import PostgreSQLProvider
+from src.providers.database.sqlite import SQLiteProvider
 
 if TYPE_CHECKING:
     from src.storage.models import Connection
@@ -14,6 +15,7 @@ _REGISTRY: dict[str, type[BaseDatabaseProvider]] = {
     "postgresql": PostgreSQLProvider,
     "mysql": MySQLProvider,
     "mssql": MSSQLProvider,
+    "sqlite": SQLiteProvider,
 }
 
 

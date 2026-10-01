@@ -8,12 +8,14 @@ from src.providers.database.registry import (
     provider_from_connection,
     register_database_provider,
 )
+from src.providers.database.sqlite import SQLiteProvider
 
 __all__ = [
     "BaseDatabaseProvider",
     "PostgreSQLProvider",
     "MySQLProvider",
     "MSSQLProvider",
+    "SQLiteProvider",
     "get_database_provider",
     "list_database_types",
     "provider_from_connection",

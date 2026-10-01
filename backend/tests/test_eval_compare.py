@@ -1,4 +1,9 @@
-from src.eval.compare import results_equal, sql_equal
+from src.eval.compare import (
+    gold_has_order_by,
+    results_equal,
+    results_equal_values,
+    sql_equal,
+)
 from src.eval.models import CaseResult
 from src.eval.run import build_report
 
@@ -27,6 +32,59 @@ def test_results_equal_detects_value_mismatch():
     left = {"columns": ["n"], "rows": [{"n": 3}]}
     right = {"columns": ["n"], "rows": [{"n": 4}]}
     assert results_equal(left, right) is False
+
+
+def test_results_equal_values_ignores_alias():
+    gold = {
+        "columns": ["country", "count(*)"],
+        "rows": [{"country": "France", "count(*)": 2}, {"country": "Netherlands", "count(*)": 1}],
+    }
+    gen = {
+        "columns": ["country", "singer_count"],
+        "rows": [
+            {"country": "Netherlands", "singer_count": 1},
+            {"country": "France", "singer_count": 2},
+        ],
+    }
+    assert results_equal(gold, gen) is False
+    assert results_equal_values(gold, gen) is True
+
+
+def test_results_equal_values_different_row_counts_fail():
+    gold = {"columns": ["n"], "rows": [{"n": 1}, {"n": 2}]}
+    gen = {"columns": ["n"], "rows": [{"n": 1}, {"n": 2}, {"n": 0}]}
+    assert results_equal_values(gold, gen) is False
+
+
+def test_results_equal_values_left_join_extra_rows_fail():
+    gold = {
+        "columns": ["name", "c"],
+        "rows": [{"name": "A", "c": 2}, {"name": "B", "c": 1}],
+    }
+    gen = {
+        "columns": ["name", "c"],
+        "rows": [
+            {"name": "A", "c": 2},
+            {"name": "B", "c": 1},
+            {"name": "C", "c": 0},
+        ],
+    }
+    assert results_equal_values(gold, gen) is False
+
+
+def test_results_equal_values_order_sensitive_with_order_by():
+    gold_sql = "SELECT name FROM t ORDER BY name"
+    gold = {"columns": ["name"], "rows": [{"name": "A"}, {"name": "B"}]}
+    gen = {"columns": ["name"], "rows": [{"name": "B"}, {"name": "A"}]}
+    assert results_equal_values(gold, gen, gold_sql=gold_sql) is False
+    assert results_equal_values(gold, gen, gold_sql="SELECT name FROM t") is True
+    assert gold_has_order_by(gold_sql) is True
+
+
+def test_results_equal_values_float_tolerance():
+    gold = {"columns": ["x"], "rows": [{"x": 1.0}]}
+    gen = {"columns": ["x"], "rows": [{"x": 1.0000001}]}
+    assert results_equal_values(gold, gen) is True
 
 
 def test_build_report_rates():

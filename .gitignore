@@ -12,7 +12,9 @@ build/
 
 # Data
 backend/data/
+backend/eval/benchmarks/data/
 *.db
+*.sqlite
 *.index
 *.pkl
 

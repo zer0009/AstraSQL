@@ -2,9 +2,16 @@
 
 from __future__ import annotations
 
+import math
+import re
+from itertools import permutations
 from typing import Any, Optional
 
 from src.agent.trust import normalize_sql
+
+_FLOAT_TOL = 1e-6
+_MAX_PERM_COLS = 8
+_ORDER_BY_RE = re.compile(r"\border\s+by\b", re.IGNORECASE)
 
 
 def sql_equal(left: Optional[str], right: Optional[str], dialect: str = "postgres") -> bool:
@@ -15,16 +22,44 @@ def sql_equal(left: Optional[str], right: Optional[str], dialect: str = "postgre
     )
 
 
+def gold_has_order_by(sql: Optional[str]) -> bool:
+    """True when the gold SQL requests a specific row order."""
+    text = (sql or "").strip()
+    if not text:
+        return False
+    return bool(_ORDER_BY_RE.search(text))
+
+
 def _cell(value: Any) -> Any:
     if value is None:
         return None
     if isinstance(value, bool):
         return value
     if isinstance(value, (int, float)):
-        if isinstance(value, float) and value.is_integer():
+        if isinstance(value, float) and math.isfinite(value) and value.is_integer():
             return int(value)
         return value
-    return str(value)
+    text = str(value)
+    # Numeric strings from SQLite / drivers
+    try:
+        if "." in text or "e" in text.lower():
+            f = float(text)
+            if math.isfinite(f) and abs(f - round(f)) < _FLOAT_TOL:
+                return int(round(f))
+            return f
+        return int(text)
+    except (TypeError, ValueError):
+        return text
+
+
+def _cells_equal(a: Any, b: Any) -> bool:
+    if a is None and b is None:
+        return True
+    if a is None or b is None:
+        return False
+    if isinstance(a, (int, float)) and isinstance(b, (int, float)):
+        return abs(float(a) - float(b)) <= _FLOAT_TOL
+    return a == b
 
 
 def _row_tuple(row: Any, columns: list[str]) -> tuple[Any, ...]:
@@ -35,12 +70,65 @@ def _row_tuple(row: Any, columns: list[str]) -> tuple[Any, ...]:
     return (_cell(row),)
 
 
-def results_equal(left: Optional[dict], right: Optional[dict]) -> bool:
-    """Compare two execute_readonly-style payloads (columns + rows).
+def _rows_as_value_lists(payload: dict) -> list[list[Any]]:
+    columns = list(payload.get("columns") or [])
+    rows = payload.get("rows") or []
+    out: list[list[Any]] = []
+    for row in rows:
+        if isinstance(row, dict):
+            # Prefer declared column order; fall back to values()
+            if columns:
+                keyed = {str(k): v for k, v in row.items()}
+                keyed_l = {str(k).lower(): v for k, v in row.items()}
+                vals = []
+                for c in columns:
+                    if c in keyed:
+                        vals.append(_cell(keyed[c]))
+                    elif str(c).lower() in keyed_l:
+                        vals.append(_cell(keyed_l[str(c).lower()]))
+                    else:
+                        vals.append(None)
+                out.append(vals)
+            else:
+                out.append([_cell(v) for v in row.values()])
+        elif isinstance(row, (list, tuple)):
+            out.append([_cell(v) for v in row])
+        else:
+            out.append([_cell(row)])
+    return out
 
-    Column names are compared case-insensitively. Row order is ignored so
-    missing ORDER BY does not fail an otherwise correct result.
-    """
+
+def _rows_match(
+    left_rows: list[tuple[Any, ...]],
+    right_rows: list[tuple[Any, ...]],
+    *,
+    order_sensitive: bool,
+) -> bool:
+    if len(left_rows) != len(right_rows):
+        return False
+    if order_sensitive:
+        return all(
+            all(_cells_equal(a, b) for a, b in zip(lr, rr))
+            for lr, rr in zip(left_rows, right_rows)
+        )
+    # Multiset of rows (order-insensitive).
+    def _key(row: tuple[Any, ...]) -> tuple[Any, ...]:
+        # Round floats for stable sorting / grouping.
+        parts: list[Any] = []
+        for v in row:
+            if isinstance(v, float):
+                parts.append(round(v, 6))
+            else:
+                parts.append(v)
+        return tuple(parts)
+
+    from collections import Counter
+
+    return Counter(_key(r) for r in left_rows) == Counter(_key(r) for r in right_rows)
+
+
+def results_equal(left: Optional[dict], right: Optional[dict]) -> bool:
+    """Strict compare: column names (case-insensitive) + unordered rows."""
     if not left or not right:
         return False
     left_cols = [str(c).lower() for c in (left.get("columns") or [])]
@@ -50,7 +138,6 @@ def results_equal(left: Optional[dict], right: Optional[dict]) -> bool:
     if sorted(left_cols) != sorted(right_cols):
         return False
 
-    # Align right rows to left column order.
     right_index = {c: i for i, c in enumerate(right_cols)}
     left_rows = [_row_tuple(r, left.get("columns") or []) for r in (left.get("rows") or [])]
     aligned_right: list[tuple[Any, ...]] = []
@@ -65,4 +152,73 @@ def results_equal(left: Optional[dict], right: Optional[dict]) -> bool:
         else:
             aligned_right.append((_cell(row),))
 
-    return sorted(left_rows) == sorted(aligned_right)
+    return _rows_match(left_rows, aligned_right, order_sensitive=False)
+
+
+def results_equal_values(
+    left: Optional[dict],
+    right: Optional[dict],
+    *,
+    gold_sql: Optional[str] = None,
+    order_sensitive: Optional[bool] = None,
+) -> bool:
+    """Spider-style denotation equality: ignore column names, match values.
+
+    Tries column permutations when the column count matches. Row order is
+    ignored unless ``order_sensitive`` is True or the gold SQL has ORDER BY.
+    """
+    if not left or not right:
+        return False
+    left_vals = _rows_as_value_lists(left)
+    right_vals = _rows_as_value_lists(right)
+    if not left_vals and not right_vals:
+        # Both empty — treat as equal only if column counts agree or both zero.
+        lc = len(left.get("columns") or [])
+        rc = len(right.get("columns") or [])
+        return lc == rc or (lc == 0 and rc == 0)
+    if not left_vals or not right_vals:
+        return False
+    if len(left_vals) != len(right_vals):
+        return False
+    n_cols = len(left_vals[0])
+    if n_cols == 0:
+        return True
+    if any(len(r) != n_cols for r in left_vals):
+        return False
+    if any(len(r) != n_cols for r in right_vals):
+        # Column count mismatch between sides
+        right_cols = len(right_vals[0])
+        if right_cols != n_cols:
+            return False
+
+    if order_sensitive is None:
+        order_sensitive = gold_has_order_by(gold_sql)
+
+    left_tuples = [tuple(r) for r in left_vals]
+    right_matrix = right_vals
+
+    if n_cols > _MAX_PERM_COLS:
+        # Fall back: sort cells within each row (loses column association).
+        def bag(rows: list[list[Any]]) -> list[tuple[Any, ...]]:
+            out = []
+            for row in rows:
+                key = tuple(
+                    sorted(
+                        (round(v, 6) if isinstance(v, float) else v for v in row),
+                        key=lambda x: (str(type(x)), str(x)),
+                    )
+                )
+                out.append(key)
+            return out
+
+        if order_sensitive:
+            return bag(left_vals) == bag(right_matrix)
+        from collections import Counter
+
+        return Counter(bag(left_vals)) == Counter(bag(right_matrix))
+
+    for perm in permutations(range(n_cols)):
+        remapped = [tuple(row[i] for i in perm) for row in right_matrix]
+        if _rows_match(left_tuples, remapped, order_sensitive=order_sensitive):
+            return True
+    return False

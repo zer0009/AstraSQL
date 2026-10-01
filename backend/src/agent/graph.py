@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Literal
+from functools import wraps
+from typing import Any, Callable, Literal
 
 from langgraph.graph import END, START, StateGraph
 
@@ -16,8 +17,22 @@ from src.agent.nodes import (
 )
 from src.agent.state import AgentState
 from src.agent.utils import max_retries
+from src.observability.usage import usage_stage
 
 _SQL_INTENTS = frozenset({"SQL_QUERY"})
+
+
+def _with_stage(stage: str, fn: Callable[..., Any]) -> Callable[..., Any]:
+    """Wrap a node so LLM calls inside it are labelled with ``stage``."""
+
+    @wraps(fn)
+    async def _wrapped(state: AgentState, config: Any = None) -> Any:
+        with usage_stage(stage):
+            if config is None:
+                return await fn(state)
+            return await fn(state, config)
+
+    return _wrapped
 
 
 def route_intent(state: AgentState) -> Literal["sql", "direct"]:
@@ -72,14 +87,23 @@ def route_after_execute(
 def build_graph():
     """Compile the AstraSQL LangGraph pipeline."""
     g = StateGraph(AgentState)
-    g.add_node("intent_classifier", intent_classifier)
-    g.add_node("context_retriever", context_retriever_node)
-    g.add_node("interpretation_resolver", interpretation_resolver)
-    g.add_node("query_generator", query_generator)
-    g.add_node("query_validator", query_validator)
-    g.add_node("query_executor", query_executor)
-    g.add_node("response_formatter", response_formatter)
-    g.add_node("direct_response", direct_response)
+    g.add_node("intent_classifier", _with_stage("intent_classifier", intent_classifier))
+    g.add_node(
+        "context_retriever",
+        _with_stage("context_retriever", context_retriever_node),
+    )
+    g.add_node(
+        "interpretation_resolver",
+        _with_stage("interpretation_resolver", interpretation_resolver),
+    )
+    g.add_node("query_generator", _with_stage("query_generator", query_generator))
+    g.add_node("query_validator", _with_stage("query_validator", query_validator))
+    g.add_node("query_executor", _with_stage("query_executor", query_executor))
+    g.add_node(
+        "response_formatter",
+        _with_stage("response_formatter", response_formatter),
+    )
+    g.add_node("direct_response", _with_stage("direct_response", direct_response))
 
     g.add_edge(START, "intent_classifier")
     g.add_conditional_edges(

@@ -1,0 +1,6359 @@
+{
+  "kind": "spider-pilot",
+  "created_at": "2026-09-30T20:50:54.376312+00:00",
+  "models": {
+    "openai_model": "gpt-5.6-luna",
+    "enrichment_model": "gpt-5.6-luna",
+    "interpretation_model": "gpt-5.6-luna",
+    "llm_reasoning_effort": "low",
+    "embedding_model": "text-embedding-3-small"
+  },
+  "rate_card": {
+    "gpt-5.6-luna": {
+      "input": 0.2,
+      "output": 1.2,
+      "cached_input": 0.02
+    },
+    "embedding": 0.02
+  },
+  "db_id": null,
+  "db_ids": [
+    "concert_singer",
+    "course_teach",
+    "network_1",
+    "orchestra",
+    "pets_1"
+  ],
+  "question_ids": [
+    "course_teach:9e4bef81cd89",
+    "course_teach:b45786ed0af6",
+    "course_teach:d609a3b5e2eb",
+    "course_teach:7cd5b8a77a3c",
+    "course_teach:f8981bb4054d",
+    "concert_singer:88aeca8a41e8",
+    "concert_singer:b45e8112835e",
+    "concert_singer:b696905ed1d6",
+    "concert_singer:3af42e7e0821",
+    "concert_singer:f22528648d5c",
+    "pets_1:0a67fdb91226",
+    "pets_1:8bd260baf455",
+    "pets_1:6847f764cdfb",
+    "pets_1:f9b607ba3304",
+    "pets_1:a201c09fa32c",
+    "network_1:03a3045ed350",
+    "network_1:4977698c784a",
+    "network_1:367815e79dd4",
+    "network_1:76c75a92d3d7",
+    "network_1:83bd47e893c4",
+    "orchestra:c719cf8db286",
+    "orchestra:5a092e07dc63",
+    "orchestra:723a05ed5688",
+    "orchestra:ab73cb450540",
+    "orchestra:c1d9e8230efa"
+  ],
+  "n": 25,
+  "seed": 42,
+  "setup": {
+    "by_db": {
+      "course_teach": {
+        "tables": 3,
+        "enriched": 0,
+        "elapsed_ms": 8,
+        "cost_usd": 0,
+        "usage": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "latency_ms": 0,
+          "cost_usd": 0,
+          "estimated_calls": 0,
+          "by_stage": {}
+        }
+      },
+      "concert_singer": {
+        "tables": 4,
+        "enriched": 0,
+        "elapsed_ms": 5,
+        "cost_usd": 0,
+        "usage": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "latency_ms": 0,
+          "cost_usd": 0,
+          "estimated_calls": 0,
+          "by_stage": {}
+        }
+      },
+      "pets_1": {
+        "tables": 3,
+        "enriched": 0,
+        "elapsed_ms": 3,
+        "cost_usd": 0,
+        "usage": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "latency_ms": 0,
+          "cost_usd": 0,
+          "estimated_calls": 0,
+          "by_stage": {}
+        }
+      },
+      "network_1": {
+        "tables": 3,
+        "enriched": 0,
+        "elapsed_ms": 3,
+        "cost_usd": 0,
+        "usage": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "latency_ms": 0,
+          "cost_usd": 0,
+          "estimated_calls": 0,
+          "by_stage": {}
+        }
+      },
+      "orchestra": {
+        "tables": 4,
+        "enriched": 0,
+        "elapsed_ms": 3,
+        "cost_usd": 0,
+        "usage": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "latency_ms": 0,
+          "cost_usd": 0,
+          "estimated_calls": 0,
+          "by_stage": {}
+        }
+      }
+    },
+    "cost_usd": 0.0,
+    "elapsed_ms": 22
+  },
+  "questions": [
+    {
+      "id": "course_teach:9e4bef81cd89",
+      "db_id": "course_teach",
+      "question": "What are the names of the teachers who are aged either 32 or 33?",
+      "hardness": "easy",
+      "gold_sql": "SELECT Name FROM teacher WHERE Age  =  32 OR Age  =  33",
+      "generated_sql": "SELECT Name FROM teacher WHERE Age IN ('32', '33') LIMIT 500;",
+      "result_match": true,
+      "result_match_values": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "teacher"
+        ],
+        "selected_tables": [
+          "teacher"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "teacher"
+      ],
+      "gold_result": {
+        "columns": [
+          "Name"
+        ],
+        "row_count": 2,
+        "rows": [
+          {
+            "Name": "Joseph Huts"
+          },
+          {
+            "Name": "John Deloor"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Name"
+        ],
+        "row_count": 2,
+        "rows": [
+          {
+            "Name": "Joseph Huts"
+          },
+          {
+            "Name": "John Deloor"
+          }
+        ],
+        "truncated": false
+      },
+      "elapsed_ms": 15524,
+      "cost_usd": 0.00145092,
+      "input_tokens": 4623,
+      "output_tokens": 648,
+      "reasoning_tokens": 32,
+      "cached_input_tokens": 1396,
+      "calls": 8,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 347,
+          "output_tokens": 27,
+          "reasoning_tokens": 0,
+          "latency_ms": 1528,
+          "cost_usd": 0.0001018
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 993,
+          "output_tokens": 185,
+          "reasoning_tokens": 0,
+          "latency_ms": 5042,
+          "cost_usd": 0.0004206
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 458,
+          "output_tokens": 111,
+          "reasoning_tokens": 0,
+          "latency_ms": 1981,
+          "cost_usd": 0.0002248
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1399,
+          "output_tokens": 155,
+          "reasoning_tokens": 32,
+          "latency_ms": 3799,
+          "cost_usd": 0.00021452
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 951,
+          "output_tokens": 50,
+          "reasoning_tokens": 0,
+          "latency_ms": 1401,
+          "cost_usd": 0.0002502
+        },
+        "response_formatter": {
+          "calls": 1,
+          "input_tokens": 475,
+          "output_tokens": 120,
+          "reasoning_tokens": 0,
+          "latency_ms": 2341,
+          "cost_usd": 0.000239
+        }
+      }
+    },
+    {
+      "id": "course_teach:b45786ed0af6",
+      "db_id": "course_teach",
+      "question": "What is the most commmon hometowns for teachers?",
+      "hardness": "medium",
+      "gold_sql": "SELECT Hometown FROM teacher GROUP BY Hometown ORDER BY COUNT(*) DESC LIMIT 1",
+      "generated_sql": "WITH hometown_counts AS (\n  SELECT\n    Hometown,\n    COUNT(*) AS teacher_count\n  FROM teacher\n  GROUP BY Hometown\n), max_count AS (\n  SELECT MAX(teacher_count) AS max_teacher_count\n  FROM hometown_counts\n)\nSELECT\n  hc.Hometown,\n  hc.teacher_count\nFROM hometown_counts AS hc\nJOIN max_count AS mc\n  ON hc.teacher_count = mc.max_teacher_count\nORDER BY hc.Hometown;",
+      "result_match": false,
+      "result_match_values": false,
+      "failure_label": "wrong_table",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "teacher"
+        ],
+        "selected_tables": [
+          "teacher"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "teacher"
+      ],
+      "gold_result": {
+        "columns": [
+          "Hometown"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "Hometown": "Turton Urban District"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Hometown",
+          "teacher_count"
+        ],
+        "row_count": 7,
+        "rows": [
+          {
+            "Hometown": "Blackrod Urban District",
+            "teacher_count": 1
+          },
+          {
+            "Hometown": "Bolton County Borough",
+            "teacher_count": 1
+          },
+          {
+            "Hometown": "Farnworth Municipal Borough",
+            "teacher_count": 1
+          },
+          {
+            "Hometown": "Horwich Urban District",
+            "teacher_count": 1
+          },
+          {
+            "Hometown": "Kearsley Urban District",
+            "teacher_count": 1
+          },
+          {
+            "Hometown": "Little Lever Urban District",
+            "teacher_count": 1
+          },
+          {
+            "Hometown": "Turton Urban District",
+            "teacher_count": 1
+          }
+        ],
+        "truncated": false
+      },
+      "elapsed_ms": 16317,
+      "cost_usd": 0.0023222,
+      "input_tokens": 4765,
+      "output_tokens": 1141,
+      "reasoning_tokens": 309,
+      "cached_input_tokens": 0,
+      "calls": 8,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 341,
+          "output_tokens": 33,
+          "reasoning_tokens": 0,
+          "latency_ms": 1221,
+          "cost_usd": 0.0001078
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 975,
+          "output_tokens": 249,
+          "reasoning_tokens": 45,
+          "latency_ms": 5016,
+          "cost_usd": 0.0004938
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 454,
+          "output_tokens": 182,
+          "reasoning_tokens": 62,
+          "latency_ms": 2685,
+          "cost_usd": 0.0003092
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1397,
+          "output_tokens": 280,
+          "reasoning_tokens": 68,
+          "latency_ms": 3434,
+          "cost_usd": 0.0006154
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1019,
+          "output_tokens": 217,
+          "reasoning_tokens": 80,
+          "latency_ms": 2428,
+          "cost_usd": 0.0004642
+        },
+        "response_formatter": {
+          "calls": 1,
+          "input_tokens": 579,
+          "output_tokens": 180,
+          "reasoning_tokens": 54,
+          "latency_ms": 3116,
+          "cost_usd": 0.0003318
+        }
+      }
+    },
+    {
+      "id": "course_teach:d609a3b5e2eb",
+      "db_id": "course_teach",
+      "question": "What are the names of the teachers whose courses have not been arranged?",
+      "hardness": "hard",
+      "gold_sql": "SELECT Name FROM teacher WHERE Teacher_id NOT IN (SELECT Teacher_id FROM course_arrange)",
+      "generated_sql": "SELECT t.Name\nFROM teacher AS t\nLEFT JOIN course_arrange AS ca\n  ON t.Teacher_ID = ca.Teacher_ID\nWHERE ca.Teacher_ID IS NULL\nORDER BY t.Name\nLIMIT 500;",
+      "result_match": true,
+      "result_match_values": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "course_arrange",
+          "teacher"
+        ],
+        "selected_tables": [
+          "course",
+          "course_arrange",
+          "teacher"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "course",
+        "course_arrange",
+        "teacher"
+      ],
+      "gold_result": {
+        "columns": [
+          "Name"
+        ],
+        "row_count": 2,
+        "rows": [
+          {
+            "Name": "Joseph Huts"
+          },
+          {
+            "Name": "John Deloor"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Name"
+        ],
+        "row_count": 2,
+        "rows": [
+          {
+            "Name": "John Deloor"
+          },
+          {
+            "Name": "Joseph Huts"
+          }
+        ],
+        "truncated": false
+      },
+      "elapsed_ms": 20388,
+      "cost_usd": 0.002625,
+      "input_tokens": 5205,
+      "output_tokens": 1320,
+      "reasoning_tokens": 439,
+      "cached_input_tokens": 0,
+      "calls": 8,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 344,
+          "output_tokens": 37,
+          "reasoning_tokens": 0,
+          "latency_ms": 1907,
+          "cost_usd": 0.0001132
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 984,
+          "output_tokens": 395,
+          "reasoning_tokens": 118,
+          "latency_ms": 7626,
+          "cost_usd": 0.0006708
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 475,
+          "output_tokens": 281,
+          "reasoning_tokens": 116,
+          "latency_ms": 3961,
+          "cost_usd": 0.0004322
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1666,
+          "output_tokens": 323,
+          "reasoning_tokens": 131,
+          "latency_ms": 3843,
+          "cost_usd": 0.0007208
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1235,
+          "output_tokens": 159,
+          "reasoning_tokens": 74,
+          "latency_ms": 2758,
+          "cost_usd": 0.0004378
+        },
+        "response_formatter": {
+          "calls": 1,
+          "input_tokens": 501,
+          "output_tokens": 125,
+          "reasoning_tokens": 0,
+          "latency_ms": 2107,
+          "cost_usd": 0.0002502
+        }
+      }
+    },
+    {
+      "id": "course_teach:7cd5b8a77a3c",
+      "db_id": "course_teach",
+      "question": "For each hometown, how many teachers are there?",
+      "hardness": "medium",
+      "gold_sql": "SELECT Hometown ,  COUNT(*) FROM teacher GROUP BY Hometown",
+      "generated_sql": "SELECT teacher.Hometown, COUNT(*) AS teacher_count\nFROM teacher\nGROUP BY teacher.Hometown;",
+      "result_match": false,
+      "result_match_values": true,
+      "failure_label": "scorer_only",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "teacher"
+        ],
+        "selected_tables": [
+          "teacher"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "teacher"
+      ],
+      "gold_result": {
+        "columns": [
+          "Hometown",
+          "COUNT(*)"
+        ],
+        "row_count": 7,
+        "rows": [
+          {
+            "Hometown": "Blackrod Urban District",
+            "COUNT(*)": 1
+          },
+          {
+            "Hometown": "Bolton County Borough",
+            "COUNT(*)": 1
+          },
+          {
+            "Hometown": "Farnworth Municipal Borough",
+            "COUNT(*)": 1
+          },
+          {
+            "Hometown": "Horwich Urban District",
+            "COUNT(*)": 1
+          },
+          {
+            "Hometown": "Kearsley Urban District",
+            "COUNT(*)": 1
+          },
+          {
+            "Hometown": "Little Lever Urban District",
+            "COUNT(*)": 1
+          },
+          {
+            "Hometown": "Turton Urban District",
+            "COUNT(*)": 1
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Hometown",
+          "teacher_count"
+        ],
+        "row_count": 7,
+        "rows": [
+          {
+            "Hometown": "Blackrod Urban District",
+            "teacher_count": 1
+          },
+          {
+            "Hometown": "Bolton County Borough",
+            "teacher_count": 1
+          },
+          {
+            "Hometown": "Farnworth Municipal Borough",
+            "teacher_count": 1
+          },
+          {
+            "Hometown": "Horwich Urban District",
+            "teacher_count": 1
+          },
+          {
+            "Hometown": "Kearsley Urban District",
+            "teacher_count": 1
+          },
+          {
+            "Hometown": "Little Lever Urban District",
+            "teacher_count": 1
+          },
+          {
+            "Hometown": "Turton Urban District",
+            "teacher_count": 1
+          }
+        ],
+        "truncated": false
+      },
+      "elapsed_ms": 12685,
+      "cost_usd": 0.001378,
+      "input_tokens": 4598,
+      "output_tokens": 589,
+      "reasoning_tokens": 13,
+      "cached_input_tokens": 1380,
+      "calls": 8,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 340,
+          "output_tokens": 30,
+          "reasoning_tokens": 0,
+          "latency_ms": 1698,
+          "cost_usd": 0.000104
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 972,
+          "output_tokens": 189,
+          "reasoning_tokens": 13,
+          "latency_ms": 5476,
+          "cost_usd": 0.0004212
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 453,
+          "output_tokens": 68,
+          "reasoning_tokens": 0,
+          "latency_ms": 1482,
+          "cost_usd": 0.0001722
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1383,
+          "output_tokens": 114,
+          "reasoning_tokens": 0,
+          "latency_ms": 1951,
+          "cost_usd": 0.000165
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 945,
+          "output_tokens": 53,
+          "reasoning_tokens": 0,
+          "latency_ms": 1569,
+          "cost_usd": 0.0002526
+        },
+        "response_formatter": {
+          "calls": 1,
+          "input_tokens": 505,
+          "output_tokens": 135,
+          "reasoning_tokens": 0,
+          "latency_ms": 1791,
+          "cost_usd": 0.000263
+        }
+      }
+    },
+    {
+      "id": "course_teach:f8981bb4054d",
+      "db_id": "course_teach",
+      "question": "What is the age and hometown of every teacher?",
+      "hardness": "easy",
+      "gold_sql": "SELECT Age ,  Hometown FROM teacher",
+      "generated_sql": "SELECT Age, Hometown FROM teacher LIMIT 500;",
+      "result_match": true,
+      "result_match_values": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "teacher"
+        ],
+        "selected_tables": [
+          "teacher"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "teacher"
+      ],
+      "gold_result": {
+        "columns": [
+          "Age",
+          "Hometown"
+        ],
+        "row_count": 7,
+        "rows": [
+          {
+            "Age": "32",
+            "Hometown": "Blackrod Urban District"
+          },
+          {
+            "Age": "29",
+            "Hometown": "Bolton County Borough"
+          },
+          {
+            "Age": "26",
+            "Hometown": "Farnworth Municipal Borough"
+          },
+          {
+            "Age": "33",
+            "Hometown": "Horwich Urban District"
+          },
+          {
+            "Age": "45",
+            "Hometown": "Kearsley Urban District"
+          },
+          {
+            "Age": "41",
+            "Hometown": "Little Lever Urban District"
+          },
+          {
+            "Age": "39",
+            "Hometown": "Turton Urban District"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Age",
+          "Hometown"
+        ],
+        "row_count": 7,
+        "rows": [
+          {
+            "Age": "32",
+            "Hometown": "Blackrod Urban District"
+          },
+          {
+            "Age": "29",
+            "Hometown": "Bolton County Borough"
+          },
+          {
+            "Age": "26",
+            "Hometown": "Farnworth Municipal Borough"
+          },
+          {
+            "Age": "33",
+            "Hometown": "Horwich Urban District"
+          },
+          {
+            "Age": "45",
+            "Hometown": "Kearsley Urban District"
+          },
+          {
+            "Age": "41",
+            "Hometown": "Little Lever Urban District"
+          },
+          {
+            "Age": "39",
+            "Hometown": "Turton Urban District"
+          }
+        ],
+        "truncated": false
+      },
+      "elapsed_ms": 17301,
+      "cost_usd": 0.00130576,
+      "input_tokens": 4613,
+      "output_tokens": 529,
+      "reasoning_tokens": 0,
+      "cached_input_tokens": 1398,
+      "calls": 8,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 340,
+          "output_tokens": 28,
+          "reasoning_tokens": 0,
+          "latency_ms": 1603,
+          "cost_usd": 0.0001016
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 972,
+          "output_tokens": 177,
+          "reasoning_tokens": 0,
+          "latency_ms": 9761,
+          "cost_usd": 0.0004068
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 452,
+          "output_tokens": 74,
+          "reasoning_tokens": 0,
+          "latency_ms": 1557,
+          "cost_usd": 0.0001792
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1401,
+          "output_tokens": 90,
+          "reasoning_tokens": 0,
+          "latency_ms": 2446,
+          "cost_usd": 0.00013656
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 954,
+          "output_tokens": 44,
+          "reasoning_tokens": 0,
+          "latency_ms": 957,
+          "cost_usd": 0.0002436
+        },
+        "response_formatter": {
+          "calls": 1,
+          "input_tokens": 494,
+          "output_tokens": 116,
+          "reasoning_tokens": 0,
+          "latency_ms": 2783,
+          "cost_usd": 0.000238
+        }
+      }
+    },
+    {
+      "id": "concert_singer:88aeca8a41e8",
+      "db_id": "concert_singer",
+      "question": "what is the name and nation of the singer who have a song having 'Hey' in its name?",
+      "hardness": "easy",
+      "gold_sql": "SELECT name ,  country FROM singer WHERE song_name LIKE '%Hey%'",
+      "generated_sql": "SELECT Name, Country FROM singer WHERE Song_Name LIKE '%Hey%' LIMIT 500;",
+      "result_match": true,
+      "result_match_values": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "singer"
+        ],
+        "selected_tables": [
+          "singer"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "singer"
+      ],
+      "gold_result": {
+        "columns": [
+          "Name",
+          "Country"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "Name": "Justin Brown",
+            "Country": "France"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Name",
+          "Country"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "Name": "Justin Brown",
+            "Country": "France"
+          }
+        ],
+        "truncated": false
+      },
+      "elapsed_ms": 14791,
+      "cost_usd": 0.0016971,
+      "input_tokens": 4959,
+      "output_tokens": 806,
+      "reasoning_tokens": 114,
+      "cached_input_tokens": 1455,
+      "calls": 8,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 351,
+          "output_tokens": 31,
+          "reasoning_tokens": 0,
+          "latency_ms": 1251,
+          "cost_usd": 0.0001074
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 1207,
+          "output_tokens": 324,
+          "reasoning_tokens": 57,
+          "latency_ms": 7299,
+          "cost_usd": 0.0006302
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 468,
+          "output_tokens": 92,
+          "reasoning_tokens": 0,
+          "latency_ms": 1890,
+          "cost_usd": 0.000204
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1458,
+          "output_tokens": 118,
+          "reasoning_tokens": 0,
+          "latency_ms": 2239,
+          "cost_usd": 0.0001713
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1006,
+          "output_tokens": 113,
+          "reasoning_tokens": 57,
+          "latency_ms": 1826,
+          "cost_usd": 0.0003368
+        },
+        "response_formatter": {
+          "calls": 1,
+          "input_tokens": 469,
+          "output_tokens": 128,
+          "reasoning_tokens": 0,
+          "latency_ms": 1885,
+          "cost_usd": 0.0002474
+        }
+      }
+    },
+    {
+      "id": "concert_singer:b45e8112835e",
+      "db_id": "concert_singer",
+      "question": "Show all countries and the number of singers in each country.",
+      "hardness": "medium",
+      "gold_sql": "SELECT country ,  count(*) FROM singer GROUP BY country",
+      "generated_sql": "SELECT singer.Country AS country, COUNT(*) AS singer_count\nFROM singer\nGROUP BY singer.Country\nORDER BY singer.Country;",
+      "result_match": false,
+      "result_match_values": true,
+      "failure_label": "scorer_only",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "singer"
+        ],
+        "selected_tables": [
+          "singer"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "singer"
+      ],
+      "gold_result": {
+        "columns": [
+          "Country",
+          "count(*)"
+        ],
+        "row_count": 3,
+        "rows": [
+          {
+            "Country": "France",
+            "count(*)": 4
+          },
+          {
+            "Country": "Netherlands",
+            "count(*)": 1
+          },
+          {
+            "Country": "United States",
+            "count(*)": 1
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "country",
+          "singer_count"
+        ],
+        "row_count": 3,
+        "rows": [
+          {
+            "country": "France",
+            "singer_count": 4
+          },
+          {
+            "country": "Netherlands",
+            "singer_count": 1
+          },
+          {
+            "country": "United States",
+            "singer_count": 1
+          }
+        ],
+        "truncated": false
+      },
+      "elapsed_ms": 15113,
+      "cost_usd": 0.00159508,
+      "input_tokens": 4880,
+      "output_tokens": 728,
+      "reasoning_tokens": 102,
+      "cached_input_tokens": 1414,
+      "calls": 8,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 342,
+          "output_tokens": 27,
+          "reasoning_tokens": 0,
+          "latency_ms": 1285,
+          "cost_usd": 0.0001008
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 1180,
+          "output_tokens": 237,
+          "reasoning_tokens": 41,
+          "latency_ms": 5130,
+          "cost_usd": 0.0005204
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 455,
+          "output_tokens": 77,
+          "reasoning_tokens": 0,
+          "latency_ms": 3486,
+          "cost_usd": 0.0001834
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1417,
+          "output_tokens": 202,
+          "reasoning_tokens": 61,
+          "latency_ms": 3130,
+          "cost_usd": 0.00027128
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 982,
+          "output_tokens": 58,
+          "reasoning_tokens": 0,
+          "latency_ms": 1523,
+          "cost_usd": 0.000266
+        },
+        "response_formatter": {
+          "calls": 1,
+          "input_tokens": 504,
+          "output_tokens": 127,
+          "reasoning_tokens": 0,
+          "latency_ms": 1915,
+          "cost_usd": 0.0002532
+        }
+      }
+    },
+    {
+      "id": "concert_singer:b696905ed1d6",
+      "db_id": "concert_singer",
+      "question": "Show names for all stadiums except for stadiums having a concert in year 2014.",
+      "hardness": "hard",
+      "gold_sql": "SELECT name FROM stadium EXCEPT SELECT T2.name FROM concert AS T1 JOIN stadium AS T2 ON T1.stadium_id  =  T2.stadium_id WHERE T1.year  =  2014",
+      "generated_sql": "SELECT s.Name\nFROM stadium AS s\nWHERE NOT EXISTS (\n    SELECT 1\n    FROM concert AS c\n    WHERE c.Stadium_ID = s.Stadium_ID\n      AND c.Year = '2014'\n);",
+      "result_match": true,
+      "result_match_values": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "concert",
+          "stadium"
+        ],
+        "selected_tables": [
+          "concert",
+          "stadium"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "concert",
+        "stadium"
+      ],
+      "gold_result": {
+        "columns": [
+          "Name"
+        ],
+        "row_count": 6,
+        "rows": [
+          {
+            "Name": "Balmoor"
+          },
+          {
+            "Name": "Bayview Stadium"
+          },
+          {
+            "Name": "Forthbank Stadium"
+          },
+          {
+            "Name": "Gayfield Park"
+          },
+          {
+            "Name": "Hampden Park"
+          },
+          {
+            "Name": "Recreation Park"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Name"
+        ],
+        "row_count": 6,
+        "rows": [
+          {
+            "Name": "Bayview Stadium"
+          },
+          {
+            "Name": "Hampden Park"
+          },
+          {
+            "Name": "Forthbank Stadium"
+          },
+          {
+            "Name": "Gayfield Park"
+          },
+          {
+            "Name": "Recreation Park"
+          },
+          {
+            "Name": "Balmoor"
+          }
+        ],
+        "truncated": false
+      },
+      "elapsed_ms": 15955,
+      "cost_usd": 0.00172034,
+      "input_tokens": 5341,
+      "output_tokens": 963,
+      "reasoning_tokens": 118,
+      "cached_input_tokens": 2797,
+      "calls": 8,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 349,
+          "output_tokens": 34,
+          "reasoning_tokens": 0,
+          "latency_ms": 892,
+          "cost_usd": 0.0001106
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 1201,
+          "output_tokens": 347,
+          "reasoning_tokens": 65,
+          "latency_ms": 7349,
+          "cost_usd": 0.0006566
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 473,
+          "output_tokens": 105,
+          "reasoning_tokens": 0,
+          "latency_ms": 2412,
+          "cost_usd": 0.0002206
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1612,
+          "output_tokens": 234,
+          "reasoning_tokens": 53,
+          "latency_ms": 2966,
+          "cost_usd": 0.00031358
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1191,
+          "output_tokens": 82,
+          "reasoning_tokens": 0,
+          "latency_ms": 1577,
+          "cost_usd": 0.00012276
+        },
+        "response_formatter": {
+          "calls": 1,
+          "input_tokens": 515,
+          "output_tokens": 161,
+          "reasoning_tokens": 0,
+          "latency_ms": 2275,
+          "cost_usd": 0.0002962
+        }
+      }
+    },
+    {
+      "id": "concert_singer:3af42e7e0821",
+      "db_id": "concert_singer",
+      "question": "What are the names and locations of the stadiums that had concerts that occurred in both 2014 and 2015?",
+      "hardness": "extra",
+      "gold_sql": "SELECT T2.name ,  T2.location FROM concert AS T1 JOIN stadium AS T2 ON T1.stadium_id  =  T2.stadium_id WHERE T1.Year  =  2014 INTERSECT SELECT T2.name ,  T2.location FROM concert AS T1 JOIN stadium AS T2 ON T1.stadium_id  =  T2.stadium_id WHERE T1.Year  =  2015",
+      "generated_sql": "SELECT stadium.Name, stadium.Location\nFROM stadium\nJOIN concert ON concert.Stadium_ID = stadium.Stadium_ID\nWHERE concert.Year IN ('2014', '2015')\nGROUP BY stadium.Stadium_ID, stadium.Name, stadium.Location\nHAVING COUNT(DISTINCT concert.Year) = 2;",
+      "result_match": true,
+      "result_match_values": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "concert",
+          "stadium"
+        ],
+        "selected_tables": [
+          "concert",
+          "stadium"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "concert",
+        "stadium"
+      ],
+      "gold_result": {
+        "columns": [
+          "Name",
+          "Location"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "Name": "Somerset Park",
+            "Location": "Ayr United"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Name",
+          "Location"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "Name": "Somerset Park",
+            "Location": "Ayr United"
+          }
+        ],
+        "truncated": false
+      },
+      "elapsed_ms": 18790,
+      "cost_usd": 0.00229358,
+      "input_tokens": 5449,
+      "output_tokens": 1249,
+      "reasoning_tokens": 282,
+      "cached_input_tokens": 1639,
+      "calls": 8,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 355,
+          "output_tokens": 39,
+          "reasoning_tokens": 0,
+          "latency_ms": 1397,
+          "cost_usd": 0.0001178
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 1219,
+          "output_tokens": 451,
+          "reasoning_tokens": 116,
+          "latency_ms": 7306,
+          "cost_usd": 0.000785
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 483,
+          "output_tokens": 175,
+          "reasoning_tokens": 33,
+          "latency_ms": 2974,
+          "cost_usd": 0.0003066
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1642,
+          "output_tokens": 270,
+          "reasoning_tokens": 59,
+          "latency_ms": 3890,
+          "cost_usd": 0.00035738
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1230,
+          "output_tokens": 176,
+          "reasoning_tokens": 74,
+          "latency_ms": 2832,
+          "cost_usd": 0.0004572
+        },
+        "response_formatter": {
+          "calls": 1,
+          "input_tokens": 520,
+          "output_tokens": 138,
+          "reasoning_tokens": 0,
+          "latency_ms": 2485,
+          "cost_usd": 0.0002696
+        }
+      }
+    },
+    {
+      "id": "concert_singer:f22528648d5c",
+      "db_id": "concert_singer",
+      "question": "Which year has most number of concerts?",
+      "hardness": "medium",
+      "gold_sql": "SELECT YEAR FROM concert GROUP BY YEAR ORDER BY count(*) DESC LIMIT 1",
+      "generated_sql": "SELECT c.Year, COUNT(*) AS concert_count\nFROM concert AS c\nGROUP BY c.Year\nORDER BY concert_count DESC\nLIMIT 1;",
+      "result_match": false,
+      "result_match_values": false,
+      "failure_label": "aggregation_or_grouping",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "concert"
+        ],
+        "selected_tables": [
+          "concert",
+          "stadium"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "concert",
+        "stadium"
+      ],
+      "gold_result": {
+        "columns": [
+          "Year"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "Year": "2015"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Year",
+          "concert_count"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "Year": "2015",
+            "concert_count": 3
+          }
+        ],
+        "truncated": false
+      },
+      "elapsed_ms": 13376,
+      "cost_usd": 0.00135996,
+      "input_tokens": 5340,
+      "output_tokens": 678,
+      "reasoning_tokens": 70,
+      "cached_input_tokens": 2898,
+      "calls": 8,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 338,
+          "output_tokens": 30,
+          "reasoning_tokens": 0,
+          "latency_ms": 1222,
+          "cost_usd": 0.0001036
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 1168,
+          "output_tokens": 211,
+          "reasoning_tokens": 33,
+          "latency_ms": 6053,
+          "cost_usd": 0.0004868
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 461,
+          "output_tokens": 152,
+          "reasoning_tokens": 37,
+          "latency_ms": 2539,
+          "cost_usd": 0.0002746
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1665,
+          "output_tokens": 118,
+          "reasoning_tokens": 0,
+          "latency_ms": 2408,
+          "cost_usd": 0.00017544
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1239,
+          "output_tokens": 63,
+          "reasoning_tokens": 0,
+          "latency_ms": 1101,
+          "cost_usd": 0.00010092
+        },
+        "response_formatter": {
+          "calls": 1,
+          "input_tokens": 469,
+          "output_tokens": 104,
+          "reasoning_tokens": 0,
+          "latency_ms": 1513,
+          "cost_usd": 0.0002186
+        }
+      }
+    },
+    {
+      "id": "pets_1:0a67fdb91226",
+      "db_id": "pets_1",
+      "question": "Find the type and weight of the youngest pet.",
+      "hardness": "easy",
+      "gold_sql": "SELECT pettype ,  weight FROM pets ORDER BY pet_age LIMIT 1",
+      "generated_sql": "SELECT p.PetType, p.weight\nFROM Pets AS p\nORDER BY p.pet_age ASC\nLIMIT 1;",
+      "result_match": true,
+      "result_match_values": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "pets"
+        ],
+        "selected_tables": [
+          "pets"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "Pets"
+      ],
+      "gold_result": {
+        "columns": [
+          "PetType",
+          "weight"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "PetType": "dog",
+            "weight": 9.3
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "PetType",
+          "weight"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "PetType": "dog",
+            "weight": 9.3
+          }
+        ],
+        "truncated": false
+      },
+      "elapsed_ms": 14635,
+      "cost_usd": 0.00149644,
+      "input_tokens": 4664,
+      "output_tokens": 680,
+      "reasoning_tokens": 39,
+      "cached_input_tokens": 1402,
+      "calls": 8,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 340,
+          "output_tokens": 31,
+          "reasoning_tokens": 0,
+          "latency_ms": 1322,
+          "cost_usd": 0.0001052
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 1023,
+          "output_tokens": 268,
+          "reasoning_tokens": 39,
+          "latency_ms": 7776,
+          "cost_usd": 0.0005262
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 457,
+          "output_tokens": 94,
+          "reasoning_tokens": 0,
+          "latency_ms": 2377,
+          "cost_usd": 0.0002042
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1405,
+          "output_tokens": 110,
+          "reasoning_tokens": 0,
+          "latency_ms": 2314,
+          "cost_usd": 0.00016064
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 972,
+          "output_tokens": 58,
+          "reasoning_tokens": 0,
+          "latency_ms": 1159,
+          "cost_usd": 0.000264
+        },
+        "response_formatter": {
+          "calls": 1,
+          "input_tokens": 467,
+          "output_tokens": 119,
+          "reasoning_tokens": 0,
+          "latency_ms": 2409,
+          "cost_usd": 0.0002362
+        }
+      }
+    },
+    {
+      "id": "pets_1:8bd260baf455",
+      "db_id": "pets_1",
+      "question": "What is the id of the pet owned by the student whose last name is 'Smith'?",
+      "hardness": "medium",
+      "gold_sql": "SELECT T2.petid FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid WHERE T1.Lname  =  'Smith'",
+      "generated_sql": "SELECT p.PetID FROM Student AS s JOIN Has_Pet AS hp ON s.StuID = hp.StuID JOIN Pets AS p ON hp.PetID = p.PetID WHERE s.LName = 'Smith' LIMIT 500;",
+      "result_match": true,
+      "result_match_values": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "has_pet",
+          "student"
+        ],
+        "selected_tables": [
+          "has_pet",
+          "pets",
+          "student"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "Has_Pet",
+        "Student",
+        "Pets"
+      ],
+      "gold_result": {
+        "columns": [
+          "PetID"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "PetID": 2001
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "PetID"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "PetID": 2001
+          }
+        ],
+        "truncated": false
+      },
+      "elapsed_ms": 18682,
+      "cost_usd": 0.0023632,
+      "input_tokens": 5426,
+      "output_tokens": 1065,
+      "reasoning_tokens": 161,
+      "cached_input_tokens": 0,
+      "calls": 8,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 349,
+          "output_tokens": 29,
+          "reasoning_tokens": 0,
+          "latency_ms": 1400,
+          "cost_usd": 0.0001046
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 1049,
+          "output_tokens": 350,
+          "reasoning_tokens": 78,
+          "latency_ms": 7749,
+          "cost_usd": 0.0006298
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 486,
+          "output_tokens": 210,
+          "reasoning_tokens": 34,
+          "latency_ms": 3494,
+          "cost_usd": 0.0003492
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1731,
+          "output_tokens": 211,
+          "reasoning_tokens": 0,
+          "latency_ms": 2235,
+          "cost_usd": 0.0005994
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1316,
+          "output_tokens": 139,
+          "reasoning_tokens": 49,
+          "latency_ms": 3037,
+          "cost_usd": 0.00043
+        },
+        "response_formatter": {
+          "calls": 1,
+          "input_tokens": 495,
+          "output_tokens": 126,
+          "reasoning_tokens": 0,
+          "latency_ms": 2334,
+          "cost_usd": 0.0002502
+        }
+      }
+    },
+    {
+      "id": "pets_1:6847f764cdfb",
+      "db_id": "pets_1",
+      "question": "What is the last name of the student who has a cat that is 3 years old?",
+      "hardness": "hard",
+      "gold_sql": "SELECT T1.lname FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid JOIN pets AS T3 ON T3.petid  =  T2.petid WHERE T3.pet_age  =  3 AND T3.pettype  =  'cat'",
+      "generated_sql": null,
+      "result_match": false,
+      "result_match_values": false,
+      "failure_label": "clarified_instead_of_answering",
+      "sql_match": false,
+      "clarified": true,
+      "error": null,
+      "intent": "CLARIFICATION_NEEDED",
+      "trust_level": "clarifying",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "has_pet",
+          "pets",
+          "student"
+        ],
+        "selected_tables": [
+          "has_pet",
+          "pets",
+          "student"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "Has_Pet",
+        "Pets",
+        "Student"
+      ],
+      "gold_result": {
+        "columns": [
+          "LName"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "LName": "Smith"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [],
+        "row_count": 0,
+        "rows": [],
+        "truncated": false
+      },
+      "elapsed_ms": 13032,
+      "cost_usd": 0.0012252,
+      "input_tokens": 2304,
+      "output_tokens": 637,
+      "reasoning_tokens": 180,
+      "cached_input_tokens": 0,
+      "calls": 6,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 349,
+          "output_tokens": 35,
+          "reasoning_tokens": 0,
+          "latency_ms": 1275,
+          "cost_usd": 0.0001118
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 1050,
+          "output_tokens": 280,
+          "reasoning_tokens": 22,
+          "latency_ms": 6715,
+          "cost_usd": 0.000546
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 483,
+          "output_tokens": 230,
+          "reasoning_tokens": 158,
+          "latency_ms": 4571,
+          "cost_usd": 0.0003726
+        },
+        "direct_response": {
+          "calls": 1,
+          "input_tokens": 422,
+          "output_tokens": 92,
+          "reasoning_tokens": 0,
+          "latency_ms": 2423,
+          "cost_usd": 0.0001948
+        }
+      }
+    },
+    {
+      "id": "pets_1:f9b607ba3304",
+      "db_id": "pets_1",
+      "question": "What major is every student who does not own a cat as a pet, and also how old are they?",
+      "hardness": "extra",
+      "gold_sql": "SELECT major ,  age FROM student WHERE stuid NOT IN (SELECT T1.stuid FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid JOIN pets AS T3 ON T3.petid  =  T2.petid WHERE T3.pettype  =  'cat')",
+      "generated_sql": null,
+      "result_match": false,
+      "result_match_values": false,
+      "failure_label": "clarified_instead_of_answering",
+      "sql_match": false,
+      "clarified": true,
+      "error": null,
+      "intent": "CLARIFICATION_NEEDED",
+      "trust_level": "clarifying",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "has_pet",
+          "pets",
+          "student"
+        ],
+        "selected_tables": [
+          "has_pet",
+          "pets",
+          "student"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "Has_Pet",
+        "Pets",
+        "Student"
+      ],
+      "gold_result": {
+        "columns": [
+          "Major",
+          "Age"
+        ],
+        "row_count": 33,
+        "rows": [
+          {
+            "Major": 600,
+            "Age": 19
+          },
+          {
+            "Major": 600,
+            "Age": 21
+          },
+          {
+            "Major": 600,
+            "Age": 20
+          },
+          {
+            "Major": 600,
+            "Age": 26
+          },
+          {
+            "Major": 600,
+            "Age": 18
+          },
+          {
+            "Major": 600,
+            "Age": 18
+          },
+          {
+            "Major": 600,
+            "Age": 20
+          },
+          {
+            "Major": 600,
+            "Age": 19
+          }
+        ],
+        "truncated": true
+      },
+      "generated_result": {
+        "columns": [],
+        "row_count": 0,
+        "rows": [],
+        "truncated": false
+      },
+      "elapsed_ms": 17986,
+      "cost_usd": 0.001872,
+      "input_tokens": 2388,
+      "output_tokens": 1162,
+      "reasoning_tokens": 338,
+      "cached_input_tokens": 0,
+      "calls": 6,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 352,
+          "output_tokens": 55,
+          "reasoning_tokens": 18,
+          "latency_ms": 1279,
+          "cost_usd": 0.0001364
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 1059,
+          "output_tokens": 619,
+          "reasoning_tokens": 173,
+          "latency_ms": 12791,
+          "cost_usd": 0.0009546
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 504,
+          "output_tokens": 388,
+          "reasoning_tokens": 147,
+          "latency_ms": 5414,
+          "cost_usd": 0.0005664
+        },
+        "direct_response": {
+          "calls": 1,
+          "input_tokens": 473,
+          "output_tokens": 100,
+          "reasoning_tokens": 0,
+          "latency_ms": 1596,
+          "cost_usd": 0.0002146
+        }
+      }
+    },
+    {
+      "id": "pets_1:a201c09fa32c",
+      "db_id": "pets_1",
+      "question": "Find the first name and age of students who have a pet.",
+      "hardness": "medium",
+      "gold_sql": "SELECT DISTINCT T1.fname ,  T1.age FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid",
+      "generated_sql": "SELECT DISTINCT s.Fname, s.Age\nFROM Student AS s\nJOIN Has_Pet AS hp ON s.StuID = hp.StuID\nLIMIT 500;",
+      "result_match": true,
+      "result_match_values": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "has_pet",
+          "student"
+        ],
+        "selected_tables": [
+          "has_pet",
+          "pets",
+          "student"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "Has_Pet",
+        "Student",
+        "Pets"
+      ],
+      "gold_result": {
+        "columns": [
+          "Fname",
+          "Age"
+        ],
+        "row_count": 2,
+        "rows": [
+          {
+            "Fname": "Linda",
+            "Age": 18
+          },
+          {
+            "Fname": "Tracy",
+            "Age": 19
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Fname",
+          "Age"
+        ],
+        "row_count": 2,
+        "rows": [
+          {
+            "Fname": "Linda",
+            "Age": 18
+          },
+          {
+            "Fname": "Tracy",
+            "Age": 19
+          }
+        ],
+        "truncated": false
+      },
+      "elapsed_ms": 20974,
+      "cost_usd": 0.00189506,
+      "input_tokens": 5404,
+      "output_tokens": 874,
+      "reasoning_tokens": 101,
+      "cached_input_tokens": 1303,
+      "calls": 8,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 343,
+          "output_tokens": 27,
+          "reasoning_tokens": 0,
+          "latency_ms": 1033,
+          "cost_usd": 0.000101
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 1032,
+          "output_tokens": 283,
+          "reasoning_tokens": 19,
+          "latency_ms": 6158,
+          "cost_usd": 0.000546
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 479,
+          "output_tokens": 231,
+          "reasoning_tokens": 82,
+          "latency_ms": 3300,
+          "cost_usd": 0.000373
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1745,
+          "output_tokens": 144,
+          "reasoning_tokens": 0,
+          "latency_ms": 2049,
+          "cost_usd": 0.0005218
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1306,
+          "output_tokens": 69,
+          "reasoning_tokens": 0,
+          "latency_ms": 6957,
+          "cost_usd": 0.00010946
+        },
+        "response_formatter": {
+          "calls": 1,
+          "input_tokens": 499,
+          "output_tokens": 120,
+          "reasoning_tokens": 0,
+          "latency_ms": 3246,
+          "cost_usd": 0.0002438
+        }
+      }
+    },
+    {
+      "id": "network_1:03a3045ed350",
+      "db_id": "network_1",
+      "question": "What are the names and grades for each high schooler?",
+      "hardness": "easy",
+      "gold_sql": "SELECT name ,  grade FROM Highschooler",
+      "generated_sql": "SELECT h.name, h.grade\nFROM Highschooler AS h\nLIMIT 500;",
+      "result_match": true,
+      "result_match_values": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "highschooler"
+        ],
+        "selected_tables": [
+          "highschooler"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "Highschooler"
+      ],
+      "gold_result": {
+        "columns": [
+          "name",
+          "grade"
+        ],
+        "row_count": 16,
+        "rows": [
+          {
+            "name": "Jordan",
+            "grade": 9
+          },
+          {
+            "name": "Gabriel",
+            "grade": 9
+          },
+          {
+            "name": "Tiffany",
+            "grade": 9
+          },
+          {
+            "name": "Cassandra",
+            "grade": 9
+          },
+          {
+            "name": "Haley",
+            "grade": 10
+          },
+          {
+            "name": "Andrew",
+            "grade": 10
+          },
+          {
+            "name": "Kris",
+            "grade": 10
+          },
+          {
+            "name": "Brittany",
+            "grade": 10
+          }
+        ],
+        "truncated": true
+      },
+      "generated_result": {
+        "columns": [
+          "name",
+          "grade"
+        ],
+        "row_count": 16,
+        "rows": [
+          {
+            "name": "Jordan",
+            "grade": 9
+          },
+          {
+            "name": "Gabriel",
+            "grade": 9
+          },
+          {
+            "name": "Tiffany",
+            "grade": 9
+          },
+          {
+            "name": "Cassandra",
+            "grade": 9
+          },
+          {
+            "name": "Haley",
+            "grade": 10
+          },
+          {
+            "name": "Andrew",
+            "grade": 10
+          },
+          {
+            "name": "Kris",
+            "grade": 10
+          },
+          {
+            "name": "Brittany",
+            "grade": 10
+          }
+        ],
+        "truncated": true
+      },
+      "elapsed_ms": 17158,
+      "cost_usd": 0.00141734,
+      "input_tokens": 4492,
+      "output_tokens": 636,
+      "reasoning_tokens": 46,
+      "cached_input_tokens": 1357,
+      "calls": 8,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 342,
+          "output_tokens": 34,
+          "reasoning_tokens": 0,
+          "latency_ms": 1461,
+          "cost_usd": 0.0001092
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 926,
+          "output_tokens": 194,
+          "reasoning_tokens": 0,
+          "latency_ms": 7321,
+          "cost_usd": 0.000418
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 455,
+          "output_tokens": 83,
+          "reasoning_tokens": 0,
+          "latency_ms": 1736,
+          "cost_usd": 0.0001906
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1360,
+          "output_tokens": 100,
+          "reasoning_tokens": 0,
+          "latency_ms": 1937,
+          "cost_usd": 0.00014774
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 918,
+          "output_tokens": 51,
+          "reasoning_tokens": 0,
+          "latency_ms": 3905,
+          "cost_usd": 0.0002448
+        },
+        "response_formatter": {
+          "calls": 1,
+          "input_tokens": 491,
+          "output_tokens": 174,
+          "reasoning_tokens": 46,
+          "latency_ms": 3191,
+          "cost_usd": 0.000307
+        }
+      }
+    },
+    {
+      "id": "network_1:4977698c784a",
+      "db_id": "network_1",
+      "question": "What are the names of high schoolers who have 3 or more friends?",
+      "hardness": "medium",
+      "gold_sql": "SELECT T2.name FROM Friend AS T1 JOIN Highschooler AS T2 ON T1.student_id  =  T2.id GROUP BY T1.student_id HAVING count(*)  >=  3",
+      "generated_sql": null,
+      "result_match": false,
+      "result_match_values": false,
+      "failure_label": "clarified_instead_of_answering",
+      "sql_match": false,
+      "clarified": true,
+      "error": null,
+      "intent": "CLARIFICATION_NEEDED",
+      "trust_level": "clarifying",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "friend",
+          "highschooler"
+        ],
+        "selected_tables": [
+          "friend",
+          "highschooler"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "Friend",
+        "Highschooler"
+      ],
+      "gold_result": {
+        "columns": [
+          "name"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "name": "Andrew"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [],
+        "row_count": 0,
+        "rows": [],
+        "truncated": false
+      },
+      "elapsed_ms": 17044,
+      "cost_usd": 0.001706,
+      "input_tokens": 2236,
+      "output_tokens": 1049,
+      "reasoning_tokens": 215,
+      "cached_input_tokens": 0,
+      "calls": 6,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 346,
+          "output_tokens": 31,
+          "reasoning_tokens": 0,
+          "latency_ms": 1087,
+          "cost_usd": 0.0001064
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 938,
+          "output_tokens": 344,
+          "reasoning_tokens": 74,
+          "latency_ms": 7117,
+          "cost_usd": 0.0006004
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 471,
+          "output_tokens": 544,
+          "reasoning_tokens": 141,
+          "latency_ms": 7630,
+          "cost_usd": 0.000747
+        },
+        "direct_response": {
+          "calls": 1,
+          "input_tokens": 481,
+          "output_tokens": 130,
+          "reasoning_tokens": 0,
+          "latency_ms": 2557,
+          "cost_usd": 0.0002522
+        }
+      }
+    },
+    {
+      "id": "network_1:367815e79dd4",
+      "db_id": "network_1",
+      "question": "Show ids of all students who do not have any friends.",
+      "hardness": "hard",
+      "gold_sql": "SELECT id FROM Highschooler EXCEPT SELECT student_id FROM Friend",
+      "generated_sql": "SELECT h.ID\nFROM Highschooler AS h\nLEFT JOIN Friend AS f\n  ON h.ID = f.student_id\nWHERE f.student_id IS NULL;",
+      "result_match": true,
+      "result_match_values": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "friend",
+          "highschooler"
+        ],
+        "selected_tables": [
+          "friend",
+          "highschooler"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "Friend",
+        "Highschooler"
+      ],
+      "gold_result": {
+        "columns": [
+          "ID"
+        ],
+        "row_count": 2,
+        "rows": [
+          {
+            "ID": 1025
+          },
+          {
+            "ID": 1641
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "ID"
+        ],
+        "row_count": 2,
+        "rows": [
+          {
+            "ID": 1025
+          },
+          {
+            "ID": 1641
+          }
+        ],
+        "truncated": false
+      },
+      "elapsed_ms": 17312,
+      "cost_usd": 0.0021326,
+      "input_tokens": 4705,
+      "output_tokens": 993,
+      "reasoning_tokens": 278,
+      "cached_input_tokens": 0,
+      "calls": 8,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 342,
+          "output_tokens": 30,
+          "reasoning_tokens": 0,
+          "latency_ms": 1791,
+          "cost_usd": 0.0001044
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 926,
+          "output_tokens": 219,
+          "reasoning_tokens": 19,
+          "latency_ms": 5787,
+          "cost_usd": 0.000448
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 458,
+          "output_tokens": 178,
+          "reasoning_tokens": 53,
+          "latency_ms": 3247,
+          "cost_usd": 0.0003052
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1462,
+          "output_tokens": 249,
+          "reasoning_tokens": 89,
+          "latency_ms": 2993,
+          "cost_usd": 0.0005912
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1035,
+          "output_tokens": 189,
+          "reasoning_tokens": 117,
+          "latency_ms": 2852,
+          "cost_usd": 0.0004338
+        },
+        "response_formatter": {
+          "calls": 1,
+          "input_tokens": 482,
+          "output_tokens": 128,
+          "reasoning_tokens": 0,
+          "latency_ms": 2124,
+          "cost_usd": 0.00025
+        }
+      }
+    },
+    {
+      "id": "network_1:76c75a92d3d7",
+      "db_id": "network_1",
+      "question": "Show name of all students who have some friends and also are liked by someone else.",
+      "hardness": "extra",
+      "gold_sql": "SELECT T2.name FROM Friend AS T1 JOIN Highschooler AS T2 ON T1.student_id  =  T2.id INTERSECT SELECT T2.name FROM Likes AS T1 JOIN Highschooler AS T2 ON T1.liked_id  =  T2.id",
+      "generated_sql": null,
+      "result_match": false,
+      "result_match_values": false,
+      "failure_label": "clarified_instead_of_answering",
+      "sql_match": false,
+      "clarified": true,
+      "error": null,
+      "intent": "CLARIFICATION_NEEDED",
+      "trust_level": "clarifying",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "friend",
+          "highschooler",
+          "likes"
+        ],
+        "selected_tables": [
+          "friend",
+          "highschooler",
+          "likes"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "Friend",
+        "Highschooler",
+        "Likes"
+      ],
+      "gold_result": {
+        "columns": [
+          "name"
+        ],
+        "row_count": 8,
+        "rows": [
+          {
+            "name": "Alexis"
+          },
+          {
+            "name": "Cassandra"
+          },
+          {
+            "name": "Gabriel"
+          },
+          {
+            "name": "Haley"
+          },
+          {
+            "name": "Jessica"
+          },
+          {
+            "name": "Jordan"
+          },
+          {
+            "name": "Kris"
+          },
+          {
+            "name": "Kyle"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [],
+        "row_count": 0,
+        "rows": [],
+        "truncated": false
+      },
+      "elapsed_ms": 20857,
+      "cost_usd": 0.0018426,
+      "input_tokens": 2277,
+      "output_tokens": 1156,
+      "reasoning_tokens": 271,
+      "cached_input_tokens": 0,
+      "calls": 6,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 347,
+          "output_tokens": 30,
+          "reasoning_tokens": 0,
+          "latency_ms": 1593,
+          "cost_usd": 0.0001054
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 941,
+          "output_tokens": 498,
+          "reasoning_tokens": 150,
+          "latency_ms": 10380,
+          "cost_usd": 0.0007858
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 484,
+          "output_tokens": 437,
+          "reasoning_tokens": 121,
+          "latency_ms": 7137,
+          "cost_usd": 0.0006212
+        },
+        "direct_response": {
+          "calls": 1,
+          "input_tokens": 505,
+          "output_tokens": 191,
+          "reasoning_tokens": 0,
+          "latency_ms": 3517,
+          "cost_usd": 0.0003302
+        }
+      }
+    },
+    {
+      "id": "network_1:83bd47e893c4",
+      "db_id": "network_1",
+      "question": "Show the names of students who have at least 2 likes.",
+      "hardness": "medium",
+      "gold_sql": "SELECT T2.name FROM Likes AS T1 JOIN Highschooler AS T2 ON T1.student_id  =  T2.id GROUP BY T1.student_id HAVING count(*)  >=  2",
+      "generated_sql": "SELECT h.name\nFROM Highschooler AS h\nJOIN Likes AS l ON h.ID = l.liked_id\nGROUP BY h.ID, h.name\nHAVING COUNT(l.student_id) >= 2;",
+      "result_match": false,
+      "result_match_values": false,
+      "failure_label": "missing_join",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "highschooler",
+          "likes"
+        ],
+        "selected_tables": [
+          "highschooler",
+          "likes"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "Highschooler",
+        "Likes"
+      ],
+      "gold_result": {
+        "columns": [
+          "name"
+        ],
+        "row_count": 0,
+        "rows": [],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "name"
+        ],
+        "row_count": 2,
+        "rows": [
+          {
+            "name": "Kris"
+          },
+          {
+            "name": "Cassandra"
+          }
+        ],
+        "truncated": false
+      },
+      "elapsed_ms": 16859,
+      "cost_usd": 0.002049,
+      "input_tokens": 4749,
+      "output_tokens": 916,
+      "reasoning_tokens": 129,
+      "cached_input_tokens": 0,
+      "calls": 8,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 343,
+          "output_tokens": 30,
+          "reasoning_tokens": 0,
+          "latency_ms": 1272,
+          "cost_usd": 0.0001046
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 929,
+          "output_tokens": 263,
+          "reasoning_tokens": 29,
+          "latency_ms": 7397,
+          "cost_usd": 0.0005014
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 463,
+          "output_tokens": 177,
+          "reasoning_tokens": 42,
+          "latency_ms": 2823,
+          "cost_usd": 0.000305
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1469,
+          "output_tokens": 188,
+          "reasoning_tokens": 0,
+          "latency_ms": 2834,
+          "cost_usd": 0.0005194
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1051,
+          "output_tokens": 140,
+          "reasoning_tokens": 58,
+          "latency_ms": 2695,
+          "cost_usd": 0.0003782
+        },
+        "response_formatter": {
+          "calls": 1,
+          "input_tokens": 494,
+          "output_tokens": 118,
+          "reasoning_tokens": 0,
+          "latency_ms": 2093,
+          "cost_usd": 0.0002404
+        }
+      }
+    },
+    {
+      "id": "orchestra:c719cf8db286",
+      "db_id": "orchestra",
+      "question": "Return the names of conductors that do not have the nationality \"USA\".",
+      "hardness": "easy",
+      "gold_sql": "SELECT Name FROM conductor WHERE Nationality != 'USA'",
+      "generated_sql": "SELECT c.Name FROM conductor AS c WHERE c.Nationality <> 'USA' LIMIT 500;",
+      "result_match": true,
+      "result_match_values": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "conductor"
+        ],
+        "selected_tables": [
+          "conductor"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "conductor"
+      ],
+      "gold_result": {
+        "columns": [
+          "Name"
+        ],
+        "row_count": 6,
+        "rows": [
+          {
+            "Name": "Igor Stravinsky"
+          },
+          {
+            "Name": "Paul Jorgensen"
+          },
+          {
+            "Name": "Charles Dutoit"
+          },
+          {
+            "Name": "Pierre Boulez"
+          },
+          {
+            "Name": "Robert Craft"
+          },
+          {
+            "Name": "Michael Tilson Thomas"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Name"
+        ],
+        "row_count": 6,
+        "rows": [
+          {
+            "Name": "Igor Stravinsky"
+          },
+          {
+            "Name": "Paul Jorgensen"
+          },
+          {
+            "Name": "Charles Dutoit"
+          },
+          {
+            "Name": "Pierre Boulez"
+          },
+          {
+            "Name": "Robert Craft"
+          },
+          {
+            "Name": "Michael Tilson Thomas"
+          }
+        ],
+        "truncated": false
+      },
+      "elapsed_ms": 14138,
+      "cost_usd": 0.00158036,
+      "input_tokens": 4777,
+      "output_tokens": 729,
+      "reasoning_tokens": 115,
+      "cached_input_tokens": 1388,
+      "calls": 8,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 345,
+          "output_tokens": 26,
+          "reasoning_tokens": 0,
+          "latency_ms": 948,
+          "cost_usd": 0.0001002
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 1148,
+          "output_tokens": 191,
+          "reasoning_tokens": 23,
+          "latency_ms": 5846,
+          "cost_usd": 0.0004588
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 458,
+          "output_tokens": 75,
+          "reasoning_tokens": 0,
+          "latency_ms": 1922,
+          "cost_usd": 0.0001816
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1391,
+          "output_tokens": 218,
+          "reasoning_tokens": 92,
+          "latency_ms": 3684,
+          "cost_usd": 0.00028996
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 948,
+          "output_tokens": 53,
+          "reasoning_tokens": 0,
+          "latency_ms": 1228,
+          "cost_usd": 0.0002532
+        },
+        "response_formatter": {
+          "calls": 1,
+          "input_tokens": 487,
+          "output_tokens": 166,
+          "reasoning_tokens": 0,
+          "latency_ms": 2078,
+          "cost_usd": 0.0002966
+        }
+      }
+    },
+    {
+      "id": "orchestra:5a092e07dc63",
+      "db_id": "orchestra",
+      "question": "Show the names of conductors and the orchestras they have conducted.",
+      "hardness": "medium",
+      "gold_sql": "SELECT T1.Name ,  T2.Orchestra FROM conductor AS T1 JOIN orchestra AS T2 ON T1.Conductor_ID  =  T2.Conductor_ID",
+      "generated_sql": "SELECT c.Name AS conductor_name, o.Orchestra AS orchestra_name\nFROM conductor AS c\nJOIN orchestra AS o ON c.Conductor_ID = o.Conductor_ID\nLIMIT 500;",
+      "result_match": false,
+      "result_match_values": true,
+      "failure_label": "scorer_only",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "conductor",
+          "orchestra"
+        ],
+        "selected_tables": [
+          "conductor",
+          "orchestra",
+          "performance"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "conductor",
+        "orchestra",
+        "performance"
+      ],
+      "gold_result": {
+        "columns": [
+          "Name",
+          "Orchestra"
+        ],
+        "row_count": 12,
+        "rows": [
+          {
+            "Name": "Antal Dor\u00e1ti",
+            "Orchestra": "London Symphony Orchestra"
+          },
+          {
+            "Name": "Igor Stravinsky",
+            "Orchestra": "Columbia Symphony Orchestra"
+          },
+          {
+            "Name": "Colin Davis",
+            "Orchestra": "Royal Concertgebouw Orchestra"
+          },
+          {
+            "Name": "Paul Jorgensen",
+            "Orchestra": "Royal Danish Orchestra"
+          },
+          {
+            "Name": "Antal Brown",
+            "Orchestra": "Detroit Symphony Orchestra"
+          },
+          {
+            "Name": "Charles Dutoit",
+            "Orchestra": "Montreal Symphony Orchestra"
+          },
+          {
+            "Name": "Gerard Schwarz",
+            "Orchestra": "Seattle Symphony Orchestra"
+          },
+          {
+            "Name": "Pierre Boulez",
+            "Orchestra": "Chicago Symphony Orchestra"
+          }
+        ],
+        "truncated": true
+      },
+      "generated_result": {
+        "columns": [
+          "conductor_name",
+          "orchestra_name"
+        ],
+        "row_count": 12,
+        "rows": [
+          {
+            "conductor_name": "Antal Dor\u00e1ti",
+            "orchestra_name": "London Symphony Orchestra"
+          },
+          {
+            "conductor_name": "Igor Stravinsky",
+            "orchestra_name": "Columbia Symphony Orchestra"
+          },
+          {
+            "conductor_name": "Colin Davis",
+            "orchestra_name": "Royal Concertgebouw Orchestra"
+          },
+          {
+            "conductor_name": "Paul Jorgensen",
+            "orchestra_name": "Royal Danish Orchestra"
+          },
+          {
+            "conductor_name": "Antal Brown",
+            "orchestra_name": "Detroit Symphony Orchestra"
+          },
+          {
+            "conductor_name": "Charles Dutoit",
+            "orchestra_name": "Montreal Symphony Orchestra"
+          },
+          {
+            "conductor_name": "Gerard Schwarz",
+            "orchestra_name": "Seattle Symphony Orchestra"
+          },
+          {
+            "conductor_name": "Pierre Boulez",
+            "orchestra_name": "Chicago Symphony Orchestra"
+          }
+        ],
+        "truncated": true
+      },
+      "elapsed_ms": 18247,
+      "cost_usd": 0.00202606,
+      "input_tokens": 5783,
+      "output_tokens": 1001,
+      "reasoning_tokens": 123,
+      "cached_input_tokens": 1843,
+      "calls": 8,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 344,
+          "output_tokens": 35,
+          "reasoning_tokens": 0,
+          "latency_ms": 1605,
+          "cost_usd": 0.0001108
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 1145,
+          "output_tokens": 401,
+          "reasoning_tokens": 95,
+          "latency_ms": 9368,
+          "cost_usd": 0.0007102
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 481,
+          "output_tokens": 167,
+          "reasoning_tokens": 28,
+          "latency_ms": 2618,
+          "cost_usd": 0.0002966
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1846,
+          "output_tokens": 161,
+          "reasoning_tokens": 0,
+          "latency_ms": 2266,
+          "cost_usd": 0.00023066
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1422,
+          "output_tokens": 71,
+          "reasoning_tokens": 0,
+          "latency_ms": 1702,
+          "cost_usd": 0.0003696
+        },
+        "response_formatter": {
+          "calls": 1,
+          "input_tokens": 545,
+          "output_tokens": 166,
+          "reasoning_tokens": 0,
+          "latency_ms": 3557,
+          "cost_usd": 0.0003082
+        }
+      }
+    },
+    {
+      "id": "orchestra:723a05ed5688",
+      "db_id": "orchestra",
+      "question": "List the names of orchestras that have no performance.",
+      "hardness": "hard",
+      "gold_sql": "SELECT Orchestra FROM orchestra WHERE Orchestra_ID NOT IN (SELECT Orchestra_ID FROM performance)",
+      "generated_sql": "SELECT o.Orchestra\nFROM orchestra AS o\nLEFT JOIN performance AS p\n  ON o.Orchestra_ID = p.Orchestra_ID\nWHERE p.Performance_ID IS NULL;",
+      "result_match": true,
+      "result_match_values": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "orchestra",
+          "performance"
+        ],
+        "selected_tables": [
+          "conductor",
+          "orchestra",
+          "performance"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "orchestra",
+        "performance",
+        "conductor"
+      ],
+      "gold_result": {
+        "columns": [
+          "Orchestra"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "Orchestra": "San Francisco Symphony Orchestra"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Orchestra"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "Orchestra": "San Francisco Symphony Orchestra"
+          }
+        ],
+        "truncated": false
+      },
+      "elapsed_ms": 17102,
+      "cost_usd": 0.00179384,
+      "input_tokens": 5611,
+      "output_tokens": 830,
+      "reasoning_tokens": 102,
+      "cached_input_tokens": 1802,
+      "calls": 8,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 341,
+          "output_tokens": 28,
+          "reasoning_tokens": 0,
+          "latency_ms": 1296,
+          "cost_usd": 0.0001018
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 1136,
+          "output_tokens": 302,
+          "reasoning_tokens": 62,
+          "latency_ms": 7407,
+          "cost_usd": 0.0005896
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 472,
+          "output_tokens": 172,
+          "reasoning_tokens": 40,
+          "latency_ms": 3248,
+          "cost_usd": 0.0003008
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1805,
+          "output_tokens": 150,
+          "reasoning_tokens": 0,
+          "latency_ms": 2701,
+          "cost_usd": 0.00021664
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1382,
+          "output_tokens": 69,
+          "reasoning_tokens": 0,
+          "latency_ms": 1284,
+          "cost_usd": 0.0003592
+        },
+        "response_formatter": {
+          "calls": 1,
+          "input_tokens": 475,
+          "output_tokens": 109,
+          "reasoning_tokens": 0,
+          "latency_ms": 2860,
+          "cost_usd": 0.0002258
+        }
+      }
+    },
+    {
+      "id": "orchestra:ab73cb450540",
+      "db_id": "orchestra",
+      "question": "What are the major record formats of orchestras, sorted by their frequency?",
+      "hardness": "medium",
+      "gold_sql": "SELECT Major_Record_Format FROM orchestra GROUP BY Major_Record_Format ORDER BY COUNT(*) ASC",
+      "generated_sql": "SELECT Major_Record_Format, COUNT(*) AS orchestra_count\nFROM orchestra\nWHERE Major_Record_Format IS NOT NULL\nGROUP BY Major_Record_Format\nORDER BY orchestra_count DESC, Major_Record_Format ASC;",
+      "result_match": false,
+      "result_match_values": false,
+      "failure_label": "aggregation_or_grouping",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "orchestra"
+        ],
+        "selected_tables": [
+          "conductor",
+          "orchestra"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "orchestra",
+        "conductor"
+      ],
+      "gold_result": {
+        "columns": [
+          "Major_Record_Format"
+        ],
+        "row_count": 3,
+        "rows": [
+          {
+            "Major_Record_Format": "CD / LP"
+          },
+          {
+            "Major_Record_Format": "DVD"
+          },
+          {
+            "Major_Record_Format": "CD"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Major_Record_Format",
+          "orchestra_count"
+        ],
+        "row_count": 3,
+        "rows": [
+          {
+            "Major_Record_Format": "CD",
+            "orchestra_count": 10
+          },
+          {
+            "Major_Record_Format": "CD / LP",
+            "orchestra_count": 1
+          },
+          {
+            "Major_Record_Format": "DVD",
+            "orchestra_count": 1
+          }
+        ],
+        "truncated": false
+      },
+      "elapsed_ms": 16491,
+      "cost_usd": 0.00181018,
+      "input_tokens": 5306,
+      "output_tokens": 867,
+      "reasoning_tokens": 205,
+      "cached_input_tokens": 1619,
+      "calls": 8,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 345,
+          "output_tokens": 32,
+          "reasoning_tokens": 0,
+          "latency_ms": 1079,
+          "cost_usd": 0.0001074
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 1148,
+          "output_tokens": 318,
+          "reasoning_tokens": 125,
+          "latency_ms": 7566,
+          "cost_usd": 0.0006112
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 466,
+          "output_tokens": 179,
+          "reasoning_tokens": 80,
+          "latency_ms": 3219,
+          "cost_usd": 0.000308
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1622,
+          "output_tokens": 145,
+          "reasoning_tokens": 0,
+          "latency_ms": 2329,
+          "cost_usd": 0.00020698
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1198,
+          "output_tokens": 72,
+          "reasoning_tokens": 0,
+          "latency_ms": 1763,
+          "cost_usd": 0.000326
+        },
+        "response_formatter": {
+          "calls": 1,
+          "input_tokens": 527,
+          "output_tokens": 121,
+          "reasoning_tokens": 0,
+          "latency_ms": 2350,
+          "cost_usd": 0.0002506
+        }
+      }
+    },
+    {
+      "id": "orchestra:c1d9e8230efa",
+      "db_id": "orchestra",
+      "question": "What are the names of conductors, sorted descending by the number of years they have worked?",
+      "hardness": "easy",
+      "gold_sql": "SELECT Name FROM conductor ORDER BY Year_of_Work DESC",
+      "generated_sql": "SELECT Name, Year_of_Work FROM conductor ORDER BY Year_of_Work DESC LIMIT 500;",
+      "result_match": false,
+      "result_match_values": false,
+      "failure_label": "other",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "conductor"
+        ],
+        "selected_tables": [
+          "conductor"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "conductor"
+      ],
+      "gold_result": {
+        "columns": [
+          "Name"
+        ],
+        "row_count": 12,
+        "rows": [
+          {
+            "Name": "Robert Craft"
+          },
+          {
+            "Name": "Antal Brown"
+          },
+          {
+            "Name": "Gerard Schwarz"
+          },
+          {
+            "Name": "Valeri Gergiev"
+          },
+          {
+            "Name": "Charles Dutoit"
+          },
+          {
+            "Name": "Michael Tilson Thomas"
+          },
+          {
+            "Name": "Igor Stravinsky"
+          },
+          {
+            "Name": "Paul Jorgensen"
+          }
+        ],
+        "truncated": true
+      },
+      "generated_result": {
+        "columns": [
+          "Name",
+          "Year_of_Work"
+        ],
+        "row_count": 12,
+        "rows": [
+          {
+            "Name": "Robert Craft",
+            "Year_of_Work": 21
+          },
+          {
+            "Name": "Antal Brown",
+            "Year_of_Work": 20
+          },
+          {
+            "Name": "Gerard Schwarz",
+            "Year_of_Work": 20
+          },
+          {
+            "Name": "Valeri Gergiev",
+            "Year_of_Work": 16
+          },
+          {
+            "Name": "Charles Dutoit",
+            "Year_of_Work": 12
+          },
+          {
+            "Name": "Michael Tilson Thomas",
+            "Year_of_Work": 12
+          },
+          {
+            "Name": "Igor Stravinsky",
+            "Year_of_Work": 11
+          },
+          {
+            "Name": "Paul Jorgensen",
+            "Year_of_Work": 11
+          }
+        ],
+        "truncated": true
+      },
+      "elapsed_ms": 15238,
+      "cost_usd": 0.00159874,
+      "input_tokens": 4850,
+      "output_tokens": 735,
+      "reasoning_tokens": 91,
+      "cached_input_tokens": 1407,
+      "calls": 8,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 349,
+          "output_tokens": 34,
+          "reasoning_tokens": 0,
+          "latency_ms": 1191,
+          "cost_usd": 0.0001106
+        },
+        "context_retriever": {
+          "calls": 3,
+          "input_tokens": 1160,
+          "output_tokens": 220,
+          "reasoning_tokens": 14,
+          "latency_ms": 5490,
+          "cost_usd": 0.000496
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 463,
+          "output_tokens": 142,
+          "reasoning_tokens": 29,
+          "latency_ms": 2484,
+          "cost_usd": 0.000263
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1410,
+          "output_tokens": 110,
+          "reasoning_tokens": 0,
+          "latency_ms": 1651,
+          "cost_usd": 0.00016074
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 961,
+          "output_tokens": 51,
+          "reasoning_tokens": 0,
+          "latency_ms": 2568,
+          "cost_usd": 0.0002534
+        },
+        "response_formatter": {
+          "calls": 1,
+          "input_tokens": 507,
+          "output_tokens": 178,
+          "reasoning_tokens": 48,
+          "latency_ms": 3214,
+          "cost_usd": 0.000315
+        }
+      }
+    }
+  ],
+  "accuracy": {
+    "overall": {
+      "n": 25,
+      "strict_correct": 13,
+      "values_correct": 16,
+      "strict_accuracy": 0.52,
+      "values_accuracy": 0.64
+    },
+    "by_hardness": {
+      "easy": {
+        "n": 7,
+        "strict_correct": 6,
+        "values_correct": 6,
+        "strict_accuracy": 0.8571,
+        "values_accuracy": 0.8571
+      },
+      "extra": {
+        "n": 3,
+        "strict_correct": 1,
+        "values_correct": 1,
+        "strict_accuracy": 0.3333,
+        "values_accuracy": 0.3333
+      },
+      "hard": {
+        "n": 5,
+        "strict_correct": 4,
+        "values_correct": 4,
+        "strict_accuracy": 0.8,
+        "values_accuracy": 0.8
+      },
+      "medium": {
+        "n": 10,
+        "strict_correct": 2,
+        "values_correct": 5,
+        "strict_accuracy": 0.2,
+        "values_accuracy": 0.5
+      }
+    },
+    "by_database": {
+      "concert_singer": {
+        "n": 5,
+        "strict_correct": 3,
+        "values_correct": 4,
+        "strict_accuracy": 0.6,
+        "values_accuracy": 0.8
+      },
+      "course_teach": {
+        "n": 5,
+        "strict_correct": 3,
+        "values_correct": 4,
+        "strict_accuracy": 0.6,
+        "values_accuracy": 0.8
+      },
+      "network_1": {
+        "n": 5,
+        "strict_correct": 2,
+        "values_correct": 2,
+        "strict_accuracy": 0.4,
+        "values_accuracy": 0.4
+      },
+      "orchestra": {
+        "n": 5,
+        "strict_correct": 2,
+        "values_correct": 3,
+        "strict_accuracy": 0.4,
+        "values_accuracy": 0.6
+      },
+      "pets_1": {
+        "n": 5,
+        "strict_correct": 3,
+        "values_correct": 3,
+        "strict_accuracy": 0.6,
+        "values_accuracy": 0.6
+      }
+    },
+    "failure_labels": {
+      "wrong_table": 1,
+      "aggregation_or_grouping": 2,
+      "clarified_instead_of_answering": 4,
+      "missing_join": 1,
+      "other": 1
+    },
+    "schema_linking_recall": {
+      "n": 25,
+      "full_hit": 25,
+      "rate": 1.0
+    }
+  },
+  "totals": {
+    "cost_usd": 0.044557,
+    "elapsed_ms": 415995,
+    "input_tokens": 114745,
+    "output_tokens": 21981,
+    "reasoning_tokens": 3873,
+    "calls": 192,
+    "estimated_calls": 0,
+    "correct_strict": 13,
+    "correct_values": 16,
+    "n": 25
+  },
+  "by_stage": {
+    "intent_classifier": {
+      "calls": 25,
+      "input_tokens": 8624,
+      "output_tokens": 803,
+      "reasoning_tokens": 18,
+      "latency_ms": 33636,
+      "cost_usd": 0.0026884
+    },
+    "context_retriever": {
+      "calls": 75,
+      "input_tokens": 26481,
+      "output_tokens": 7515,
+      "reasoning_tokens": 1410,
+      "latency_ms": 180926,
+      "cost_usd": 0.0143142
+    },
+    "interpretation_resolver": {
+      "calls": 25,
+      "input_tokens": 11712,
+      "output_tokens": 4624,
+      "reasoning_tokens": 1203,
+      "latency_ms": 80187,
+      "cost_usd": 0.0078912
+    },
+    "query_generator": {
+      "calls": 21,
+      "input_tokens": 32286,
+      "output_tokens": 3690,
+      "reasoning_tokens": 585,
+      "latency_ms": 57099,
+      "cost_usd": 0.00678642
+    },
+    "query_validator": {
+      "calls": 21,
+      "input_tokens": 23261,
+      "output_tokens": 1977,
+      "reasoning_tokens": 509,
+      "latency_ms": 47122,
+      "cost_usd": 0.00635374
+    },
+    "response_formatter": {
+      "calls": 21,
+      "input_tokens": 10500,
+      "output_tokens": 2859,
+      "reasoning_tokens": 148,
+      "latency_ms": 51667,
+      "cost_usd": 0.0055308
+    },
+    "direct_response": {
+      "calls": 4,
+      "input_tokens": 1881,
+      "output_tokens": 513,
+      "reasoning_tokens": 0,
+      "latency_ms": 10093,
+      "cost_usd": 0.0009918
+    }
+  },
+  "extrapolation": {
+    "spider_dev_1034": {
+      "n_questions": 1034,
+      "setup_cost_usd": 0.0,
+      "questions_cost_usd": 1.842859,
+      "total_cost_usd": 1.842859,
+      "avg_cost_per_question_usd": 0.001782,
+      "avg_latency_ms": 16639.8,
+      "estimated_total_latency_ms": 17205575.2
+    },
+    "bird_mini_dev_500": {
+      "n_questions": 500,
+      "setup_cost_usd": 0.0,
+      "questions_cost_usd": 0.891131,
+      "total_cost_usd": 0.891131,
+      "avg_cost_per_question_usd": 0.001782,
+      "avg_latency_ms": 16639.8,
+      "estimated_total_latency_ms": 8319922.0
+    }
+  },
+  "usage": {
+    "total_cost_usd": 0.04455656,
+    "total_calls": 192,
+    "estimated_calls": 0,
+    "by_stage": {
+      "intent_classifier": {
+        "calls": 25,
+        "input_tokens": 8624,
+        "output_tokens": 803,
+        "reasoning_tokens": 18,
+        "cached_input_tokens": 0,
+        "latency_ms": 33636,
+        "cost_usd": 0.0026884,
+        "estimated_calls": 0
+      },
+      "context_retriever": {
+        "calls": 75,
+        "input_tokens": 26481,
+        "output_tokens": 7515,
+        "reasoning_tokens": 1410,
+        "cached_input_tokens": 0,
+        "latency_ms": 180926,
+        "cost_usd": 0.0143142,
+        "estimated_calls": 0
+      },
+      "interpretation_resolver": {
+        "calls": 25,
+        "input_tokens": 11712,
+        "output_tokens": 4624,
+        "reasoning_tokens": 1203,
+        "cached_input_tokens": 0,
+        "latency_ms": 80187,
+        "cost_usd": 0.0078912,
+        "estimated_calls": 0
+      },
+      "query_generator": {
+        "calls": 21,
+        "input_tokens": 32286,
+        "output_tokens": 3690,
+        "reasoning_tokens": 585,
+        "cached_input_tokens": 22771,
+        "latency_ms": 57099,
+        "cost_usd": 0.00678642,
+        "estimated_calls": 0
+      },
+      "query_validator": {
+        "calls": 21,
+        "input_tokens": 23261,
+        "output_tokens": 1977,
+        "reasoning_tokens": 509,
+        "cached_input_tokens": 3727,
+        "latency_ms": 47122,
+        "cost_usd": 0.00635374,
+        "estimated_calls": 0
+      },
+      "response_formatter": {
+        "calls": 21,
+        "input_tokens": 10500,
+        "output_tokens": 2859,
+        "reasoning_tokens": 148,
+        "cached_input_tokens": 0,
+        "latency_ms": 51667,
+        "cost_usd": 0.0055308,
+        "estimated_calls": 0
+      },
+      "direct_response": {
+        "calls": 4,
+        "input_tokens": 1881,
+        "output_tokens": 513,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 10093,
+        "cost_usd": 0.0009918,
+        "estimated_calls": 0
+      }
+    },
+    "records": [
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "course_teach:9e4bef81cd89",
+        "label": "",
+        "input_tokens": 347,
+        "output_tokens": 27,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1528,
+        "cost_usd": 0.0001018,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "course_teach:9e4bef81cd89",
+        "label": "",
+        "input_tokens": 176,
+        "output_tokens": 42,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1593,
+        "cost_usd": 8.56e-05,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "course_teach:9e4bef81cd89",
+        "label": "",
+        "input_tokens": 435,
+        "output_tokens": 99,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1607,
+        "cost_usd": 0.0002058,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "course_teach:9e4bef81cd89",
+        "label": "",
+        "input_tokens": 382,
+        "output_tokens": 44,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1842,
+        "cost_usd": 0.0001292,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "course_teach:9e4bef81cd89",
+        "label": "",
+        "input_tokens": 458,
+        "output_tokens": 111,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1981,
+        "cost_usd": 0.0002248,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "course_teach:9e4bef81cd89",
+        "label": "",
+        "input_tokens": 1399,
+        "output_tokens": 155,
+        "reasoning_tokens": 32,
+        "cached_input_tokens": 1396,
+        "latency_ms": 3799,
+        "cost_usd": 0.00021452,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "course_teach:9e4bef81cd89",
+        "label": "",
+        "input_tokens": 951,
+        "output_tokens": 50,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1401,
+        "cost_usd": 0.0002502,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "response_formatter",
+        "case_id": "course_teach:9e4bef81cd89",
+        "label": "",
+        "input_tokens": 475,
+        "output_tokens": 120,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2341,
+        "cost_usd": 0.000239,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "course_teach:b45786ed0af6",
+        "label": "",
+        "input_tokens": 341,
+        "output_tokens": 33,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1221,
+        "cost_usd": 0.0001078,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "course_teach:b45786ed0af6",
+        "label": "",
+        "input_tokens": 170,
+        "output_tokens": 51,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1419,
+        "cost_usd": 9.52e-05,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "course_teach:b45786ed0af6",
+        "label": "",
+        "input_tokens": 429,
+        "output_tokens": 150,
+        "reasoning_tokens": 45,
+        "cached_input_tokens": 0,
+        "latency_ms": 1780,
+        "cost_usd": 0.0002658,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "course_teach:b45786ed0af6",
+        "label": "",
+        "input_tokens": 376,
+        "output_tokens": 48,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1817,
+        "cost_usd": 0.0001328,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "course_teach:b45786ed0af6",
+        "label": "",
+        "input_tokens": 454,
+        "output_tokens": 182,
+        "reasoning_tokens": 62,
+        "cached_input_tokens": 0,
+        "latency_ms": 2685,
+        "cost_usd": 0.0003092,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "course_teach:b45786ed0af6",
+        "label": "",
+        "input_tokens": 1397,
+        "output_tokens": 280,
+        "reasoning_tokens": 68,
+        "cached_input_tokens": 0,
+        "latency_ms": 3434,
+        "cost_usd": 0.0006154,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "course_teach:b45786ed0af6",
+        "label": "",
+        "input_tokens": 1019,
+        "output_tokens": 217,
+        "reasoning_tokens": 80,
+        "cached_input_tokens": 0,
+        "latency_ms": 2428,
+        "cost_usd": 0.0004642,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "response_formatter",
+        "case_id": "course_teach:b45786ed0af6",
+        "label": "",
+        "input_tokens": 579,
+        "output_tokens": 180,
+        "reasoning_tokens": 54,
+        "cached_input_tokens": 0,
+        "latency_ms": 3116,
+        "cost_usd": 0.0003318,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "course_teach:d609a3b5e2eb",
+        "label": "",
+        "input_tokens": 344,
+        "output_tokens": 37,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1907,
+        "cost_usd": 0.0001132,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "course_teach:d609a3b5e2eb",
+        "label": "",
+        "input_tokens": 173,
+        "output_tokens": 52,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2625,
+        "cost_usd": 9.7e-05,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "course_teach:d609a3b5e2eb",
+        "label": "",
+        "input_tokens": 379,
+        "output_tokens": 111,
+        "reasoning_tokens": 29,
+        "cached_input_tokens": 0,
+        "latency_ms": 2029,
+        "cost_usd": 0.000209,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "course_teach:d609a3b5e2eb",
+        "label": "",
+        "input_tokens": 432,
+        "output_tokens": 232,
+        "reasoning_tokens": 89,
+        "cached_input_tokens": 0,
+        "latency_ms": 2972,
+        "cost_usd": 0.0003648,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "course_teach:d609a3b5e2eb",
+        "label": "",
+        "input_tokens": 475,
+        "output_tokens": 281,
+        "reasoning_tokens": 116,
+        "cached_input_tokens": 0,
+        "latency_ms": 3961,
+        "cost_usd": 0.0004322,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "course_teach:d609a3b5e2eb",
+        "label": "",
+        "input_tokens": 1666,
+        "output_tokens": 323,
+        "reasoning_tokens": 131,
+        "cached_input_tokens": 0,
+        "latency_ms": 3843,
+        "cost_usd": 0.0007208,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "course_teach:d609a3b5e2eb",
+        "label": "",
+        "input_tokens": 1235,
+        "output_tokens": 159,
+        "reasoning_tokens": 74,
+        "cached_input_tokens": 0,
+        "latency_ms": 2758,
+        "cost_usd": 0.0004378,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "response_formatter",
+        "case_id": "course_teach:d609a3b5e2eb",
+        "label": "",
+        "input_tokens": 501,
+        "output_tokens": 125,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2107,
+        "cost_usd": 0.0002502,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "course_teach:7cd5b8a77a3c",
+        "label": "",
+        "input_tokens": 340,
+        "output_tokens": 30,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1698,
+        "cost_usd": 0.000104,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "course_teach:7cd5b8a77a3c",
+        "label": "",
+        "input_tokens": 169,
+        "output_tokens": 37,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1944,
+        "cost_usd": 7.82e-05,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "course_teach:7cd5b8a77a3c",
+        "label": "",
+        "input_tokens": 428,
+        "output_tokens": 84,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1492,
+        "cost_usd": 0.0001864,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "course_teach:7cd5b8a77a3c",
+        "label": "",
+        "input_tokens": 375,
+        "output_tokens": 68,
+        "reasoning_tokens": 13,
+        "cached_input_tokens": 0,
+        "latency_ms": 2040,
+        "cost_usd": 0.0001566,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "course_teach:7cd5b8a77a3c",
+        "label": "",
+        "input_tokens": 453,
+        "output_tokens": 68,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1482,
+        "cost_usd": 0.0001722,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "course_teach:7cd5b8a77a3c",
+        "label": "",
+        "input_tokens": 1383,
+        "output_tokens": 114,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1380,
+        "latency_ms": 1951,
+        "cost_usd": 0.000165,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "course_teach:7cd5b8a77a3c",
+        "label": "",
+        "input_tokens": 945,
+        "output_tokens": 53,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1569,
+        "cost_usd": 0.0002526,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "response_formatter",
+        "case_id": "course_teach:7cd5b8a77a3c",
+        "label": "",
+        "input_tokens": 505,
+        "output_tokens": 135,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1791,
+        "cost_usd": 0.000263,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "course_teach:f8981bb4054d",
+        "label": "",
+        "input_tokens": 340,
+        "output_tokens": 28,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1603,
+        "cost_usd": 0.0001016,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "course_teach:f8981bb4054d",
+        "label": "",
+        "input_tokens": 169,
+        "output_tokens": 44,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 3919,
+        "cost_usd": 8.66e-05,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "course_teach:f8981bb4054d",
+        "label": "",
+        "input_tokens": 375,
+        "output_tokens": 45,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2024,
+        "cost_usd": 0.000129,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "course_teach:f8981bb4054d",
+        "label": "",
+        "input_tokens": 428,
+        "output_tokens": 88,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 3818,
+        "cost_usd": 0.0001912,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "course_teach:f8981bb4054d",
+        "label": "",
+        "input_tokens": 452,
+        "output_tokens": 74,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1557,
+        "cost_usd": 0.0001792,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "course_teach:f8981bb4054d",
+        "label": "",
+        "input_tokens": 1401,
+        "output_tokens": 90,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1398,
+        "latency_ms": 2446,
+        "cost_usd": 0.00013656,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "course_teach:f8981bb4054d",
+        "label": "",
+        "input_tokens": 954,
+        "output_tokens": 44,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 957,
+        "cost_usd": 0.0002436,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "response_formatter",
+        "case_id": "course_teach:f8981bb4054d",
+        "label": "",
+        "input_tokens": 494,
+        "output_tokens": 116,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2783,
+        "cost_usd": 0.000238,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "concert_singer:88aeca8a41e8",
+        "label": "",
+        "input_tokens": 351,
+        "output_tokens": 31,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1251,
+        "cost_usd": 0.0001074,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "concert_singer:88aeca8a41e8",
+        "label": "",
+        "input_tokens": 180,
+        "output_tokens": 94,
+        "reasoning_tokens": 20,
+        "cached_input_tokens": 0,
+        "latency_ms": 3037,
+        "cost_usd": 0.0001488,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "concert_singer:88aeca8a41e8",
+        "label": "",
+        "input_tokens": 611,
+        "output_tokens": 110,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1830,
+        "cost_usd": 0.0002542,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "concert_singer:88aeca8a41e8",
+        "label": "",
+        "input_tokens": 416,
+        "output_tokens": 120,
+        "reasoning_tokens": 37,
+        "cached_input_tokens": 0,
+        "latency_ms": 2432,
+        "cost_usd": 0.0002272,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "concert_singer:88aeca8a41e8",
+        "label": "",
+        "input_tokens": 468,
+        "output_tokens": 92,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1890,
+        "cost_usd": 0.000204,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "concert_singer:88aeca8a41e8",
+        "label": "",
+        "input_tokens": 1458,
+        "output_tokens": 118,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1455,
+        "latency_ms": 2239,
+        "cost_usd": 0.0001713,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "concert_singer:88aeca8a41e8",
+        "label": "",
+        "input_tokens": 1006,
+        "output_tokens": 113,
+        "reasoning_tokens": 57,
+        "cached_input_tokens": 0,
+        "latency_ms": 1826,
+        "cost_usd": 0.0003368,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "response_formatter",
+        "case_id": "concert_singer:88aeca8a41e8",
+        "label": "",
+        "input_tokens": 469,
+        "output_tokens": 128,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1885,
+        "cost_usd": 0.0002474,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "concert_singer:b45e8112835e",
+        "label": "",
+        "input_tokens": 342,
+        "output_tokens": 27,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1285,
+        "cost_usd": 0.0001008,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "concert_singer:b45e8112835e",
+        "label": "",
+        "input_tokens": 171,
+        "output_tokens": 48,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1584,
+        "cost_usd": 9.18e-05,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "concert_singer:b45e8112835e",
+        "label": "",
+        "input_tokens": 602,
+        "output_tokens": 83,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1726,
+        "cost_usd": 0.00022,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "concert_singer:b45e8112835e",
+        "label": "",
+        "input_tokens": 407,
+        "output_tokens": 106,
+        "reasoning_tokens": 41,
+        "cached_input_tokens": 0,
+        "latency_ms": 1820,
+        "cost_usd": 0.0002086,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "concert_singer:b45e8112835e",
+        "label": "",
+        "input_tokens": 455,
+        "output_tokens": 77,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 3486,
+        "cost_usd": 0.0001834,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "concert_singer:b45e8112835e",
+        "label": "",
+        "input_tokens": 1417,
+        "output_tokens": 202,
+        "reasoning_tokens": 61,
+        "cached_input_tokens": 1414,
+        "latency_ms": 3130,
+        "cost_usd": 0.00027128,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "concert_singer:b45e8112835e",
+        "label": "",
+        "input_tokens": 982,
+        "output_tokens": 58,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1523,
+        "cost_usd": 0.000266,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "response_formatter",
+        "case_id": "concert_singer:b45e8112835e",
+        "label": "",
+        "input_tokens": 504,
+        "output_tokens": 127,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1915,
+        "cost_usd": 0.0002532,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "concert_singer:b696905ed1d6",
+        "label": "",
+        "input_tokens": 349,
+        "output_tokens": 34,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 892,
+        "cost_usd": 0.0001106,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "concert_singer:b696905ed1d6",
+        "label": "",
+        "input_tokens": 178,
+        "output_tokens": 46,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2340,
+        "cost_usd": 9.08e-05,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "concert_singer:b696905ed1d6",
+        "label": "",
+        "input_tokens": 414,
+        "output_tokens": 67,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1701,
+        "cost_usd": 0.0001632,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "concert_singer:b696905ed1d6",
+        "label": "",
+        "input_tokens": 609,
+        "output_tokens": 234,
+        "reasoning_tokens": 65,
+        "cached_input_tokens": 0,
+        "latency_ms": 3308,
+        "cost_usd": 0.0004026,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "concert_singer:b696905ed1d6",
+        "label": "",
+        "input_tokens": 473,
+        "output_tokens": 105,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2412,
+        "cost_usd": 0.0002206,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "concert_singer:b696905ed1d6",
+        "label": "",
+        "input_tokens": 1612,
+        "output_tokens": 234,
+        "reasoning_tokens": 53,
+        "cached_input_tokens": 1609,
+        "latency_ms": 2966,
+        "cost_usd": 0.00031358,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "concert_singer:b696905ed1d6",
+        "label": "",
+        "input_tokens": 1191,
+        "output_tokens": 82,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1188,
+        "latency_ms": 1577,
+        "cost_usd": 0.00012276,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "response_formatter",
+        "case_id": "concert_singer:b696905ed1d6",
+        "label": "",
+        "input_tokens": 515,
+        "output_tokens": 161,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2275,
+        "cost_usd": 0.0002962,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "concert_singer:3af42e7e0821",
+        "label": "",
+        "input_tokens": 355,
+        "output_tokens": 39,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1397,
+        "cost_usd": 0.0001178,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "concert_singer:3af42e7e0821",
+        "label": "",
+        "input_tokens": 184,
+        "output_tokens": 73,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2045,
+        "cost_usd": 0.0001244,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "concert_singer:3af42e7e0821",
+        "label": "",
+        "input_tokens": 420,
+        "output_tokens": 139,
+        "reasoning_tokens": 51,
+        "cached_input_tokens": 0,
+        "latency_ms": 2349,
+        "cost_usd": 0.0002508,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "concert_singer:3af42e7e0821",
+        "label": "",
+        "input_tokens": 615,
+        "output_tokens": 239,
+        "reasoning_tokens": 65,
+        "cached_input_tokens": 0,
+        "latency_ms": 2912,
+        "cost_usd": 0.0004098,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "concert_singer:3af42e7e0821",
+        "label": "",
+        "input_tokens": 483,
+        "output_tokens": 175,
+        "reasoning_tokens": 33,
+        "cached_input_tokens": 0,
+        "latency_ms": 2974,
+        "cost_usd": 0.0003066,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "concert_singer:3af42e7e0821",
+        "label": "",
+        "input_tokens": 1642,
+        "output_tokens": 270,
+        "reasoning_tokens": 59,
+        "cached_input_tokens": 1639,
+        "latency_ms": 3890,
+        "cost_usd": 0.00035738,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "concert_singer:3af42e7e0821",
+        "label": "",
+        "input_tokens": 1230,
+        "output_tokens": 176,
+        "reasoning_tokens": 74,
+        "cached_input_tokens": 0,
+        "latency_ms": 2832,
+        "cost_usd": 0.0004572,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "response_formatter",
+        "case_id": "concert_singer:3af42e7e0821",
+        "label": "",
+        "input_tokens": 520,
+        "output_tokens": 138,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2485,
+        "cost_usd": 0.0002696,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "concert_singer:f22528648d5c",
+        "label": "",
+        "input_tokens": 338,
+        "output_tokens": 30,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1222,
+        "cost_usd": 0.0001036,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "concert_singer:f22528648d5c",
+        "label": "",
+        "input_tokens": 167,
+        "output_tokens": 38,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1821,
+        "cost_usd": 7.9e-05,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "concert_singer:f22528648d5c",
+        "label": "",
+        "input_tokens": 403,
+        "output_tokens": 47,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1728,
+        "cost_usd": 0.000137,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "concert_singer:f22528648d5c",
+        "label": "",
+        "input_tokens": 598,
+        "output_tokens": 126,
+        "reasoning_tokens": 33,
+        "cached_input_tokens": 0,
+        "latency_ms": 2504,
+        "cost_usd": 0.0002708,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "concert_singer:f22528648d5c",
+        "label": "",
+        "input_tokens": 461,
+        "output_tokens": 152,
+        "reasoning_tokens": 37,
+        "cached_input_tokens": 0,
+        "latency_ms": 2539,
+        "cost_usd": 0.0002746,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "concert_singer:f22528648d5c",
+        "label": "",
+        "input_tokens": 1665,
+        "output_tokens": 118,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1662,
+        "latency_ms": 2408,
+        "cost_usd": 0.00017544,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "concert_singer:f22528648d5c",
+        "label": "",
+        "input_tokens": 1239,
+        "output_tokens": 63,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1236,
+        "latency_ms": 1101,
+        "cost_usd": 0.00010092,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "response_formatter",
+        "case_id": "concert_singer:f22528648d5c",
+        "label": "",
+        "input_tokens": 469,
+        "output_tokens": 104,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1513,
+        "cost_usd": 0.0002186,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "pets_1:0a67fdb91226",
+        "label": "",
+        "input_tokens": 340,
+        "output_tokens": 31,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1322,
+        "cost_usd": 0.0001052,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "pets_1:0a67fdb91226",
+        "label": "",
+        "input_tokens": 169,
+        "output_tokens": 41,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1928,
+        "cost_usd": 8.3e-05,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "pets_1:0a67fdb91226",
+        "label": "",
+        "input_tokens": 471,
+        "output_tokens": 116,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2919,
+        "cost_usd": 0.0002334,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "pets_1:0a67fdb91226",
+        "label": "",
+        "input_tokens": 383,
+        "output_tokens": 111,
+        "reasoning_tokens": 39,
+        "cached_input_tokens": 0,
+        "latency_ms": 2929,
+        "cost_usd": 0.0002098,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "pets_1:0a67fdb91226",
+        "label": "",
+        "input_tokens": 457,
+        "output_tokens": 94,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2377,
+        "cost_usd": 0.0002042,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "pets_1:0a67fdb91226",
+        "label": "",
+        "input_tokens": 1405,
+        "output_tokens": 110,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1402,
+        "latency_ms": 2314,
+        "cost_usd": 0.00016064,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "pets_1:0a67fdb91226",
+        "label": "",
+        "input_tokens": 972,
+        "output_tokens": 58,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1159,
+        "cost_usd": 0.000264,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "response_formatter",
+        "case_id": "pets_1:0a67fdb91226",
+        "label": "",
+        "input_tokens": 467,
+        "output_tokens": 119,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2409,
+        "cost_usd": 0.0002362,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "pets_1:8bd260baf455",
+        "label": "",
+        "input_tokens": 349,
+        "output_tokens": 29,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1400,
+        "cost_usd": 0.0001046,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "pets_1:8bd260baf455",
+        "label": "",
+        "input_tokens": 177,
+        "output_tokens": 63,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2591,
+        "cost_usd": 0.000111,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "pets_1:8bd260baf455",
+        "label": "",
+        "input_tokens": 392,
+        "output_tokens": 91,
+        "reasoning_tokens": 32,
+        "cached_input_tokens": 0,
+        "latency_ms": 1944,
+        "cost_usd": 0.0001876,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "pets_1:8bd260baf455",
+        "label": "",
+        "input_tokens": 480,
+        "output_tokens": 196,
+        "reasoning_tokens": 46,
+        "cached_input_tokens": 0,
+        "latency_ms": 3214,
+        "cost_usd": 0.0003312,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "pets_1:8bd260baf455",
+        "label": "",
+        "input_tokens": 486,
+        "output_tokens": 210,
+        "reasoning_tokens": 34,
+        "cached_input_tokens": 0,
+        "latency_ms": 3494,
+        "cost_usd": 0.0003492,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "pets_1:8bd260baf455",
+        "label": "",
+        "input_tokens": 1731,
+        "output_tokens": 211,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2235,
+        "cost_usd": 0.0005994,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "pets_1:8bd260baf455",
+        "label": "",
+        "input_tokens": 1316,
+        "output_tokens": 139,
+        "reasoning_tokens": 49,
+        "cached_input_tokens": 0,
+        "latency_ms": 3037,
+        "cost_usd": 0.00043,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "response_formatter",
+        "case_id": "pets_1:8bd260baf455",
+        "label": "",
+        "input_tokens": 495,
+        "output_tokens": 126,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2334,
+        "cost_usd": 0.0002502,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "pets_1:6847f764cdfb",
+        "label": "",
+        "input_tokens": 349,
+        "output_tokens": 35,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1275,
+        "cost_usd": 0.0001118,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "pets_1:6847f764cdfb",
+        "label": "",
+        "input_tokens": 178,
+        "output_tokens": 42,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2241,
+        "cost_usd": 8.6e-05,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "pets_1:6847f764cdfb",
+        "label": "",
+        "input_tokens": 392,
+        "output_tokens": 86,
+        "reasoning_tokens": 22,
+        "cached_input_tokens": 0,
+        "latency_ms": 2077,
+        "cost_usd": 0.0001816,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "pets_1:6847f764cdfb",
+        "label": "",
+        "input_tokens": 480,
+        "output_tokens": 152,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2397,
+        "cost_usd": 0.0002784,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "pets_1:6847f764cdfb",
+        "label": "",
+        "input_tokens": 483,
+        "output_tokens": 230,
+        "reasoning_tokens": 158,
+        "cached_input_tokens": 0,
+        "latency_ms": 4571,
+        "cost_usd": 0.0003726,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "direct_response",
+        "case_id": "pets_1:6847f764cdfb",
+        "label": "",
+        "input_tokens": 422,
+        "output_tokens": 92,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2423,
+        "cost_usd": 0.0001948,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "pets_1:f9b607ba3304",
+        "label": "",
+        "input_tokens": 352,
+        "output_tokens": 55,
+        "reasoning_tokens": 18,
+        "cached_input_tokens": 0,
+        "latency_ms": 1279,
+        "cost_usd": 0.0001364,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "pets_1:f9b607ba3304",
+        "label": "",
+        "input_tokens": 181,
+        "output_tokens": 55,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 3955,
+        "cost_usd": 0.0001022,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "pets_1:f9b607ba3304",
+        "label": "",
+        "input_tokens": 395,
+        "output_tokens": 149,
+        "reasoning_tokens": 45,
+        "cached_input_tokens": 0,
+        "latency_ms": 3200,
+        "cost_usd": 0.0002578,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "pets_1:f9b607ba3304",
+        "label": "",
+        "input_tokens": 483,
+        "output_tokens": 415,
+        "reasoning_tokens": 128,
+        "cached_input_tokens": 0,
+        "latency_ms": 5636,
+        "cost_usd": 0.0005946,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "pets_1:f9b607ba3304",
+        "label": "",
+        "input_tokens": 504,
+        "output_tokens": 388,
+        "reasoning_tokens": 147,
+        "cached_input_tokens": 0,
+        "latency_ms": 5414,
+        "cost_usd": 0.0005664,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "direct_response",
+        "case_id": "pets_1:f9b607ba3304",
+        "label": "",
+        "input_tokens": 473,
+        "output_tokens": 100,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1596,
+        "cost_usd": 0.0002146,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "pets_1:a201c09fa32c",
+        "label": "",
+        "input_tokens": 343,
+        "output_tokens": 27,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1033,
+        "cost_usd": 0.000101,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "pets_1:a201c09fa32c",
+        "label": "",
+        "input_tokens": 172,
+        "output_tokens": 53,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1719,
+        "cost_usd": 9.8e-05,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "pets_1:a201c09fa32c",
+        "label": "",
+        "input_tokens": 386,
+        "output_tokens": 77,
+        "reasoning_tokens": 19,
+        "cached_input_tokens": 0,
+        "latency_ms": 1982,
+        "cost_usd": 0.0001696,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "pets_1:a201c09fa32c",
+        "label": "",
+        "input_tokens": 474,
+        "output_tokens": 153,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2457,
+        "cost_usd": 0.0002784,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "pets_1:a201c09fa32c",
+        "label": "",
+        "input_tokens": 479,
+        "output_tokens": 231,
+        "reasoning_tokens": 82,
+        "cached_input_tokens": 0,
+        "latency_ms": 3300,
+        "cost_usd": 0.000373,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "pets_1:a201c09fa32c",
+        "label": "",
+        "input_tokens": 1745,
+        "output_tokens": 144,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2049,
+        "cost_usd": 0.0005218,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "pets_1:a201c09fa32c",
+        "label": "",
+        "input_tokens": 1306,
+        "output_tokens": 69,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1303,
+        "latency_ms": 6957,
+        "cost_usd": 0.00010946,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "response_formatter",
+        "case_id": "pets_1:a201c09fa32c",
+        "label": "",
+        "input_tokens": 499,
+        "output_tokens": 120,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 3246,
+        "cost_usd": 0.0002438,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "network_1:03a3045ed350",
+        "label": "",
+        "input_tokens": 342,
+        "output_tokens": 34,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1461,
+        "cost_usd": 0.0001092,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "network_1:03a3045ed350",
+        "label": "",
+        "input_tokens": 171,
+        "output_tokens": 46,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1794,
+        "cost_usd": 8.94e-05,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "network_1:03a3045ed350",
+        "label": "",
+        "input_tokens": 379,
+        "output_tokens": 97,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2625,
+        "cost_usd": 0.0001922,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "network_1:03a3045ed350",
+        "label": "",
+        "input_tokens": 376,
+        "output_tokens": 51,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2902,
+        "cost_usd": 0.0001364,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "network_1:03a3045ed350",
+        "label": "",
+        "input_tokens": 455,
+        "output_tokens": 83,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1736,
+        "cost_usd": 0.0001906,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "network_1:03a3045ed350",
+        "label": "",
+        "input_tokens": 1360,
+        "output_tokens": 100,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1357,
+        "latency_ms": 1937,
+        "cost_usd": 0.00014774,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "network_1:03a3045ed350",
+        "label": "",
+        "input_tokens": 918,
+        "output_tokens": 51,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 3905,
+        "cost_usd": 0.0002448,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "response_formatter",
+        "case_id": "network_1:03a3045ed350",
+        "label": "",
+        "input_tokens": 491,
+        "output_tokens": 174,
+        "reasoning_tokens": 46,
+        "cached_input_tokens": 0,
+        "latency_ms": 3191,
+        "cost_usd": 0.000307,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "network_1:4977698c784a",
+        "label": "",
+        "input_tokens": 346,
+        "output_tokens": 31,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1087,
+        "cost_usd": 0.0001064,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "network_1:4977698c784a",
+        "label": "",
+        "input_tokens": 175,
+        "output_tokens": 59,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1945,
+        "cost_usd": 0.0001058,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "network_1:4977698c784a",
+        "label": "",
+        "input_tokens": 380,
+        "output_tokens": 70,
+        "reasoning_tokens": 11,
+        "cached_input_tokens": 0,
+        "latency_ms": 1607,
+        "cost_usd": 0.00016,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "network_1:4977698c784a",
+        "label": "",
+        "input_tokens": 383,
+        "output_tokens": 215,
+        "reasoning_tokens": 63,
+        "cached_input_tokens": 0,
+        "latency_ms": 3565,
+        "cost_usd": 0.0003346,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "network_1:4977698c784a",
+        "label": "",
+        "input_tokens": 471,
+        "output_tokens": 544,
+        "reasoning_tokens": 141,
+        "cached_input_tokens": 0,
+        "latency_ms": 7630,
+        "cost_usd": 0.000747,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "direct_response",
+        "case_id": "network_1:4977698c784a",
+        "label": "",
+        "input_tokens": 481,
+        "output_tokens": 130,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2557,
+        "cost_usd": 0.0002522,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "network_1:367815e79dd4",
+        "label": "",
+        "input_tokens": 342,
+        "output_tokens": 30,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1791,
+        "cost_usd": 0.0001044,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "network_1:367815e79dd4",
+        "label": "",
+        "input_tokens": 171,
+        "output_tokens": 40,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1584,
+        "cost_usd": 8.22e-05,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "network_1:367815e79dd4",
+        "label": "",
+        "input_tokens": 379,
+        "output_tokens": 90,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1736,
+        "cost_usd": 0.0001838,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "network_1:367815e79dd4",
+        "label": "",
+        "input_tokens": 376,
+        "output_tokens": 89,
+        "reasoning_tokens": 19,
+        "cached_input_tokens": 0,
+        "latency_ms": 2467,
+        "cost_usd": 0.000182,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "network_1:367815e79dd4",
+        "label": "",
+        "input_tokens": 458,
+        "output_tokens": 178,
+        "reasoning_tokens": 53,
+        "cached_input_tokens": 0,
+        "latency_ms": 3247,
+        "cost_usd": 0.0003052,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "network_1:367815e79dd4",
+        "label": "",
+        "input_tokens": 1462,
+        "output_tokens": 249,
+        "reasoning_tokens": 89,
+        "cached_input_tokens": 0,
+        "latency_ms": 2993,
+        "cost_usd": 0.0005912,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "network_1:367815e79dd4",
+        "label": "",
+        "input_tokens": 1035,
+        "output_tokens": 189,
+        "reasoning_tokens": 117,
+        "cached_input_tokens": 0,
+        "latency_ms": 2852,
+        "cost_usd": 0.0004338,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "response_formatter",
+        "case_id": "network_1:367815e79dd4",
+        "label": "",
+        "input_tokens": 482,
+        "output_tokens": 128,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2124,
+        "cost_usd": 0.00025,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "network_1:76c75a92d3d7",
+        "label": "",
+        "input_tokens": 347,
+        "output_tokens": 30,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1593,
+        "cost_usd": 0.0001054,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "network_1:76c75a92d3d7",
+        "label": "",
+        "input_tokens": 176,
+        "output_tokens": 56,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 3758,
+        "cost_usd": 0.0001024,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "network_1:76c75a92d3d7",
+        "label": "",
+        "input_tokens": 381,
+        "output_tokens": 94,
+        "reasoning_tokens": 28,
+        "cached_input_tokens": 0,
+        "latency_ms": 1916,
+        "cost_usd": 0.000189,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "network_1:76c75a92d3d7",
+        "label": "",
+        "input_tokens": 384,
+        "output_tokens": 348,
+        "reasoning_tokens": 122,
+        "cached_input_tokens": 0,
+        "latency_ms": 4706,
+        "cost_usd": 0.0004944,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "network_1:76c75a92d3d7",
+        "label": "",
+        "input_tokens": 484,
+        "output_tokens": 437,
+        "reasoning_tokens": 121,
+        "cached_input_tokens": 0,
+        "latency_ms": 7137,
+        "cost_usd": 0.0006212,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "direct_response",
+        "case_id": "network_1:76c75a92d3d7",
+        "label": "",
+        "input_tokens": 505,
+        "output_tokens": 191,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 3517,
+        "cost_usd": 0.0003302,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "network_1:83bd47e893c4",
+        "label": "",
+        "input_tokens": 343,
+        "output_tokens": 30,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1272,
+        "cost_usd": 0.0001046,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "network_1:83bd47e893c4",
+        "label": "",
+        "input_tokens": 172,
+        "output_tokens": 49,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1914,
+        "cost_usd": 9.32e-05,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "network_1:83bd47e893c4",
+        "label": "",
+        "input_tokens": 380,
+        "output_tokens": 117,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2470,
+        "cost_usd": 0.0002164,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "network_1:83bd47e893c4",
+        "label": "",
+        "input_tokens": 377,
+        "output_tokens": 97,
+        "reasoning_tokens": 29,
+        "cached_input_tokens": 0,
+        "latency_ms": 3013,
+        "cost_usd": 0.0001918,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "network_1:83bd47e893c4",
+        "label": "",
+        "input_tokens": 463,
+        "output_tokens": 177,
+        "reasoning_tokens": 42,
+        "cached_input_tokens": 0,
+        "latency_ms": 2823,
+        "cost_usd": 0.000305,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "network_1:83bd47e893c4",
+        "label": "",
+        "input_tokens": 1469,
+        "output_tokens": 188,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2834,
+        "cost_usd": 0.0005194,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "network_1:83bd47e893c4",
+        "label": "",
+        "input_tokens": 1051,
+        "output_tokens": 140,
+        "reasoning_tokens": 58,
+        "cached_input_tokens": 0,
+        "latency_ms": 2695,
+        "cost_usd": 0.0003782,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "response_formatter",
+        "case_id": "network_1:83bd47e893c4",
+        "label": "",
+        "input_tokens": 494,
+        "output_tokens": 118,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2093,
+        "cost_usd": 0.0002404,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "orchestra:c719cf8db286",
+        "label": "",
+        "input_tokens": 345,
+        "output_tokens": 26,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 948,
+        "cost_usd": 0.0001002,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "orchestra:c719cf8db286",
+        "label": "",
+        "input_tokens": 174,
+        "output_tokens": 34,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1614,
+        "cost_usd": 7.56e-05,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "orchestra:c719cf8db286",
+        "label": "",
+        "input_tokens": 577,
+        "output_tokens": 84,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1790,
+        "cost_usd": 0.0002162,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "orchestra:c719cf8db286",
+        "label": "",
+        "input_tokens": 397,
+        "output_tokens": 73,
+        "reasoning_tokens": 23,
+        "cached_input_tokens": 0,
+        "latency_ms": 2442,
+        "cost_usd": 0.000167,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "orchestra:c719cf8db286",
+        "label": "",
+        "input_tokens": 458,
+        "output_tokens": 75,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1922,
+        "cost_usd": 0.0001816,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "orchestra:c719cf8db286",
+        "label": "",
+        "input_tokens": 1391,
+        "output_tokens": 218,
+        "reasoning_tokens": 92,
+        "cached_input_tokens": 1388,
+        "latency_ms": 3684,
+        "cost_usd": 0.00028996,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "orchestra:c719cf8db286",
+        "label": "",
+        "input_tokens": 948,
+        "output_tokens": 53,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1228,
+        "cost_usd": 0.0002532,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "response_formatter",
+        "case_id": "orchestra:c719cf8db286",
+        "label": "",
+        "input_tokens": 487,
+        "output_tokens": 166,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2078,
+        "cost_usd": 0.0002966,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "orchestra:5a092e07dc63",
+        "label": "",
+        "input_tokens": 344,
+        "output_tokens": 35,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1605,
+        "cost_usd": 0.0001108,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "orchestra:5a092e07dc63",
+        "label": "",
+        "input_tokens": 173,
+        "output_tokens": 67,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2335,
+        "cost_usd": 0.000115,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "orchestra:5a092e07dc63",
+        "label": "",
+        "input_tokens": 576,
+        "output_tokens": 211,
+        "reasoning_tokens": 54,
+        "cached_input_tokens": 0,
+        "latency_ms": 3124,
+        "cost_usd": 0.0003684,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "orchestra:5a092e07dc63",
+        "label": "",
+        "input_tokens": 396,
+        "output_tokens": 123,
+        "reasoning_tokens": 41,
+        "cached_input_tokens": 0,
+        "latency_ms": 3909,
+        "cost_usd": 0.0002268,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "orchestra:5a092e07dc63",
+        "label": "",
+        "input_tokens": 481,
+        "output_tokens": 167,
+        "reasoning_tokens": 28,
+        "cached_input_tokens": 0,
+        "latency_ms": 2618,
+        "cost_usd": 0.0002966,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "orchestra:5a092e07dc63",
+        "label": "",
+        "input_tokens": 1846,
+        "output_tokens": 161,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1843,
+        "latency_ms": 2266,
+        "cost_usd": 0.00023066,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "orchestra:5a092e07dc63",
+        "label": "",
+        "input_tokens": 1422,
+        "output_tokens": 71,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1702,
+        "cost_usd": 0.0003696,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "response_formatter",
+        "case_id": "orchestra:5a092e07dc63",
+        "label": "",
+        "input_tokens": 545,
+        "output_tokens": 166,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 3557,
+        "cost_usd": 0.0003082,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "orchestra:723a05ed5688",
+        "label": "",
+        "input_tokens": 341,
+        "output_tokens": 28,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1296,
+        "cost_usd": 0.0001018,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "orchestra:723a05ed5688",
+        "label": "",
+        "input_tokens": 170,
+        "output_tokens": 44,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2843,
+        "cost_usd": 8.68e-05,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "orchestra:723a05ed5688",
+        "label": "",
+        "input_tokens": 393,
+        "output_tokens": 86,
+        "reasoning_tokens": 20,
+        "cached_input_tokens": 0,
+        "latency_ms": 1933,
+        "cost_usd": 0.0001818,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "orchestra:723a05ed5688",
+        "label": "",
+        "input_tokens": 573,
+        "output_tokens": 172,
+        "reasoning_tokens": 42,
+        "cached_input_tokens": 0,
+        "latency_ms": 2631,
+        "cost_usd": 0.000321,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "orchestra:723a05ed5688",
+        "label": "",
+        "input_tokens": 472,
+        "output_tokens": 172,
+        "reasoning_tokens": 40,
+        "cached_input_tokens": 0,
+        "latency_ms": 3248,
+        "cost_usd": 0.0003008,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "orchestra:723a05ed5688",
+        "label": "",
+        "input_tokens": 1805,
+        "output_tokens": 150,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1802,
+        "latency_ms": 2701,
+        "cost_usd": 0.00021664,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "orchestra:723a05ed5688",
+        "label": "",
+        "input_tokens": 1382,
+        "output_tokens": 69,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1284,
+        "cost_usd": 0.0003592,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "response_formatter",
+        "case_id": "orchestra:723a05ed5688",
+        "label": "",
+        "input_tokens": 475,
+        "output_tokens": 109,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2860,
+        "cost_usd": 0.0002258,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "orchestra:ab73cb450540",
+        "label": "",
+        "input_tokens": 345,
+        "output_tokens": 32,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1079,
+        "cost_usd": 0.0001074,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "orchestra:ab73cb450540",
+        "label": "",
+        "input_tokens": 174,
+        "output_tokens": 105,
+        "reasoning_tokens": 56,
+        "cached_input_tokens": 0,
+        "latency_ms": 3176,
+        "cost_usd": 0.0001608,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "orchestra:ab73cb450540",
+        "label": "",
+        "input_tokens": 577,
+        "output_tokens": 115,
+        "reasoning_tokens": 44,
+        "cached_input_tokens": 0,
+        "latency_ms": 2026,
+        "cost_usd": 0.0002534,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "orchestra:ab73cb450540",
+        "label": "",
+        "input_tokens": 397,
+        "output_tokens": 98,
+        "reasoning_tokens": 25,
+        "cached_input_tokens": 0,
+        "latency_ms": 2364,
+        "cost_usd": 0.000197,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "orchestra:ab73cb450540",
+        "label": "",
+        "input_tokens": 466,
+        "output_tokens": 179,
+        "reasoning_tokens": 80,
+        "cached_input_tokens": 0,
+        "latency_ms": 3219,
+        "cost_usd": 0.000308,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "orchestra:ab73cb450540",
+        "label": "",
+        "input_tokens": 1622,
+        "output_tokens": 145,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1619,
+        "latency_ms": 2329,
+        "cost_usd": 0.00020698,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "orchestra:ab73cb450540",
+        "label": "",
+        "input_tokens": 1198,
+        "output_tokens": 72,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1763,
+        "cost_usd": 0.000326,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "response_formatter",
+        "case_id": "orchestra:ab73cb450540",
+        "label": "",
+        "input_tokens": 527,
+        "output_tokens": 121,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2350,
+        "cost_usd": 0.0002506,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "orchestra:c1d9e8230efa",
+        "label": "",
+        "input_tokens": 349,
+        "output_tokens": 34,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1191,
+        "cost_usd": 0.0001106,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "orchestra:c1d9e8230efa",
+        "label": "",
+        "input_tokens": 178,
+        "output_tokens": 47,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1646,
+        "cost_usd": 9.2e-05,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "orchestra:c1d9e8230efa",
+        "label": "",
+        "input_tokens": 401,
+        "output_tokens": 73,
+        "reasoning_tokens": 14,
+        "cached_input_tokens": 0,
+        "latency_ms": 1706,
+        "cost_usd": 0.0001678,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "context_retriever",
+        "case_id": "orchestra:c1d9e8230efa",
+        "label": "",
+        "input_tokens": 581,
+        "output_tokens": 100,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2138,
+        "cost_usd": 0.0002362,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "orchestra:c1d9e8230efa",
+        "label": "",
+        "input_tokens": 463,
+        "output_tokens": 142,
+        "reasoning_tokens": 29,
+        "cached_input_tokens": 0,
+        "latency_ms": 2484,
+        "cost_usd": 0.000263,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "orchestra:c1d9e8230efa",
+        "label": "",
+        "input_tokens": 1410,
+        "output_tokens": 110,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1407,
+        "latency_ms": 1651,
+        "cost_usd": 0.00016074,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "orchestra:c1d9e8230efa",
+        "label": "",
+        "input_tokens": 961,
+        "output_tokens": 51,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2568,
+        "cost_usd": 0.0002534,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "response_formatter",
+        "case_id": "orchestra:c1d9e8230efa",
+        "label": "",
+        "input_tokens": 507,
+        "output_tokens": 178,
+        "reasoning_tokens": 48,
+        "cached_input_tokens": 0,
+        "latency_ms": 3214,
+        "cost_usd": 0.000315,
+        "estimated": false
+      }
+    ]
+  }
+}

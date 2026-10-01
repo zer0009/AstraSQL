@@ -39,6 +39,8 @@ class Settings(BaseSettings):
     openai_embedding_model: str = "text-embedding-3-small"
     llm_temperature: float = 0.0
     llm_max_tokens: int = 8192
+    # Reasoning models (gpt-5.*): none|low|medium|high. Empty → omit the param.
+    llm_reasoning_effort: str = ""
 
     # Schema enrichment (cheaper/faster path than query generation)
     # Empty enrichment_model → use the provider's default chat model.
