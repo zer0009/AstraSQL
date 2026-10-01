@@ -128,6 +128,11 @@ _RETRY_FIX_HINTS: dict[str, str] = {
         "Database execution failed. Fix the exact error from the engine while "
         "keeping the query aligned with the schema and question."
     ),
+    "EMPTY_RESULT": (
+        "The query executed but returned 0 rows. Relax or correct filters, "
+        "check join keys and literal values against sample rows / schema, and "
+        "ensure the question's entities map to the right tables."
+    ),
     "OTHER": (
         "Fix the SQL so it executes successfully against the schema and answers "
         "the original question."
@@ -253,6 +258,7 @@ def build_retry_context(
     error: str,
     prior_context: str = "",
     retry_type: str = "OTHER",
+    exploration_block: str = "",
 ) -> str:
     hint = _RETRY_FIX_HINTS.get(
         (retry_type or "OTHER").upper(),
@@ -264,6 +270,8 @@ def build_retry_context(
         f"Error: [{error}]\n"
         f"Correction needed: {hint}"
     )
+    if exploration_block and exploration_block.strip():
+        block = f"{block}\n\nColumn exploration:\n{exploration_block.strip()}"
     if prior_context and prior_context.strip():
         return f"{prior_context.strip()}\n\n---\n\n{block}"
     return block

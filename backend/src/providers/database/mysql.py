@@ -8,9 +8,27 @@ from src.providers.database.base import BaseDatabaseProvider
 
 
 class MySQLProvider(BaseDatabaseProvider):
-    """MySQL stub — dialect metadata only until aiomysql support lands."""
+    """MySQL stub — dialect metadata only until aiomysql support lands.
+
+    To make available=True, implement:
+    - get_async_engine via ``mysql+aiomysql://`` (or asyncmy)
+    - list_tables / get_table_schema from information_schema
+    - execute_readonly with READ ONLY txn + ``SET SESSION MAX_EXECUTION_TIME``
+      (ms) when supports_timeout() is used
+    - explain_query via ``EXPLAIN FORMAT=TRADITIONAL``
+    """
 
     available = False
+
+    def supports_timeout(self) -> bool:
+        # Will use MAX_EXECUTION_TIME / max_execution_time when execute lands.
+        return True
+
+    def quote_ident(self, name: str) -> str:
+        text_name = (name or "").replace("`", "``")
+        if not text_name:
+            raise ValueError("Empty SQL identifier")
+        return f"`{text_name}`"
 
     def dialect_name(self) -> str:
         return "MySQL 8.0"

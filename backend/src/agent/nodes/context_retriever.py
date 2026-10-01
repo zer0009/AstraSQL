@@ -74,9 +74,16 @@ async def context_retriever_node(
         "used_golden": retrieved.used_golden,
         "golden_sqls": retrieved.golden_sqls,
         "golden_questions": retrieved.golden_questions,
+        "verified_sql": retrieved.verified_sql or "",
+        "fk_edges": list(retrieved.fk_edges or []),
+        "column_types": dict(retrieved.column_types or {}),
+        "example_values": dict(retrieved.example_values or {}),
         "schema_digest": build_schema_digest(
             retrieved.selected_tables,
             retrieved.selected_columns,
+            fk_edges=retrieved.fk_edges,
+            column_types=retrieved.column_types,
+            example_values=retrieved.example_values,
         ),
     }
 

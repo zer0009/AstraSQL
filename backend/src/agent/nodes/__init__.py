@@ -1,5 +1,6 @@
 """LangGraph agent node functions."""
 
+from src.agent.nodes.ambiguity_gate import ambiguity_gate
 from src.agent.nodes.context_retriever import context_retriever_node
 from src.agent.nodes.direct_response import direct_response
 from src.agent.nodes.intent_classifier import intent_classifier
@@ -14,6 +15,7 @@ __all__ = [
     "context_retriever_node",
     "interpretation_resolver",
     "query_generator",
+    "ambiguity_gate",
     "query_validator",
     "query_executor",
     "response_formatter",

@@ -1,0 +1,212 @@
+[
+  {
+    "id": "mc-revenue-gross-vs-net",
+    "question": "What was revenue last month?",
+    "expect": "clarify",
+    "reason": "gross vs net without a defining rule",
+    "tags": ["metric", "ambiguous"]
+  },
+  {
+    "id": "mc-best-employee",
+    "question": "Who is the best employee?",
+    "expect": "clarify",
+    "reason": "best is undefined without a metric",
+    "tags": ["ranking", "ambiguous"]
+  },
+  {
+    "id": "mc-active-customers",
+    "question": "How many active customers do we have?",
+    "expect": "clarify",
+    "reason": "active needs a status definition when multiple exist",
+    "tags": ["filter", "ambiguous"]
+  },
+  {
+    "id": "mc-sales-by-region",
+    "question": "Show sales by region",
+    "expect": "clarify",
+    "reason": "sales amount vs order count; which date field",
+    "tags": ["metric", "ambiguous"]
+  },
+  {
+    "id": "mc-top-product",
+    "question": "What is our top product?",
+    "expect": "clarify",
+    "reason": "top by revenue, units, or margin",
+    "tags": ["ranking", "ambiguous"]
+  },
+  {
+    "id": "mc-churn",
+    "question": "What is the churn rate?",
+    "expect": "clarify",
+    "reason": "churn definition varies by business",
+    "tags": ["metric", "ambiguous"]
+  },
+  {
+    "id": "mc-performance",
+    "question": "How is performance looking?",
+    "expect": "clarify",
+    "reason": "no entity or metric named",
+    "tags": ["vague"]
+  },
+  {
+    "id": "mc-compare-quarters",
+    "question": "Compare this quarter to last quarter",
+    "expect": "clarify",
+    "reason": "which KPI to compare",
+    "tags": ["vague"]
+  },
+  {
+    "id": "mc-vip-users",
+    "question": "List VIP users",
+    "expect": "clarify",
+    "reason": "VIP needs a business rule",
+    "tags": ["filter", "ambiguous"]
+  },
+  {
+    "id": "mc-recent-orders",
+    "question": "Show recent orders",
+    "expect": "clarify",
+    "reason": "recent window undefined (7d vs 30d vs YTD)",
+    "tags": ["time", "ambiguous"]
+  },
+  {
+    "id": "mc-margin",
+    "question": "What is our margin?",
+    "expect": "clarify",
+    "reason": "gross vs contribution vs net margin",
+    "tags": ["metric", "ambiguous"]
+  },
+  {
+    "id": "mc-engagement",
+    "question": "Who has the highest engagement?",
+    "expect": "clarify",
+    "reason": "engagement metric undefined",
+    "tags": ["ranking", "ambiguous"]
+  },
+  {
+    "id": "mc-cost",
+    "question": "What did it cost?",
+    "expect": "clarify",
+    "reason": "entity and cost type missing",
+    "tags": ["vague"]
+  },
+  {
+    "id": "mc-conversion",
+    "question": "What is the conversion rate?",
+    "expect": "clarify",
+    "reason": "funnel stage and denominator undefined",
+    "tags": ["metric", "ambiguous"]
+  },
+  {
+    "id": "mc-retention",
+    "question": "Show retention",
+    "expect": "clarify",
+    "reason": "cohort definition and window undefined",
+    "tags": ["metric", "ambiguous"]
+  },
+  {
+    "id": "mc-late",
+    "question": "Which shipments are late?",
+    "expect": "clarify",
+    "reason": "SLA threshold may be rule-defined",
+    "tags": ["filter", "ambiguous"]
+  },
+  {
+    "id": "mc-profit",
+    "question": "Are we profitable?",
+    "expect": "clarify",
+    "reason": "profit definition and period undefined",
+    "tags": ["metric", "ambiguous"]
+  },
+  {
+    "id": "mc-users-online",
+    "question": "How many users are online?",
+    "expect": "clarify",
+    "reason": "online window and event source undefined",
+    "tags": ["filter", "ambiguous"]
+  },
+  {
+    "id": "mc-average-ticket",
+    "question": "What is the average ticket?",
+    "expect": "clarify",
+    "reason": "ticket could mean order value or support ticket",
+    "tags": ["entity", "ambiguous"]
+  },
+  {
+    "id": "mc-growth",
+    "question": "Show growth",
+    "expect": "clarify",
+    "reason": "metric and baseline period undefined",
+    "tags": ["vague"]
+  },
+  {
+    "id": "mc-priority",
+    "question": "List priority accounts",
+    "expect": "clarify",
+    "reason": "priority tier needs a rule",
+    "tags": ["filter", "ambiguous"]
+  },
+  {
+    "id": "mc-spend",
+    "question": "Who spends the most?",
+    "expect": "clarify",
+    "reason": "spend metric and period undefined",
+    "tags": ["ranking", "ambiguous"]
+  },
+  {
+    "id": "mc-inventory",
+    "question": "Do we have inventory issues?",
+    "expect": "clarify",
+    "reason": "stockout vs overstock vs aging undefined",
+    "tags": ["vague"]
+  },
+  {
+    "id": "mc-nps",
+    "question": "What is our NPS?",
+    "expect": "clarify",
+    "reason": "survey source and window when multiple exist",
+    "tags": ["metric", "ambiguous"]
+  },
+  {
+    "id": "mc-pipeline",
+    "question": "How healthy is the pipeline?",
+    "expect": "clarify",
+    "reason": "health metric undefined",
+    "tags": ["vague"]
+  },
+  {
+    "id": "mc-refunds",
+    "question": "Are refunds high?",
+    "expect": "clarify",
+    "reason": "threshold and baseline undefined",
+    "tags": ["metric", "ambiguous"]
+  },
+  {
+    "id": "mc-duplicates",
+    "question": "Find duplicate customers",
+    "expect": "clarify",
+    "reason": "match keys (email vs name+phone) undefined",
+    "tags": ["entity", "ambiguous"]
+  },
+  {
+    "id": "mc-risk",
+    "question": "Which accounts are high risk?",
+    "expect": "clarify",
+    "reason": "risk score definition needed",
+    "tags": ["filter", "ambiguous"]
+  },
+  {
+    "id": "mc-utilization",
+    "question": "What is utilization?",
+    "expect": "clarify",
+    "reason": "resource and formula undefined",
+    "tags": ["metric", "ambiguous"]
+  },
+  {
+    "id": "mc-anomaly",
+    "question": "Show anomalies in the data",
+    "expect": "clarify",
+    "reason": "which metric and detection method",
+    "tags": ["vague"]
+  }
+]

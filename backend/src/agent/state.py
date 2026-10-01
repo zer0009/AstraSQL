@@ -12,6 +12,8 @@ class AgentState(TypedDict, total=False):
     results: dict  # {columns, rows, row_count}
     retries: int
     retry_context: str
+    # Soft post-execute retry (e.g. EMPTY_RESULT). Not a hard execution error.
+    shape_retry: bool
     error: Optional[str]
     confidence: str  # HIGH|MEDIUM|LOW
     trust_level: str  # certified|taught|guessed|clarifying|failed

@@ -1,6 +1,7 @@
 from src.eval.compare import (
     gold_has_order_by,
     results_equal,
+    results_equal_lenient,
     results_equal_values,
     sql_equal,
 )
@@ -85,6 +86,16 @@ def test_results_equal_values_float_tolerance():
     gold = {"columns": ["x"], "rows": [{"x": 1.0}]}
     gen = {"columns": ["x"], "rows": [{"x": 1.0000001}]}
     assert results_equal_values(gold, gen) is True
+
+
+def test_results_equal_lenient_extra_column():
+    gold = {"columns": ["Year"], "rows": [{"Year": "2015"}]}
+    gen = {
+        "columns": ["Year", "concert_count"],
+        "rows": [{"Year": "2015", "concert_count": 3}],
+    }
+    assert results_equal_values(gold, gen) is False
+    assert results_equal_lenient(gold, gen) is True
 
 
 def test_build_report_rates():

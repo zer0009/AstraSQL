@@ -48,6 +48,30 @@ def _result_summary(results: dict | None, error: str | None) -> str:
     return f"{row_count} rows returned. First 3 rows: {preview_text}"
 
 
+def _deterministic_answer(results: dict | None, error: str | None) -> tuple[str, str]:
+    """Short API/eval answer without an LLM call."""
+    if error and not results:
+        return f"Query failed: {error}", "Query did not succeed"
+    summary = _result_summary(results, error)
+    if not results:
+        return summary, "No rows"
+    row_count = int(results.get("row_count") or 0)
+    columns = results.get("columns") or []
+    key_cols = ", ".join(str(c) for c in columns[:5]) if columns else ""
+    if row_count == 0:
+        return "Returned 0 rows.", "0 rows"
+    preview = f" Key columns: {key_cols}." if key_cols else ""
+    return f"Returned {row_count} rows.{preview}", f"{row_count} row(s)"
+
+
+def _resolve_formatter_model(settings: Any) -> str | None:
+    override = (settings.formatter_model or "").strip()
+    if override:
+        return override
+    fallback = (settings.enrichment_model or "").strip()
+    return fallback or None
+
+
 async def response_formatter(
     state: AgentState, config: RunnableConfig
 ) -> dict[str, Any]:
@@ -102,12 +126,49 @@ async def response_formatter(
 
     confidence = compute_confidence(retries, row_count)
     summary = _result_summary(results if not error else None, error)
+    preset_assumption = str(state.get("assumption") or "").strip() or None
+    preset_follow_ups = [
+        str(x).strip()
+        for x in (state.get("follow_ups") or [])
+        if str(x).strip()
+    ]
+
+    # Eval / API mode: skip NL formatter LLM for lower latency.
+    if not settings.format_response:
+        answer, key_finding = _deterministic_answer(
+            results if not error else None, error
+        )
+        context = state.get("context") or {}
+        trust_level = compute_trust_level(
+            intent=str(state.get("intent") or ""),
+            error=error,
+            generated_sql=sql,
+            golden_sqls=list(context.get("golden_sqls") or []),
+            used_golden=bool(state.get("used_golden")),
+        )
+        return {
+            "confidence": confidence,
+            "trust_level": trust_level,
+            "answer": answer,
+            "key_finding": key_finding,
+            "assumption": preset_assumption,
+            "follow_ups": preset_follow_ups,
+            "steps": append_step(
+                state,
+                "response_formatted",
+                f"Deterministic answer (format_response=off, confidence={confidence})",
+                confidence=confidence,
+                trust_level=trust_level,
+            ),
+        }
 
     try:
         system = render_formatter_prompt(question, sql, summary)
+        model_name = _resolve_formatter_model(settings)
         llm = get_llm_provider().get_chat_model(
             temperature=0.3,
             max_tokens=settings.llm_max_tokens,
+            model=model_name,
         )
         response = await llm.ainvoke(
             [
@@ -123,7 +184,6 @@ async def response_formatter(
         if assumption is not None:
             assumption = str(assumption).strip() or None
         # Prefer schema-grounded interpretation assumption when present.
-        preset_assumption = str(state.get("assumption") or "").strip() or None
         if preset_assumption:
             assumption = preset_assumption
         follow_ups = parsed.get("follow_up_suggestions") or parsed.get(
@@ -132,12 +192,6 @@ async def response_formatter(
         if not isinstance(follow_ups, list):
             follow_ups = [str(follow_ups)]
         follow_ups = [str(x) for x in follow_ups if x]
-        # Merge alternative interpretations as one-click follow-ups.
-        preset_follow_ups = [
-            str(x).strip()
-            for x in (state.get("follow_ups") or [])
-            if str(x).strip()
-        ]
         for alt in preset_follow_ups:
             if alt not in follow_ups:
                 follow_ups.append(alt)
@@ -147,12 +201,8 @@ async def response_formatter(
             f"(Formatter fallback: {exc})"
         )
         key_finding = f"{row_count} row(s)" if row_count else "No rows"
-        assumption = str(state.get("assumption") or "").strip() or None
-        follow_ups = [
-            str(x).strip()
-            for x in (state.get("follow_ups") or [])
-            if str(x).strip()
-        ]
+        assumption = preset_assumption
+        follow_ups = preset_follow_ups
 
     context = state.get("context") or {}
     trust_level = compute_trust_level(

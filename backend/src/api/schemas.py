@@ -286,6 +286,7 @@ class HistoryOut(BaseModel):
     user_rating: Optional[int] = None
     explanation: Optional[str] = None
     follow_ups: Optional[str] = None
+    ambiguity_json: Optional[str] = None
     created_at: datetime
 
 

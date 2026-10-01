@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import re
 from abc import ABC, abstractmethod
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncEngine
+
+_IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
 class BaseDatabaseProvider(ABC):
@@ -21,6 +24,8 @@ class BaseDatabaseProvider(ABC):
         username: str,
         password: str,
         ssl_enabled: bool = False,
+        *,
+        query_timeout_seconds: float | None = None,
     ) -> None:
         self.host = host
         self.port = port
@@ -29,6 +34,41 @@ class BaseDatabaseProvider(ABC):
         self.password = password
         self.ssl_enabled = ssl_enabled
         self._engine: AsyncEngine | None = None
+        if query_timeout_seconds is None:
+            from src.config.settings import get_settings
+
+            query_timeout_seconds = get_settings().query_timeout_seconds
+        self.query_timeout_seconds = float(query_timeout_seconds or 0)
+
+    # --- Capability mixin (defaults; override per dialect) ---
+
+    def supports_explain(self) -> bool:
+        return True
+
+    def supports_timeout(self) -> bool:
+        return False
+
+    def quote_ident(self, name: str) -> str:
+        """Quote an identifier for this dialect (default: double quotes)."""
+        text_name = (name or "").replace('"', '""')
+        if not text_name:
+            raise ValueError("Empty SQL identifier")
+        if _IDENT_RE.match(text_name):
+            return text_name
+        return f'"{text_name}"'
+
+    async def sample_distinct_values(
+        self,
+        table: str,
+        column: str,
+        limit: int = 50,
+    ) -> list[Any]:
+        """Return up to ``limit`` distinct non-null values (default: unsupported)."""
+        return []
+
+    async def estimate_cost(self, sql: str) -> float | None:
+        """Optional EXPLAIN-based cost estimate; ``None`` when unsupported."""
+        return None
 
     @abstractmethod
     def dialect_name(self) -> str:

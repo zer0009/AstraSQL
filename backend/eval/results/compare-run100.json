@@ -1,0 +1,274 @@
+{
+  "run100": {
+    "label": "run100",
+    "n": 100,
+    "strict": 59,
+    "values": 85,
+    "lenient": 86,
+    "clarified": 1,
+    "answered": 99,
+    "answered_values": 85,
+    "avg_cost": 0.0019283456,
+    "total_cost": 0.19283456,
+    "avg_ms": 15282.34,
+    "p50_ms": 13059,
+    "p95_ms": 30851,
+    "avg_in": 6452.17,
+    "avg_out": 647.69,
+    "avg_calls": 3.75,
+    "labels": {
+      "ok": 58,
+      "scorer_only": 27,
+      "missing_table": 1,
+      "wrong_table": 3,
+      "wrong_filter_or_value": 3,
+      "no_sql": 2,
+      "join_type": 2,
+      "aggregation_or_grouping": 2,
+      "missing_join": 1,
+      "other": 1
+    },
+    "by_hard": {
+      "easy": [
+        28,
+        30
+      ],
+      "extra": [
+        10,
+        13
+      ],
+      "hard": [
+        19,
+        22
+      ],
+      "medium": [
+        28,
+        35
+      ]
+    },
+    "by_db": {
+      "car_1": {
+        "n": 10,
+        "values": 5,
+        "clarified": 0
+      },
+      "concert_singer": {
+        "n": 10,
+        "values": 10,
+        "clarified": 0
+      },
+      "cre_Doc_Template_Mgt": {
+        "n": 10,
+        "values": 10,
+        "clarified": 0
+      },
+      "dog_kennels": {
+        "n": 10,
+        "values": 8,
+        "clarified": 1
+      },
+      "employee_hire_evaluation": {
+        "n": 10,
+        "values": 9,
+        "clarified": 0
+      },
+      "museum_visit": {
+        "n": 10,
+        "values": 10,
+        "clarified": 0
+      },
+      "network_1": {
+        "n": 10,
+        "values": 9,
+        "clarified": 0
+      },
+      "orchestra": {
+        "n": 10,
+        "values": 8,
+        "clarified": 0
+      },
+      "tvshow": {
+        "n": 10,
+        "values": 7,
+        "clarified": 0
+      },
+      "wta_1": {
+        "n": 10,
+        "values": 9,
+        "clarified": 0
+      }
+    },
+    "by_stage": {
+      "intent_classifier": {
+        "calls": 100,
+        "input_tokens": 34489,
+        "output_tokens": 3226,
+        "reasoning_tokens": 118,
+        "latency_ms": 589880,
+        "cost_usd": 0.010769
+      },
+      "interpretation_resolver": {
+        "calls": 98,
+        "input_tokens": 82376,
+        "output_tokens": 26384,
+        "reasoning_tokens": 9023,
+        "latency_ms": 358913,
+        "cost_usd": 0.048136
+      },
+      "query_generator": {
+        "calls": 108,
+        "input_tokens": 320407,
+        "output_tokens": 21485,
+        "reasoning_tokens": 4103,
+        "latency_ms": 337307,
+        "cost_usd": 0.08942024
+      },
+      "ambiguity_gate": {
+        "calls": 66,
+        "input_tokens": 205795,
+        "output_tokens": 13301,
+        "reasoning_tokens": 2986,
+        "latency_ms": 203343,
+        "cost_usd": 0.04389632
+      },
+      "direct_response": {
+        "calls": 3,
+        "input_tokens": 2150,
+        "output_tokens": 373,
+        "reasoning_tokens": 95,
+        "latency_ms": 12299,
+        "cost_usd": 0.000613
+      }
+    }
+  },
+  "run50": {
+    "label": "run50",
+    "n": 50,
+    "strict": 27,
+    "values": 34,
+    "lenient": 34,
+    "clarified": 12,
+    "answered": 38,
+    "answered_values": 34,
+    "avg_cost": 0.001408116,
+    "total_cost": 0.0704058,
+    "avg_ms": 9995.74,
+    "p50_ms": 8721,
+    "p95_ms": 17355,
+    "avg_in": 3920.82,
+    "avg_out": 519.96,
+    "avg_calls": 3.1,
+    "labels": {
+      "clarified_instead_of_answering": 12,
+      "ok": 27,
+      "scorer_only": 7,
+      "wrong_filter_or_value": 2,
+      "join_type": 1,
+      "wrong_table": 1
+    },
+    "by_hard": {
+      "easy": [
+        8,
+        13
+      ],
+      "extra": [
+        5,
+        7
+      ],
+      "hard": [
+        5,
+        10
+      ],
+      "medium": [
+        16,
+        20
+      ]
+    },
+    "by_db": {
+      "orchestra": {
+        "n": 5,
+        "values": 4,
+        "clarified": 1
+      },
+      "concert_singer": {
+        "n": 5,
+        "values": 5,
+        "clarified": 0
+      },
+      "tvshow": {
+        "n": 5,
+        "values": 3,
+        "clarified": 1
+      },
+      "museum_visit": {
+        "n": 5,
+        "values": 3,
+        "clarified": 2
+      },
+      "wta_1": {
+        "n": 5,
+        "values": 2,
+        "clarified": 2
+      },
+      "employee_hire_evaluation": {
+        "n": 5,
+        "values": 4,
+        "clarified": 1
+      },
+      "dog_kennels": {
+        "n": 5,
+        "values": 3,
+        "clarified": 2
+      },
+      "network_1": {
+        "n": 5,
+        "values": 3,
+        "clarified": 2
+      },
+      "cre_Doc_Template_Mgt": {
+        "n": 5,
+        "values": 5,
+        "clarified": 0
+      },
+      "car_1": {
+        "n": 5,
+        "values": 2,
+        "clarified": 1
+      }
+    },
+    "by_stage": {
+      "intent_classifier": {
+        "calls": 50,
+        "input_tokens": 17336,
+        "output_tokens": 1691,
+        "reasoning_tokens": 44,
+        "latency_ms": 93863,
+        "cost_usd": 0.0054964
+      },
+      "interpretation_resolver": {
+        "calls": 50,
+        "input_tokens": 42055,
+        "output_tokens": 13602,
+        "reasoning_tokens": 4682,
+        "latency_ms": 169925,
+        "cost_usd": 0.0247334
+      },
+      "direct_response": {
+        "calls": 12,
+        "input_tokens": 10475,
+        "output_tokens": 1393,
+        "reasoning_tokens": 0,
+        "latency_ms": 25981,
+        "cost_usd": 0.0037666
+      },
+      "query_generator": {
+        "calls": 43,
+        "input_tokens": 126175,
+        "output_tokens": 9312,
+        "reasoning_tokens": 1754,
+        "latency_ms": 135080,
+        "cost_usd": 0.0364094
+      }
+    }
+  }
+}

@@ -30,9 +30,11 @@ async def intent_classifier(
             question,
             conversation_history=history_text,
         )
+        model_name = (settings.intent_model or "").strip() or None
         llm = get_llm_provider().get_chat_model(
             temperature=0.0,
             max_tokens=settings.llm_max_tokens,
+            model=model_name,
         )
         response = await llm.ainvoke(
             [SystemMessage(content=system), HumanMessage(content=user)],

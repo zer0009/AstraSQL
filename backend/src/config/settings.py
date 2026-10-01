@@ -62,6 +62,62 @@ class Settings(BaseSettings):
     # Empty → use enrichment_model if set, else the provider default chat model.
     interpretation_model: str = ""
 
+    # Ablation / performance switches (Phase 0+). Modes:
+    # interpretation: on | off | assume_only  (assume_only = never ask, always proceed)
+    # validator: full | deterministic | off
+    # schema_link: auto | full | faiss  (auto = full schema when under token budget)
+    # format_response: on | off  (off skips NL formatter — API/eval mode)
+    interpretation_mode: str = "on"
+    validator_mode: str = "full"
+    schema_link_mode: str = "auto"
+    format_response: bool = True
+    # Max candidates for adaptive multi-path generation (1 = disabled).
+    sql_candidate_count: int = Field(default=1, ge=1, le=5)
+    # Approximate token budget for "pass full schema" path (schema_link_mode=auto).
+    schema_full_token_budget: int = Field(default=6000, ge=500, le=100000)
+    # Distinct-value sample size for low-cardinality columns (value grounding).
+    value_grounding_max_distinct: int = Field(default=50, ge=0, le=500)
+    # Statement timeout seconds for read-only execute (0 = provider default).
+    query_timeout_seconds: float = Field(default=30.0, ge=0.0, le=600.0)
+    # Per-stage model overrides (empty → openai_model / enrichment_model).
+    intent_model: str = ""
+    formatter_model: str = ""
+    expansion_model: str = ""
+
+    # Execution-evidence ambiguity gate (Phase 1).
+    # When true, ask only when sampled SQLs form split result clusters.
+    # interpretation_mode still controls the old resolver for A/B:
+    #   on = resolver then optional execution gate
+    #   off = skip resolver; merged generate-with-interpretation when merge_interpret_generate
+    #   assume_only = never ask
+    execution_evidence_gate: bool = True
+    # Merge interpretation into the generator (skip separate resolver LLM call).
+    merge_interpret_generate: bool = False
+    # Candidates to sample when decision_points are flagged (or gate always samples).
+    ambiguity_sample_count: int = Field(default=3, ge=1, le=5)
+    # Fraction of successful executes that must share one denotation to answer.
+    # Below this (and ≥2 clusters) → ask. Casual connections can raise this.
+    ambiguity_dominance_threshold: float = Field(default=0.67, ge=0.5, le=1.0)
+    # Per-connection policy hint when no connection override: casual | balanced | strict.
+    # strict asks more readily (lower dominance); casual answers more (higher).
+    ambiguity_policy: str = "balanced"
+    # Estimated query cost gate: refuse/flag when EXPLAIN cost exceeds this (0 = off).
+    explain_cost_limit: float = Field(default=0.0, ge=0.0, le=1e12)
+    # Relationship discovery on schema scan (proposed join edges).
+    relationship_discovery_enabled: bool = True
+    # Auto-approve discovered relationships (solo-user default). Org can set false.
+    relationship_auto_approve: bool = True
+    # Column-level hybrid retrieval when table count exceeds this.
+    large_schema_table_threshold: int = Field(default=40, ge=10, le=5000)
+    # Enable bounded column-exploration tool during repair.
+    column_exploration_enabled: bool = True
+    # Governed learning: promote thumbs-up / edited SQL to reviewed queries.
+    learning_loop_enabled: bool = True
+    # Run intent classifier and context retrieval in parallel from START.
+    # Off by default: both nodes write LastValue keys (error/steps); enable only
+    # after AgentState uses Annotated reducers for concurrent updates.
+    parallel_intent_retrieval: bool = False
+
     # CORS
     cors_origins: str = "http://localhost:5173,http://localhost:3000"
 

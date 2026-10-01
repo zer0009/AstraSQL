@@ -41,7 +41,7 @@ class SQLiteProvider(BaseDatabaseProvider):
         password: str = "",
         ssl_enabled: bool = False,
         *,
-        query_timeout_seconds: float = 30.0,
+        query_timeout_seconds: float | None = None,
     ) -> None:
         super().__init__(
             host=host or "local",
@@ -50,8 +50,15 @@ class SQLiteProvider(BaseDatabaseProvider):
             username=username or "",
             password=password or "",
             ssl_enabled=ssl_enabled,
+            query_timeout_seconds=query_timeout_seconds,
         )
-        self.query_timeout_seconds = float(query_timeout_seconds)
+
+    def supports_timeout(self) -> bool:
+        # Uses PRAGMA busy_timeout (wired from query_timeout_seconds).
+        return True
+
+    def quote_ident(self, name: str) -> str:
+        return _quote_ident(name)
 
     def dialect_name(self) -> str:
         return "SQLite"
@@ -130,6 +137,22 @@ class SQLiteProvider(BaseDatabaseProvider):
             result = await conn.execute(text(f"EXPLAIN QUERY PLAN {cleaned}"))
             rows = result.fetchall()
         return "\n".join(" | ".join(str(c) for c in row) for row in rows)
+
+    async def estimate_cost(self, sql: str) -> float | None:
+        """Heuristic cost from EXPLAIN QUERY PLAN (count of SCAN ops)."""
+        try:
+            plan = await self.explain_query(sql)
+        except Exception:
+            return None
+        if not plan:
+            return 0.0
+        # SQLite plans mention SCAN for full-table scans; SEARCH for indexes.
+        scan_ops = sum(
+            1
+            for line in plan.splitlines()
+            if re.search(r"\bSCAN\b", line, re.IGNORECASE)
+        )
+        return float(scan_ops)
 
     async def list_tables(self) -> list[dict[str, Any]]:
         engine = self.get_async_engine()
@@ -289,6 +312,33 @@ class SQLiteProvider(BaseDatabaseProvider):
             "rows": rows,
             "row_count": len(rows),
         }
+
+    async def sample_distinct_values(
+        self,
+        table: str,
+        column: str,
+        limit: int = 50,
+    ) -> list[Any]:
+        table_q = _quote_ident(table)
+        col_q = _quote_ident(column)
+        lim = max(1, int(limit))
+        sql = (
+            f"SELECT DISTINCT {col_q} AS v FROM {table_q} "
+            f"WHERE {col_q} IS NOT NULL "
+            f"LIMIT {lim}"
+        )
+        result = await self.execute_readonly(sql, max_rows=lim)
+        values: list[Any] = []
+        for row in result.get("rows") or []:
+            if isinstance(row, dict):
+                raw = row.get("v")
+                if raw is None and row:
+                    raw = next(iter(row.values()), None)
+            else:
+                raw = row
+            if raw is not None:
+                values.append(raw)
+        return values
 
     async def close(self) -> None:
         if self._engine is not None:

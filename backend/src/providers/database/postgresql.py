@@ -51,6 +51,12 @@ def _flatten_cell(value: Any) -> Any:
 class PostgreSQLProvider(BaseDatabaseProvider):
     """PostgreSQL access via SQLAlchemy + asyncpg."""
 
+    def supports_timeout(self) -> bool:
+        return True
+
+    def quote_ident(self, name: str) -> str:
+        return _quote_ident(name)
+
     def dialect_name(self) -> str:
         return "PostgreSQL 16"
 
@@ -358,6 +364,13 @@ class PostgreSQLProvider(BaseDatabaseProvider):
             # BEGIN then SET TRANSACTION READ ONLY rejects DML in this txn.
             async with conn.begin():
                 await conn.execute(text("SET TRANSACTION READ ONLY"))
+                timeout_s = float(getattr(self, "query_timeout_seconds", 0) or 0)
+                if self.supports_timeout() and timeout_s > 0:
+                    # SET LOCAL applies for the rest of this transaction only.
+                    ms = max(1, int(timeout_s * 1000))
+                    await conn.execute(
+                        text(f"SET LOCAL statement_timeout = {ms}")
+                    )
                 result = await conn.execute(text(limited_sql))
                 columns = list(result.keys())
                 rows_raw = result.fetchmany(max_rows)
@@ -373,6 +386,33 @@ class PostgreSQLProvider(BaseDatabaseProvider):
             "rows": rows,
             "row_count": len(rows),
         }
+
+    async def sample_distinct_values(
+        self,
+        table: str,
+        column: str,
+        limit: int = 50,
+    ) -> list[Any]:
+        table_q = _quote_ident(table)
+        col_q = _quote_ident(column)
+        lim = max(1, int(limit))
+        sql = (
+            f"SELECT DISTINCT {col_q} AS v FROM {table_q} "
+            f"WHERE {col_q} IS NOT NULL "
+            f"LIMIT {lim}"
+        )
+        result = await self.execute_readonly(sql, max_rows=lim)
+        values: list[Any] = []
+        for row in result.get("rows") or []:
+            if isinstance(row, dict):
+                raw = row.get("v")
+                if raw is None and row:
+                    raw = next(iter(row.values()), None)
+            else:
+                raw = row
+            if raw is not None:
+                values.append(raw)
+        return values
 
     async def close(self) -> None:
         if self._engine is not None:

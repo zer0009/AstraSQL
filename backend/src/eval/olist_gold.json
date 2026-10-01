@@ -1,0 +1,76 @@
+{
+  "_comment": "Hand-authored Olist-style gold (8–12 Qs). Point connection at a Brazilian e-commerce schema (orders, order_items, customers, products, sellers, payments, reviews). Placeholder — not tied to a checked-in SQLite file; load via your Olist dump path (env OLIST_DB_PATH).",
+  "db_note": "Expected tables: orders, order_items, customers, products, sellers, order_payments, order_reviews, geolocation",
+  "items": [
+    {
+      "id": "olist-01-order-count",
+      "question": "How many orders are in the dataset?",
+      "gold_sql": "SELECT COUNT(*) FROM orders",
+      "expect": "answer",
+      "tags": ["olist", "count"]
+    },
+    {
+      "id": "olist-02-delivered",
+      "question": "How many orders were delivered?",
+      "gold_sql": "SELECT COUNT(*) FROM orders WHERE order_status = 'delivered'",
+      "expect": "answer",
+      "tags": ["olist", "filter"]
+    },
+    {
+      "id": "olist-03-avg-payment",
+      "question": "What is the average payment value?",
+      "gold_sql": "SELECT AVG(payment_value) FROM order_payments",
+      "expect": "answer",
+      "tags": ["olist", "agg"]
+    },
+    {
+      "id": "olist-04-top-category",
+      "question": "Which product category has the most items sold?",
+      "gold_sql": "SELECT p.product_category_name, COUNT(*) AS n FROM order_items oi JOIN products p ON oi.product_id = p.product_id GROUP BY p.product_category_name ORDER BY n DESC LIMIT 1",
+      "expect": "answer",
+      "tags": ["olist", "join"]
+    },
+    {
+      "id": "olist-05-review-score",
+      "question": "What is the average review score?",
+      "gold_sql": "SELECT AVG(review_score) FROM order_reviews",
+      "expect": "answer",
+      "tags": ["olist", "agg"]
+    },
+    {
+      "id": "olist-06-payment-types",
+      "question": "How many payments used credit card?",
+      "gold_sql": "SELECT COUNT(*) FROM order_payments WHERE payment_type = 'credit_card'",
+      "expect": "answer",
+      "tags": ["olist", "filter"]
+    },
+    {
+      "id": "olist-07-sellers-by-state",
+      "question": "How many sellers are in each state?",
+      "gold_sql": "SELECT seller_state, COUNT(*) AS n FROM sellers GROUP BY seller_state ORDER BY n DESC",
+      "expect": "answer",
+      "tags": ["olist", "group"]
+    },
+    {
+      "id": "olist-08-freight",
+      "question": "What is the total freight value across all order items?",
+      "gold_sql": "SELECT SUM(freight_value) FROM order_items",
+      "expect": "answer",
+      "tags": ["olist", "agg"]
+    },
+    {
+      "id": "olist-09-revenue-clarify",
+      "question": "What was revenue last month?",
+      "gold_sql": null,
+      "expect": "clarify",
+      "tags": ["olist", "ambiguous"]
+    },
+    {
+      "id": "olist-10-late-deliveries",
+      "question": "How many delivered orders arrived after the estimated delivery date?",
+      "gold_sql": "SELECT COUNT(*) FROM orders WHERE order_status = 'delivered' AND order_delivered_customer_date > order_estimated_delivery_date",
+      "expect": "answer",
+      "tags": ["olist", "filter"]
+    }
+  ]
+}

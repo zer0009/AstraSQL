@@ -53,6 +53,10 @@ class PolicyDecision:
     options: list[str] = field(default_factory=list)
     decision_why: str = ""
     selected: Optional[InterpretationCandidate] = None
+    # When True, generator/gate should sample K SQLs and decide via execution.
+    needs_execution_gate: bool = False
+    # Intent-level decision points from the LLM (vague terms, missing formulas).
+    decision_points: tuple[str, ...] = ()
 
 
 def _tokens(text: str) -> list[str]:
@@ -376,6 +380,44 @@ def prior_turn_was_clarification(
     return bool(answer) and not sql
 
 
+def _candidate_table_set(candidate: InterpretationCandidate) -> frozenset[str]:
+    return frozenset(_norm_name(t) for t in candidate.tables if _norm_name(t))
+
+
+def _candidate_column_set(candidate: InterpretationCandidate) -> frozenset[str]:
+    refs: set[str] = set()
+    for raw in candidate.columns:
+        table, column = _split_table_column(str(raw))
+        if table and column:
+            refs.add(f"{table}.{column}")
+        elif column:
+            refs.add(column)
+    return frozenset(refs)
+
+
+def _candidates_materially_different(
+    valid: list[InterpretationCandidate],
+) -> bool:
+    """True when candidates cite different tables or columns.
+
+    Intentionally schema-only — no English measure/filter word lists.
+    Implementation-level ambiguity (join type, NULL handling) is decided by
+    the execution-evidence gate after SQL candidates are run.
+    """
+    if len(valid) < 2:
+        return False
+
+    for i, left in enumerate(valid):
+        left_tables = _candidate_table_set(left)
+        left_cols = _candidate_column_set(left)
+        for right in valid[i + 1 :]:
+            if left_tables != _candidate_table_set(right):
+                return True
+            if left_cols != _candidate_column_set(right):
+                return True
+    return False
+
+
 def parse_interpretation_payload(raw: Any) -> InterpretationProposal:
     """Coerce LLM JSON into a typed proposal. Invalid → unanswerable empty."""
     if not isinstance(raw, dict):
@@ -423,6 +465,26 @@ def parse_interpretation_payload(raw: Any) -> InterpretationProposal:
     )
 
 
+def _assume_top_candidate(
+    valid: list[InterpretationCandidate],
+    *,
+    proposal: InterpretationProposal,
+    decision_why: str,
+    reason: str,
+) -> PolicyDecision:
+    selected = valid[0]
+    return PolicyDecision(
+        should_clarify=False,
+        status="assumed",
+        reason=reason,
+        assumption=proposal.assumption
+        or f"Assumed: {selected.label or selected.question}",
+        options=[c.question for c in valid[1:4]],
+        decision_why=decision_why,
+        selected=selected,
+    )
+
+
 def apply_interpretation_policy(
     proposal: InterpretationProposal,
     *,
@@ -433,8 +495,20 @@ def apply_interpretation_policy(
     rules: list[str],
     golden_questions: list[str],
     conversation_history: list[dict[str, Any]] | None = None,
+    defer_ask_to_execution_gate: bool = False,
+    decision_points: Iterable[str] | None = None,
 ) -> PolicyDecision:
-    """Deterministic ask-or-proceed policy. Never invents schema facts."""
+    """Deterministic ask-or-proceed policy. Never invents schema facts.
+
+    Ask only when status is ambiguous (or clear with multiple materially
+    different readings), there are ≥2 grounded candidates, knowns do not
+    resolve, candidates differ by tables/columns (not phrasing), and the
+    clarification budget is not spent. Otherwise proceed as assumed.
+
+    When ``defer_ask_to_execution_gate`` is True, potential asks become
+    assumed-with-``needs_execution_gate`` so the execution-evidence node
+    can sample SQL and decide from result clusters.
+    """
     valid = validate_candidates(
         proposal.candidates,
         tables=tables,
@@ -442,6 +516,10 @@ def apply_interpretation_policy(
         bare_columns=bare_columns,
     )
     budget_spent = prior_turn_was_clarification(conversation_history)
+    material = _candidates_materially_different(valid)
+    dpoints = tuple(
+        str(p).strip() for p in (decision_points or ()) if str(p).strip()
+    )
 
     if proposal.status == "clear" and len(valid) == 1:
         selected = valid[0]
@@ -453,11 +531,9 @@ def apply_interpretation_policy(
             options=[],
             decision_why=f"clear;candidates={len(valid)}",
             selected=selected,
+            needs_execution_gate=bool(dpoints),
+            decision_points=dpoints,
         )
-
-    if proposal.status == "clear" and len(valid) > 1:
-        # Model claimed clear but listed multiple grounded readings — ask.
-        pass
 
     if proposal.status == "unanswerable" and not valid:
         digest_hint = ", ".join(sorted(tables)[:8]) if tables else "(none)"
@@ -472,6 +548,7 @@ def apply_interpretation_policy(
             options=[_OTHER_OPTION],
             decision_why="unanswerable;valid=0",
             selected=None,
+            decision_points=dpoints,
         )
 
     known = _pick_by_knowns(
@@ -498,9 +575,35 @@ def apply_interpretation_policy(
             ][:3],
             decision_why=f"resolved_known;candidates={len(valid)}",
             selected=known,
+            decision_points=dpoints,
         )
 
-    if len(valid) >= 2 and not budget_spent:
+    status_allows_ask = proposal.status == "ambiguous" or (
+        proposal.status == "clear" and len(valid) > 1 and material
+    )
+    if (
+        status_allows_ask
+        and len(valid) >= 2
+        and material
+        and not budget_spent
+    ):
+        if defer_ask_to_execution_gate:
+            selected = valid[0]
+            return PolicyDecision(
+                should_clarify=False,
+                status="assumed",
+                reason=proposal.reason
+                or f"{len(valid)} readings deferred to execution-evidence gate",
+                assumption=proposal.assumption
+                or f"Assumed: {selected.label or selected.question}",
+                options=_options_from_candidates(valid, include_other=False)[:3],
+                decision_why=(
+                    f"defer_execution_gate;candidates={len(valid)};material"
+                ),
+                selected=selected,
+                needs_execution_gate=True,
+                decision_points=dpoints,
+            )
         return PolicyDecision(
             should_clarify=True,
             status="ambiguous",
@@ -508,21 +611,35 @@ def apply_interpretation_policy(
             or f"{len(valid)} materially different schema-grounded readings",
             assumption="",
             options=_options_from_candidates(valid, include_other=True),
-            decision_why=f"ask;candidates={len(valid)};budget_ok",
+            decision_why=f"ask;candidates={len(valid)};material;budget_ok",
             selected=None,
+            decision_points=dpoints,
         )
 
-    if len(valid) >= 2 and budget_spent:
-        selected = valid[0]
-        return PolicyDecision(
-            should_clarify=False,
-            status="assumed",
-            reason="Clarification budget spent; proceeding with top candidate",
-            assumption=proposal.assumption
-            or f"Assumed: {selected.label or selected.question}",
-            options=[c.question for c in valid[1:4]],
-            decision_why=f"budget_spent;candidates={len(valid)}",
-            selected=selected,
+    if len(valid) >= 2:
+        if budget_spent and material:
+            return _assume_top_candidate(
+                valid,
+                proposal=proposal,
+                decision_why=f"budget_spent;candidates={len(valid)}",
+                reason="Clarification budget spent; proceeding with top candidate",
+            )
+        if not material:
+            return _assume_top_candidate(
+                valid,
+                proposal=proposal,
+                decision_why=f"assumed_immaterial;candidates={len(valid)}",
+                reason=proposal.reason
+                or "Candidates differ only by phrasing/join path; proceeding",
+            )
+        return _assume_top_candidate(
+            valid,
+            proposal=proposal,
+            decision_why=(
+                f"assumed;status={proposal.status};candidates={len(valid)}"
+            ),
+            reason=proposal.reason
+            or "Proceeding with top grounded candidate",
         )
 
     if len(valid) == 1:
@@ -550,16 +667,55 @@ def apply_interpretation_policy(
     )
 
 
+def _normalize_fk_edges(
+    fk_edges: Iterable[Any] | None,
+) -> list[tuple[str, str, str, str]]:
+    out: list[tuple[str, str, str, str]] = []
+    seen: set[tuple[str, str, str, str]] = set()
+    for edge in fk_edges or []:
+        if isinstance(edge, dict):
+            ft = str(edge.get("from_table") or "").strip()
+            fc = str(edge.get("from_col") or edge.get("from_column") or "").strip()
+            tt = str(edge.get("to_table") or "").strip()
+            tc = str(edge.get("to_col") or edge.get("to_column") or "").strip()
+        elif isinstance(edge, (tuple, list)) and len(edge) >= 4:
+            ft, fc, tt, tc = (str(edge[0]).strip(), str(edge[1]).strip(),
+                              str(edge[2]).strip(), str(edge[3]).strip())
+        else:
+            continue
+        if not (ft and fc and tt and tc):
+            continue
+        key = (ft, fc, tt, tc)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(key)
+    return out
+
+
+def _format_example_values(values: Iterable[Any], *, limit: int = 5) -> str:
+    parts: list[str] = []
+    for raw in list(values)[:limit]:
+        if isinstance(raw, str):
+            parts.append(raw)
+        else:
+            parts.append(repr(raw))
+    return ", ".join(parts)
+
+
 def build_schema_digest(
     selected_tables: Iterable[str],
     selected_columns: Iterable[dict[str, Any]] | None = None,
     *,
     table_descriptions: dict[str, str] | None = None,
     column_descriptions: dict[str, dict[str, str]] | None = None,
+    fk_edges: Iterable[Any] | None = None,
+    column_types: dict[str, dict[str, str]] | None = None,
+    example_values: dict[str, dict[str, list]] | None = None,
     max_tables: int = 30,
     max_columns_per_table: int = 40,
 ) -> str:
-    """Compact digest for prompts. No sample rows."""
+    """Compact digest for prompts, with optional types/examples/FK edges."""
     cols_by_table: dict[str, list[str]] = {}
     for item in selected_columns or []:
         if not isinstance(item, dict):
@@ -573,6 +729,7 @@ def build_schema_digest(
 
     lines: list[str] = []
     tables = list(selected_tables)[:max_tables]
+    table_set = set(tables)
     for table in tables:
         desc = ""
         if table_descriptions and table in table_descriptions:
@@ -580,13 +737,35 @@ def build_schema_digest(
         header = f"{table}" + (f" — {desc}" if desc else "")
         lines.append(header)
         cols = cols_by_table.get(table) or []
+        # If fine-select omitted columns but types are known, surface them.
+        if not cols and column_types and table in column_types:
+            cols = list(column_types[table].keys())[:max_columns_per_table]
         col_descs = (column_descriptions or {}).get(table) or {}
+        type_map = (column_types or {}).get(table) or {}
+        ex_map = (example_values or {}).get(table) or {}
         for col in cols[:max_columns_per_table]:
+            ctype = str(type_map.get(col) or "").strip()
             cdesc = (col_descs.get(col) or "").strip()
+            examples = ex_map.get(col) or []
+            type_part = f" ({ctype})" if ctype else ""
+            ex_part = ""
+            if examples:
+                ex_part = f" e.g. {_format_example_values(examples, limit=5)}"
             if cdesc:
-                lines.append(f"  - {col}: {cdesc}")
+                lines.append(f"  - {col}{type_part}: {cdesc}{ex_part}")
+            elif type_part or ex_part:
+                lines.append(f"  - {col}{type_part}{ex_part}")
             else:
                 lines.append(f"  - {col}")
         if not cols:
             lines.append("  - (columns not fine-selected)")
+
+    edges = _normalize_fk_edges(fk_edges)
+    if edges:
+        lines.append("Relationships:")
+        for ft, fc, tt, tc in edges:
+            if table_set and ft not in table_set and tt not in table_set:
+                continue
+            lines.append(f"  - {ft}.{fc} → {tt}.{tc}")
+
     return "\n".join(lines) if lines else "(none)"

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 import re
+from collections import Counter
 from itertools import permutations
 from typing import Any, Optional
 
@@ -221,4 +222,90 @@ def results_equal_values(
         remapped = [tuple(row[i] for i in perm) for row in right_matrix]
         if _rows_match(left_tuples, remapped, order_sensitive=order_sensitive):
             return True
+    return False
+
+
+def results_equal_lenient(
+    gold: Optional[dict],
+    generated: Optional[dict],
+    *,
+    gold_sql: Optional[str] = None,
+    order_sensitive: Optional[bool] = None,
+) -> bool:
+    """Lenient denotation: gold columns may be a subset of generated columns.
+
+    Projects the generated result onto every combination of columns matching
+    the gold width, then reuses values-only row matching. Headline score for
+    leaderboards should remain ``results_equal_values``; this is diagnostic.
+    """
+    if not gold or not generated:
+        return False
+    # Exact values-only already covers equal column counts.
+    if results_equal_values(
+        gold, generated, gold_sql=gold_sql, order_sensitive=order_sensitive
+    ):
+        return True
+
+    gold_vals = _rows_as_value_lists(gold)
+    gen_vals = _rows_as_value_lists(generated)
+    if not gold_vals and not gen_vals:
+        return True
+    if not gold_vals or not gen_vals:
+        return False
+    if len(gold_vals) != len(gen_vals):
+        return False
+
+    g_cols = len(gold_vals[0])
+    r_cols = len(gen_vals[0])
+    if g_cols == 0:
+        return True
+    if r_cols < g_cols:
+        return False
+    if any(len(r) != g_cols for r in gold_vals) or any(len(r) != r_cols for r in gen_vals):
+        return False
+
+    if order_sensitive is None:
+        order_sensitive = gold_has_order_by(gold_sql)
+
+    gold_tuples = [tuple(r) for r in gold_vals]
+    # Cap combinations: C(r_cols, g_cols) * g_cols! via permutations of chosen indices.
+    from itertools import combinations
+
+    max_right = min(r_cols, _MAX_PERM_COLS + 2)
+    if r_cols > max_right:
+        # Fall back: bag-of-cells per row containment (weak).
+        def bag(row: list[Any]) -> Counter:
+            parts = []
+            for v in row:
+                if isinstance(v, float):
+                    parts.append(round(v, 6))
+                else:
+                    parts.append(v)
+            return Counter(parts)
+
+        gold_bags = [bag(r) for r in gold_vals]
+        gen_bags = [bag(r) for r in gen_vals]
+        if order_sensitive:
+            return all(
+                all(gb[k] <= rb[k] for k in gb) for gb, rb in zip(gold_bags, gen_bags)
+            )
+        # Multiset match of bags where each gold bag is covered by some gen bag.
+        unused = gen_bags[:]
+        for gb in gold_bags:
+            hit = None
+            for i, rb in enumerate(unused):
+                if all(gb[k] <= rb[k] for k in gb):
+                    hit = i
+                    break
+            if hit is None:
+                return False
+            unused.pop(hit)
+        return True
+
+    for chosen in combinations(range(r_cols), g_cols):
+        projected = [[row[i] for i in chosen] for row in gen_vals]
+        for perm in permutations(range(g_cols)):
+            remapped = [tuple(row[i] for i in perm) for row in projected]
+            if _rows_match(gold_tuples, remapped, order_sensitive=order_sensitive):
+                return True
     return False

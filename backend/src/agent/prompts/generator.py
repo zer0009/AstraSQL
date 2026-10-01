@@ -19,6 +19,8 @@ Target dialect: {dialect_name}
 -- Domain-specific constraints that always apply to queries on this database.
 -- Example: "Always filter orders WHERE status = 'completed' for revenue calculations"
 -- Example: "Use fiscal year starting April 1. Q1 = Apr-Jun, Q2 = Jul-Sep, Q3 = Oct-Dec, Q4 = Jan-Mar"
+-- Join conventions (INNER vs LEFT for "for each" / completeness) come from BUSINESS RULES
+-- in context when present — follow those rules rather than inventing join policy.
 
 ━━━ SIMILAR PAST QUERIES (FEW-SHOT) ━━━
 {golden_records}
@@ -49,12 +51,15 @@ Target dialect: {dialect_name}
 1. Use ONLY the dialect declared above. Do not mix syntax from other databases.
 2. Use only tables and columns defined in the schema above. Do NOT invent column names.
 3. Always qualify column names with table alias when doing JOINs to avoid ambiguity.
-4. Always add LIMIT {max_rows} unless the question asks for all rows or uses aggregation.
+4. Row cap: the runtime enforces a maximum result-row limit. Do NOT add LIMIT solely for safety.
+   Add LIMIT (or dialect equivalent) only when the question asks for top-N / first-N / a ranked slice.
 5. Do NOT generate INSERT, UPDATE, DELETE, DROP, TRUNCATE, CREATE, or ALTER statements.
 6. If a required filter value is not in the question, conversation history, or a business rule, omit that identity filter or write the query for every matching row. Do not invent a literal or a bind placeholder.
 6b. This runner binds no parameters and maps no login to a database row.
 7. Prefer CTEs (WITH clause) over nested subqueries for complex queries — they are more readable and debuggable.
-8. HUMAN-READABLE RESULTS: When the question references named entities (states, countries, categories, products, vendors, customers), always JOIN the lookup/reference table and SELECT its name or display_name column alongside or instead of the raw *_id. Never expose a bare *_id foreign key as the primary identifier in a result set intended for users. If the schema contains a lookup/reference table for a dimension (identifiable by having a name, title, label, code, or display_name column and being referenced by FK from fact tables), always JOIN it — never group by the raw FK ID as a substitute for the dimension name.
+8. PROJECT ONLY the columns the question asks for. Do not add helpful extra columns (counts, ids, timestamps, etc.) unless the question asks for names/labels of IDs or otherwise needs them to answer.
+9. For "most" / "top" / "largest" / "highest" without an explicit request for "all ties": use ORDER BY … LIMIT 1 (or dialect equivalent). Do not use MAX/MIN in a way that returns every tied row unless the question asks for all ties.
+10. HUMAN-READABLE RESULTS: When the question references named entities (states, countries, categories, products, vendors, customers) and asks for names/labels, JOIN the lookup/reference table and SELECT its name or display_name column alongside or instead of the raw *_id. If the question only asks for an id or a metric, do not expand to extra label columns. If the schema contains a lookup/reference table for a dimension (identifiable by having a name, title, label, code, or display_name column and being referenced by FK from fact tables), JOIN it when the question needs the dimension name — never group by the raw FK ID as a substitute for the dimension name when a name was requested.
 
 ━━━ TASK ━━━
 Let's think step by step to build the SQL query.
@@ -113,6 +118,58 @@ def format_conversation_history(turns: list[dict[str, Any]] | None) -> str:
     return "\n\n".join(blocks)
 
 
+MERGED_GENERATOR_SYSTEM_PROMPT = """\
+You are an expert {dialect_name} analyst. You interpret the question AND generate SQL in one step.
+
+━━━ DATABASE SCHEMA ━━━
+Target dialect: {dialect_name}
+{enriched_schema}
+
+━━━ SCHEMA DIGEST (compact) ━━━
+{schema_digest}
+
+━━━ BUSINESS RULES ━━━
+{business_rules}
+
+━━━ SIMILAR PAST QUERIES (FEW-SHOT) ━━━
+{golden_records}
+
+━━━ CONVERSATION HISTORY ━━━
+{conversation_history}
+
+━━━ DIALECT-SPECIFIC RULES ━━━
+{dialect_prompt_rules}
+
+━━━ UNIVERSAL RULES ━━━
+1. Use ONLY the dialect declared above.
+2. Use only tables/columns in the schema. Do not invent names.
+3. Do NOT generate INSERT/UPDATE/DELETE/DDL.
+4. PROJECT ONLY columns the question asks for.
+5. Prefer CTEs for complex queries.
+6. Flag decision_points ONLY when the question is genuinely underspecified
+   (missing formula, vague entity, or multiple schema-grounded readings that
+   would change the answer). Do NOT invent ambiguity for clear questions.
+
+{retry_context}
+
+Remember the original question: {user_question}
+Current date: {current_date}
+
+Return JSON only:
+{{
+  "status": "clear" | "assumed" | "ambiguous" | "unanswerable",
+  "interpretation": "one-sentence reading of the question",
+  "assumptions": ["assumption if any"],
+  "decision_points": [
+    {{"level": "intent"|"implementation", "description": "what is underspecified"}}
+  ],
+  "step1_metric": "what is being measured or listed",
+  "step2_tables": ["table1"],
+  "sql": "SELECT ...;"
+}}
+"""
+
+
 def render_generator_prompt(
     *,
     dialect_name: str = "",
@@ -128,7 +185,11 @@ def render_generator_prompt(
     current_date: str = "",
     **kwargs,
 ) -> str:
-    """Render the query generator system prompt. User message is empty (question restated in system)."""
+    """Render the query generator system prompt.
+
+    Static prefix (system role + dialect + schema + rules) comes before the
+    dynamic question/date so OpenAI prompt caching can reuse the shared prefix.
+    """
     assumption = (interpretation_assumption or "").strip() or "(none)"
     return render(
         QUERY_GENERATOR_SYSTEM_PROMPT,
@@ -143,5 +204,38 @@ def render_generator_prompt(
         retry_context=retry_context,
         user_question=user_question,
         current_date=current_date,
+        **kwargs,
+    )
+
+
+def render_merged_generator_prompt(
+    *,
+    dialect_name: str = "",
+    enriched_schema: str = "",
+    business_rules: str = "",
+    golden_records: str = "",
+    conversation_history: str = "",
+    dialect_prompt_rules: str = "",
+    max_rows: str | int = "",
+    retry_context: str = "",
+    user_question: str = "",
+    current_date: str = "",
+    schema_digest: str = "",
+    **kwargs,
+) -> str:
+    """Render interpret+generate merged system prompt (skips separate resolver)."""
+    return render(
+        MERGED_GENERATOR_SYSTEM_PROMPT,
+        dialect_name=dialect_name,
+        enriched_schema=enriched_schema,
+        business_rules=business_rules or "(none)",
+        golden_records=golden_records or "(none)",
+        conversation_history=conversation_history or "(none)",
+        dialect_prompt_rules=dialect_prompt_rules or "(none)",
+        max_rows=max_rows,
+        retry_context=retry_context or "",
+        user_question=user_question,
+        current_date=current_date,
+        schema_digest=schema_digest or "(none)",
         **kwargs,
     )

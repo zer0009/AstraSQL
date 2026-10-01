@@ -1,12 +1,24 @@
 from __future__ import annotations
 
 import json
+import logging
 from typing import Any, Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.storage.models import SchemaCache, SchemaEnrichment
+from src.context.relationships import (
+    discover_relationships,
+    edges_to_semantic_join_paths,
+    merge_relationship_edges,
+)
+from src.context.semantic_layer import parse_semantic_layer
+from src.storage.models import Connection, SchemaCache, SchemaEnrichment
+
+logger = logging.getLogger(__name__)
+
+# Sentinel so upsert can leave fields unchanged when omitted.
+_UNSET: Any = object()
 
 
 def _safe_json_loads(raw: Optional[str], default: Any = None) -> Any:
@@ -61,9 +73,9 @@ class SchemaEnrichmentStore:
         connection_id: str,
         table_name: str,
         column_name: Optional[str],
-        description: Optional[str] = None,
-        alias: Optional[str] = None,
-        example_values: Optional[str] = None,
+        description: Any = _UNSET,
+        alias: Any = _UNSET,
+        example_values: Any = _UNSET,
     ) -> SchemaEnrichment:
         stmt = select(SchemaEnrichment).where(
             SchemaEnrichment.connection_id == connection_id,
@@ -77,23 +89,32 @@ class SchemaEnrichmentStore:
         result = await session.execute(stmt)
         row = result.scalar_one_or_none()
 
-        if example_values is not None and not isinstance(example_values, str):
-            example_values = json.dumps(example_values)
+        serialized_examples = example_values
+        if example_values is not _UNSET and example_values is not None:
+            if not isinstance(example_values, str):
+                serialized_examples = json.dumps(example_values)
+            else:
+                serialized_examples = example_values
 
         if row is None:
             row = SchemaEnrichment(
                 connection_id=connection_id,
                 table_name=table_name,
                 column_name=column_name,
-                description=description,
-                alias=alias,
-                example_values=example_values,
+                description=None if description is _UNSET else description,
+                alias=None if alias is _UNSET else alias,
+                example_values=(
+                    None if example_values is _UNSET else serialized_examples
+                ),
             )
             session.add(row)
         else:
-            row.description = description
-            row.alias = alias
-            row.example_values = example_values
+            if description is not _UNSET:
+                row.description = description
+            if alias is not _UNSET:
+                row.alias = alias
+            if example_values is not _UNSET:
+                row.example_values = serialized_examples
 
         await session.flush()
         return row
@@ -279,6 +300,64 @@ class SchemaEnrichmentStore:
             blocks.append("\n".join(header_lines) + "\n" + ddl + sample_block)
 
         return "\n\n".join(blocks) if blocks else "(no schema)"
+
+
+async def discover_and_merge_relationships(
+    session: AsyncSession,
+    connection: Connection,
+    tables_data: list[dict[str, Any]],
+    db_provider: Any = None,
+    *,
+    auto_approve: bool = True,
+    max_probes: int = 50,
+) -> list[dict[str, Any]]:
+    """Run relationship discovery and merge edges into ``semantic_layer_json``.
+
+    Called after schema scan / FK extraction. Best-effort: failures are logged
+    and do not abort the scan. Declared FKs and name-suffix candidates are
+    merged into ``relationships``; approved edges also refresh ``join_paths``.
+    """
+    if not tables_data:
+        return []
+
+    discovered = await discover_relationships(
+        tables_data,
+        db_provider,
+        auto_approve=auto_approve,
+        max_probes=max_probes,
+    )
+    if not discovered:
+        return []
+
+    layer = parse_semantic_layer(getattr(connection, "semantic_layer_json", None))
+    existing = layer.get("relationships") if isinstance(layer.get("relationships"), list) else []
+    merged = merge_relationship_edges(existing, discovered)
+    layer["relationships"] = merged
+
+    # Keep join_paths in sync for approved (and auto-approved) edges.
+    path_set = {
+        str(p).strip().lower()
+        for p in (layer.get("join_paths") or [])
+        if str(p).strip()
+    }
+    join_paths = list(layer.get("join_paths") or []) if isinstance(layer.get("join_paths"), list) else []
+    for path in edges_to_semantic_join_paths(
+        [e for e in merged if str(e.get("status") or "").lower() == "approved"]
+    ):
+        key = path.lower()
+        if key not in path_set:
+            path_set.add(key)
+            join_paths.append(path)
+    layer["join_paths"] = join_paths
+
+    connection.semantic_layer_json = json.dumps(layer)
+    await session.flush()
+    logger.info(
+        "Merged %d relationship edge(s) into semantic layer for connection %s",
+        len(merged),
+        connection.id,
+    )
+    return merged
 
 
 def _format_sample_rows(table_name: str, rows: list[dict[str, Any]]) -> str:

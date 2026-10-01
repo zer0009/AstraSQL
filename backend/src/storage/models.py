@@ -39,6 +39,14 @@ class Connection(Base):
     username: Mapped[str] = mapped_column(String(255), nullable=False)
     encrypted_password: Mapped[str] = mapped_column(Text, nullable=False)
     ssl_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    # None → fall back to settings.grounded_clarification_enabled (per-connection override).
+    # Applied via Alembic 004; create_all fallback also creates this column from metadata.
+    grounded_clarification_enabled: Mapped[Optional[bool]] = mapped_column(
+        Boolean, nullable=True, default=None
+    )
+    # Optional JSON: {metrics:[], synonyms:{}, join_paths:[], table_tiers:{}}.
+    # Applied via Alembic 005_semantic_layer.
+    semantic_layer_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     last_scanned_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
@@ -165,6 +173,8 @@ class QueryHistory(Base):
     user_rating: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     explanation: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     follow_ups: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON text
+    # Resolver / execution-gate diagnostics: status, decision_why, candidates, …
+    ambiguity_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
 
     connection: Mapped[Connection] = relationship(back_populates="query_history")

@@ -1,0 +1,40 @@
+{
+  "key": "result_match_values",
+  "mcnemar": {
+    "n_paired": 25,
+    "both_correct": 14,
+    "both_wrong": 9,
+    "a_only": 0,
+    "b_only": 2,
+    "discordant": 2,
+    "p_value": 0.5,
+    "significant_0_05": false,
+    "b_minus_a_accuracy": 0.08
+  },
+  "bootstrap": {
+    "n_paired": 25,
+    "n_boot": 2000,
+    "mean_diff": 0.0773,
+    "ci95": [
+      0.0,
+      0.2
+    ],
+    "ci_excludes_zero": false
+  },
+  "flips": [
+    {
+      "id": "course_teach:d609a3b5e2eb",
+      "a": false,
+      "b": true
+    },
+    {
+      "id": "network_1:367815e79dd4",
+      "a": false,
+      "b": true
+    }
+  ],
+  "a_accuracy": 0.56,
+  "b_accuracy": 0.64,
+  "a_path": "spider-pilot",
+  "b_path": "spider-pilot"
+}

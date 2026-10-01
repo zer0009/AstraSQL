@@ -98,6 +98,9 @@ def _compact_state(state: AgentState) -> dict[str, Any]:
             "row_count": results.get("row_count", len(rows)),
             "truncated": True,
         }
+    ambiguity = state.get("ambiguity")
+    if not isinstance(ambiguity, dict):
+        ambiguity = None
     return {
         "connection_id": state.get("connection_id"),
         "question": state.get("question"),
@@ -115,6 +118,7 @@ def _compact_state(state: AgentState) -> dict[str, Any]:
         "follow_ups": state.get("follow_ups") or [],
         "clarification_options": state.get("clarification_options") or [],
         "used_golden": bool(state.get("used_golden")),
+        "ambiguity": ambiguity,
         # Steps stream via "step" events — omit from done to keep SSE JSON small
     }
 
@@ -125,20 +129,37 @@ def _compact_update(update: dict[str, Any]) -> dict[str, Any]:
     return {k: v for k, v in update.items() if k not in skip and k != "steps"}
 
 
+def _ambiguity_json(state: AgentState) -> str | None:
+    """Serialize ambiguity diagnostics for QueryHistory."""
+    ambiguity = state.get("ambiguity")
+    if not isinstance(ambiguity, dict) or not ambiguity:
+        return None
+    try:
+        return json.dumps(ambiguity, default=str)
+    except (TypeError, ValueError):
+        return None
+
+
 async def _persist_history(
     session: AsyncSession,
     connection: Connection,
     state: AgentState,
     session_id: str | None = None,
 ) -> Optional[QueryHistory]:
-    """Persist a QueryHistory row when SQL was produced."""
+    """Persist a QueryHistory row when SQL was produced or clarification asked."""
     sql = (state.get("corrected_sql") or state.get("sql") or "").strip()
-    if not sql:
+    ambiguity = state.get("ambiguity") if isinstance(state.get("ambiguity"), dict) else {}
+    clarifying = bool(ambiguity.get("should_clarify")) or (
+        str(state.get("intent") or "").upper() == "CLARIFICATION_NEEDED"
+    )
+    # Persist clarify turns (empty SQL) so diagnostics survive; skip empty no-ops.
+    if not sql and not clarifying:
         return None
 
     results = state.get("results") or {}
     row_count = results.get("row_count")
     follow_ups = state.get("follow_ups") or []
+    ambiguity_text = _ambiguity_json(state)
 
     turn_index: int | None = None
     chat_session: ChatSession | None = None
@@ -160,11 +181,12 @@ async def _persist_history(
         session_id=session_id,
         turn_index=turn_index,
         question=state.get("question") or "",
-        sql=sql,
+        sql=sql or "",
         result_row_count=int(row_count) if row_count is not None else None,
         confidence=confidence_to_float(state.get("confidence")),
         explanation=state.get("answer"),
         follow_ups=json.dumps(follow_ups) if follow_ups else None,
+        ambiguity_json=ambiguity_text,
     )
     session.add(record)
 
@@ -191,7 +213,15 @@ async def run_query(
     conversation_history: list[dict[str, Any]] | None = None,
     session_id: str | None = None,
 ) -> AgentState:
-    """Run the full agent graph and persist QueryHistory on completion."""
+    """Run the full agent graph and persist QueryHistory on completion.
+
+    When a ``UsageTracker`` is active (``track_usage`` context from the
+    caller), stage labels from the graph are recorded automatically via LLM
+    callbacks. A compact ``usage_summary`` is attached to the returned state
+    for production telemetry and eval.
+    """
+    from src.observability.usage import get_active_tracker
+
     provider = provider_from_connection(connection)
     try:
         graph = get_graph()
@@ -200,6 +230,15 @@ async def run_query(
             initial,
             config=_run_config(session, connection, provider),
         )
+        tracker = get_active_tracker()
+        if tracker is not None:
+            # Attach stage rollup without requiring the caller to dig into records.
+            result = dict(result)
+            result["usage_summary"] = {
+                "by_stage": tracker.summary_by_stage(),
+                "cost_usd": tracker.total_cost(),
+                "calls": len(tracker.records),
+            }
         await _persist_history(session, connection, result, session_id=session_id)
         return result
     finally:

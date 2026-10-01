@@ -1,0 +1,76 @@
+{
+  "_comment": "Hand-authored Odoo-style gold (8–12 Qs). Point connection at an Odoo Postgres/SQLite dump with sale.order / res.partner style tables (names vary by version). Placeholder — set ODOO_DB_PATH / connection manually; no DB is checked in.",
+  "db_note": "Expected tables (illustrative): sale_order, sale_order_line, res_partner, product_product, account_move, stock_quant",
+  "items": [
+    {
+      "id": "odoo-01-so-count",
+      "question": "How many sales orders exist?",
+      "gold_sql": "SELECT COUNT(*) FROM sale_order",
+      "expect": "answer",
+      "tags": ["odoo", "count"]
+    },
+    {
+      "id": "odoo-02-confirmed",
+      "question": "How many sales orders are confirmed?",
+      "gold_sql": "SELECT COUNT(*) FROM sale_order WHERE state = 'sale'",
+      "expect": "answer",
+      "tags": ["odoo", "filter"]
+    },
+    {
+      "id": "odoo-03-partners",
+      "question": "How many partners (contacts) are in the system?",
+      "gold_sql": "SELECT COUNT(*) FROM res_partner",
+      "expect": "answer",
+      "tags": ["odoo", "count"]
+    },
+    {
+      "id": "odoo-04-avg-order",
+      "question": "What is the average sales order amount untaxed?",
+      "gold_sql": "SELECT AVG(amount_untaxed) FROM sale_order",
+      "expect": "answer",
+      "tags": ["odoo", "agg"]
+    },
+    {
+      "id": "odoo-05-top-customer",
+      "question": "Which partner has the highest total sales order amount?",
+      "gold_sql": "SELECT partner_id, SUM(amount_total) AS total FROM sale_order GROUP BY partner_id ORDER BY total DESC LIMIT 1",
+      "expect": "answer",
+      "tags": ["odoo", "group"]
+    },
+    {
+      "id": "odoo-06-draft-invoices",
+      "question": "How many account moves are in draft?",
+      "gold_sql": "SELECT COUNT(*) FROM account_move WHERE state = 'draft'",
+      "expect": "answer",
+      "tags": ["odoo", "filter"]
+    },
+    {
+      "id": "odoo-07-order-lines",
+      "question": "How many sale order lines are there?",
+      "gold_sql": "SELECT COUNT(*) FROM sale_order_line",
+      "expect": "answer",
+      "tags": ["odoo", "count"]
+    },
+    {
+      "id": "odoo-08-products",
+      "question": "How many product variants exist?",
+      "gold_sql": "SELECT COUNT(*) FROM product_product",
+      "expect": "answer",
+      "tags": ["odoo", "count"]
+    },
+    {
+      "id": "odoo-09-best-employee",
+      "question": "Who is the best salesperson?",
+      "gold_sql": null,
+      "expect": "clarify",
+      "tags": ["odoo", "ambiguous"]
+    },
+    {
+      "id": "odoo-10-company-partners",
+      "question": "How many partners are companies?",
+      "gold_sql": "SELECT COUNT(*) FROM res_partner WHERE is_company = 1 OR is_company = true",
+      "expect": "answer",
+      "tags": ["odoo", "filter"]
+    }
+  ]
+}

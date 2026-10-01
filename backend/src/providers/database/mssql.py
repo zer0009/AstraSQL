@@ -8,9 +8,35 @@ from src.providers.database.base import BaseDatabaseProvider
 
 
 class MSSQLProvider(BaseDatabaseProvider):
-    """Microsoft SQL Server stub — dialect metadata only until aioodbc support lands."""
+    """Microsoft SQL Server — dialect metadata ready; runtime not wired yet.
+
+    ``available`` stays False until aioodbc (or similar) execute path lands.
+
+    Remaining work for a working provider:
+    - Driver: ``mssql+aioodbc://`` (or ``pyodbc`` sync bridge) with ODBC Driver 18
+    - Connection URL: host, port, database, UID/PWD, Encrypt=yes when ssl_enabled
+    - list_tables / get_table_schema from INFORMATION_SCHEMA (+ sys.foreign_keys)
+    - execute_readonly: wrap in a read-only session; use SET LOCK_TIMEOUT /
+      query_timeout_seconds via ODBC timeout; TOP/OFFSET-FETCH for row caps
+    - explain_query: ``SET SHOWPLAN_TEXT ON`` or ``EXPLAIN`` where supported
+    - sample_distinct_values: SELECT DISTINCT TOP (n) ...
+    - Register and flip ``available = True`` once smoke tests pass
+    """
 
     available = False
+
+    def supports_explain(self) -> bool:
+        # SHOWPLAN requires special session setup; treat as unsupported for now.
+        return False
+
+    def supports_timeout(self) -> bool:
+        return True
+
+    def quote_ident(self, name: str) -> str:
+        text_name = (name or "").replace("]", "]]")
+        if not text_name:
+            raise ValueError("Empty SQL identifier")
+        return f"[{text_name}]"
 
     def dialect_name(self) -> str:
         return "Microsoft SQL Server 2022"
@@ -24,6 +50,7 @@ class MSSQLProvider(BaseDatabaseProvider):
 - Concatenation: + operator or CONCAT()
 - Prefer CTEs (WITH clause) over deeply nested subqueries
 - Window functions: supported — ROW_NUMBER(), LAG(), LEAD(), RANK()
+- Do NOT use LIMIT (SQL Server does not support it); use TOP or OFFSET/FETCH
 """.strip()
 
     def dialect_validator_checklist(self) -> list[str]:
@@ -38,7 +65,10 @@ class MSSQLProvider(BaseDatabaseProvider):
         return "tsql"
 
     def get_async_engine(self) -> AsyncEngine:
-        raise NotImplementedError("MSSQLProvider is not implemented yet")
+        raise NotImplementedError(
+            "MSSQLProvider runtime not implemented yet "
+            "(needs aioodbc + ODBC Driver 18; see class docstring)"
+        )
 
     async def explain_query(self, sql: str) -> str:
         raise NotImplementedError("MSSQLProvider is not implemented yet")

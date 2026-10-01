@@ -1,0 +1,3516 @@
+{
+  "kind": "spider-pilot",
+  "created_at": "2026-10-01T15:02:03.237499+00:00",
+  "models": {
+    "openai_model": "gpt-5.6-luna",
+    "enrichment_model": "gpt-5.6-luna",
+    "interpretation_model": "gpt-5.6-luna",
+    "llm_reasoning_effort": "low",
+    "embedding_model": "text-embedding-3-small",
+    "interpretation_mode": "on",
+    "validator_mode": "deterministic",
+    "schema_link_mode": "auto",
+    "format_response": false,
+    "sql_candidate_count": 1,
+    "execution_evidence_gate": true,
+    "merge_interpret_generate": false
+  },
+  "rate_card": {
+    "gpt-5.6-luna": {
+      "input": 0.2,
+      "output": 1.2,
+      "cached_input": 0.02
+    },
+    "embedding": 0.02
+  },
+  "db_id": null,
+  "db_ids": [
+    "car_1",
+    "dog_kennels",
+    "employee_hire_evaluation",
+    "museum_visit",
+    "network_1",
+    "orchestra",
+    "tvshow",
+    "wta_1"
+  ],
+  "question_ids": [
+    "orchestra:c1d9e8230efa",
+    "tvshow:9c7549d28457",
+    "museum_visit:a8f4449a0292",
+    "museum_visit:51b3b0701af1",
+    "wta_1:cd5d550d595b",
+    "wta_1:c19e68320451",
+    "employee_hire_evaluation:eac8f8ebf62c",
+    "dog_kennels:6cba083ac1ce",
+    "dog_kennels:d66eb9ded2a4",
+    "network_1:76c75a92d3d7",
+    "network_1:9fb303e26199",
+    "car_1:8b720fc8727c"
+  ],
+  "n": 12,
+  "seed": 42,
+  "setup": {
+    "by_db": {
+      "orchestra": {
+        "tables": 4,
+        "enriched": 0,
+        "elapsed_ms": 11,
+        "cost_usd": 0,
+        "usage": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "latency_ms": 0,
+          "cost_usd": 0,
+          "estimated_calls": 0,
+          "by_stage": {}
+        }
+      },
+      "tvshow": {
+        "tables": 3,
+        "enriched": 0,
+        "elapsed_ms": 4,
+        "cost_usd": 0,
+        "usage": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "latency_ms": 0,
+          "cost_usd": 0,
+          "estimated_calls": 0,
+          "by_stage": {}
+        }
+      },
+      "museum_visit": {
+        "tables": 3,
+        "enriched": 0,
+        "elapsed_ms": 3,
+        "cost_usd": 0,
+        "usage": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "latency_ms": 0,
+          "cost_usd": 0,
+          "estimated_calls": 0,
+          "by_stage": {}
+        }
+      },
+      "wta_1": {
+        "tables": 3,
+        "enriched": 0,
+        "elapsed_ms": 3,
+        "cost_usd": 0,
+        "usage": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "latency_ms": 0,
+          "cost_usd": 0,
+          "estimated_calls": 0,
+          "by_stage": {}
+        }
+      },
+      "employee_hire_evaluation": {
+        "tables": 4,
+        "enriched": 0,
+        "elapsed_ms": 3,
+        "cost_usd": 0,
+        "usage": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "latency_ms": 0,
+          "cost_usd": 0,
+          "estimated_calls": 0,
+          "by_stage": {}
+        }
+      },
+      "dog_kennels": {
+        "tables": 8,
+        "enriched": 0,
+        "elapsed_ms": 4,
+        "cost_usd": 0,
+        "usage": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "latency_ms": 0,
+          "cost_usd": 0,
+          "estimated_calls": 0,
+          "by_stage": {}
+        }
+      },
+      "network_1": {
+        "tables": 3,
+        "enriched": 0,
+        "elapsed_ms": 3,
+        "cost_usd": 0,
+        "usage": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "latency_ms": 0,
+          "cost_usd": 0,
+          "estimated_calls": 0,
+          "by_stage": {}
+        }
+      },
+      "car_1": {
+        "tables": 6,
+        "enriched": 0,
+        "elapsed_ms": 5,
+        "cost_usd": 0,
+        "usage": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "latency_ms": 0,
+          "cost_usd": 0,
+          "estimated_calls": 0,
+          "by_stage": {}
+        }
+      }
+    },
+    "cost_usd": 0.0,
+    "elapsed_ms": 36
+  },
+  "questions": [
+    {
+      "id": "orchestra:c1d9e8230efa",
+      "db_id": "orchestra",
+      "question": "What are the names of conductors, sorted descending by the number of years they have worked?",
+      "hardness": "easy",
+      "gold_sql": "SELECT Name FROM conductor ORDER BY Year_of_Work DESC",
+      "generated_sql": "SELECT Name FROM conductor ORDER BY Year_of_Work DESC;",
+      "result_match": true,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": null,
+      "sql_match": true,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "conductor"
+        ],
+        "selected_tables": [
+          "conductor",
+          "orchestra",
+          "performance",
+          "show"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "conductor",
+        "orchestra",
+        "performance",
+        "show"
+      ],
+      "gold_result": {
+        "columns": [
+          "Name"
+        ],
+        "row_count": 12,
+        "rows": [
+          {
+            "Name": "Robert Craft"
+          },
+          {
+            "Name": "Antal Brown"
+          },
+          {
+            "Name": "Gerard Schwarz"
+          },
+          {
+            "Name": "Valeri Gergiev"
+          },
+          {
+            "Name": "Charles Dutoit"
+          },
+          {
+            "Name": "Michael Tilson Thomas"
+          },
+          {
+            "Name": "Igor Stravinsky"
+          },
+          {
+            "Name": "Paul Jorgensen"
+          }
+        ],
+        "truncated": true
+      },
+      "generated_result": {
+        "columns": [
+          "Name"
+        ],
+        "row_count": 12,
+        "rows": [
+          {
+            "Name": "Robert Craft"
+          },
+          {
+            "Name": "Antal Brown"
+          },
+          {
+            "Name": "Gerard Schwarz"
+          },
+          {
+            "Name": "Valeri Gergiev"
+          },
+          {
+            "Name": "Charles Dutoit"
+          },
+          {
+            "Name": "Michael Tilson Thomas"
+          },
+          {
+            "Name": "Igor Stravinsky"
+          },
+          {
+            "Name": "Paul Jorgensen"
+          }
+        ],
+        "truncated": true
+      },
+      "ambiguity": {
+        "status": "assumed",
+        "decision_why": "resolved_known;candidates=1",
+        "reason": "The conductor table contains the only directly relevant tenure-related field, Year_of_Work, along with each conductor's Name.",
+        "assumption": "Interpret \"number of years they have worked\" as the conductor.Year_of_Work value.",
+        "should_clarify": false,
+        "proposal_status": "assumed",
+        "options": [],
+        "candidates": [
+          {
+            "label": "Conductors by years worked",
+            "question": "What are the names of conductors, sorted descending by conductor.Year_of_Work?",
+            "tables": [
+              "conductor"
+            ],
+            "columns": [
+              "conductor.Name",
+              "conductor.Year_of_Work"
+            ]
+          }
+        ],
+        "selected": {
+          "label": "Conductors by years worked",
+          "question": "What are the names of conductors, sorted descending by conductor.Year_of_Work?",
+          "tables": [
+            "conductor"
+          ],
+          "columns": [
+            "conductor.Name",
+            "conductor.Year_of_Work"
+          ]
+        },
+        "clusters": null,
+        "gate": null
+      },
+      "assumption": "Interpret \"number of years they have worked\" as the conductor.Year_of_Work value.",
+      "elapsed_ms": 15853,
+      "cost_usd": 0.001169,
+      "input_tokens": 3349,
+      "output_tokens": 416,
+      "reasoning_tokens": 142,
+      "cached_input_tokens": 0,
+      "calls": 3,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 349,
+          "output_tokens": 34,
+          "reasoning_tokens": 0,
+          "latency_ms": 7980,
+          "cost_usd": 0.0001106
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 664,
+          "output_tokens": 280,
+          "reasoning_tokens": 142,
+          "latency_ms": 4495,
+          "cost_usd": 0.0004688
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 2336,
+          "output_tokens": 102,
+          "reasoning_tokens": 0,
+          "latency_ms": 2457,
+          "cost_usd": 0.0005896
+        }
+      }
+    },
+    {
+      "id": "tvshow:9c7549d28457",
+      "db_id": "tvshow",
+      "question": "Find the production code and channel of the most recently aired cartoon .",
+      "hardness": "easy",
+      "gold_sql": "select production_code ,  channel from cartoon order by original_air_date desc limit 1",
+      "generated_sql": "SELECT c.Production_code, c.Channel\nFROM Cartoon AS c\nORDER BY\n  CAST(substr(c.Original_air_date, instr(c.Original_air_date, ',') + 1) AS INTEGER) DESC,\n  CASE\n    WHEN c.Original_air_date LIKE 'January%' THEN 1\n    WHEN c.Original_air_date LIKE 'February%' THEN 2\n    WHEN c.Original_air_date LIKE 'November%' THEN 11\n    WHEN c.Original_air_date LIKE 'December%' THEN 12\n  END DESC,\n  CASE\n    WHEN c.Original_air_date LIKE 'January%' THEN CAST(substr(c.Original_air_date, 8, instr(c.Original_air_date, ',') - 8) AS INTEGER)\n    WHEN c.Original_air_date LIKE 'February%' THEN CAST(substr(c.Original_air_date, 9, instr(c.Original_air_date, ',') - 9) AS INTEGER)\n    WHEN c.Original_air_date LIKE 'November%' THEN CAST(substr(c.Original_air_date, 9, instr(c.Original_air_date, ',') - 9) AS INTEGER)\n    WHEN c.Original_air_date LIKE 'December%' THEN CAST(substr(c.Original_air_date, 9, instr(c.Original_air_date, ',') - 9) AS INTEGER)\n  END DESC\nLIMIT 1;",
+      "result_match": false,
+      "result_match_values": false,
+      "result_match_lenient": false,
+      "failure_label": "other",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 1,
+      "schema_linking": {
+        "gold_tables": [
+          "cartoon"
+        ],
+        "selected_tables": [
+          "cartoon",
+          "tv_channel",
+          "tv_series"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "Cartoon",
+        "TV_Channel",
+        "TV_series"
+      ],
+      "gold_result": {
+        "columns": [
+          "Production_code",
+          "Channel"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "Production_code": 102.0,
+            "Channel": "701"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Production_code",
+          "Channel"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "Production_code": 112.0,
+            "Channel": "707"
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "clear;candidates=1",
+        "reason": "The question specifies the Cartoon record with the latest Original_air_date and requests its Production_code and Channel.",
+        "assumption": null,
+        "should_clarify": false,
+        "proposal_status": "clear",
+        "options": [],
+        "candidates": [
+          {
+            "label": "Most recently aired cartoon",
+            "question": "Find the Production_code and Channel of the Cartoon with the most recent Original_air_date.",
+            "tables": [
+              "Cartoon"
+            ],
+            "columns": [
+              "Cartoon.Original_air_date",
+              "Cartoon.Production_code",
+              "Cartoon.Channel"
+            ]
+          }
+        ],
+        "selected": {
+          "label": "Most recently aired cartoon",
+          "question": "Find the Production_code and Channel of the Cartoon with the most recent Original_air_date.",
+          "tables": [
+            "cartoon"
+          ],
+          "columns": [
+            "Cartoon.Original_air_date",
+            "Cartoon.Production_code",
+            "Cartoon.Channel"
+          ]
+        },
+        "clusters": null,
+        "gate": null
+      },
+      "assumption": "",
+      "elapsed_ms": 39890,
+      "cost_usd": 0.0042564,
+      "input_tokens": 8136,
+      "output_tokens": 2191,
+      "reasoning_tokens": 1344,
+      "cached_input_tokens": 0,
+      "calls": 4,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 343,
+          "output_tokens": 33,
+          "reasoning_tokens": 0,
+          "latency_ms": 7103,
+          "cost_usd": 0.0001082
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 1045,
+          "output_tokens": 170,
+          "reasoning_tokens": 45,
+          "latency_ms": 2782,
+          "cost_usd": 0.000413
+        },
+        "query_generator": {
+          "calls": 2,
+          "input_tokens": 6748,
+          "output_tokens": 1988,
+          "reasoning_tokens": 1299,
+          "latency_ms": 29744,
+          "cost_usd": 0.0037352
+        }
+      }
+    },
+    {
+      "id": "museum_visit:a8f4449a0292",
+      "db_id": "museum_visit",
+      "question": "Find the number of visitors who did not visit any museum opened after 2010.",
+      "hardness": "hard",
+      "gold_sql": "SELECT count(*) FROM visitor WHERE id NOT IN (SELECT t2.visitor_id FROM museum AS t1 JOIN visit AS t2 ON t1.Museum_ID  =  t2.Museum_ID WHERE t1.open_year  >  2010)",
+      "generated_sql": "SELECT COUNT(*) AS visitor_count\nFROM visitor AS v\nWHERE NOT EXISTS (\n    SELECT 1\n    FROM visit AS vi\n    JOIN museum AS m ON vi.Museum_ID = m.Museum_ID\n    WHERE vi.visitor_ID = v.ID\n      AND CAST(m.Open_Year AS INTEGER) > 2010\n);",
+      "result_match": false,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": "scorer_only",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "museum",
+          "visit",
+          "visitor"
+        ],
+        "selected_tables": [
+          "museum",
+          "visit",
+          "visitor"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "museum",
+        "visit",
+        "visitor"
+      ],
+      "gold_result": {
+        "columns": [
+          "count(*)"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "count(*)": 3
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "visitor_count"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "visitor_count": 3
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "clear;candidates=1",
+        "reason": "The question specifies counting distinct visitors with no visit to a museum whose museum.Open_Year is greater than 2010.",
+        "assumption": null,
+        "should_clarify": false,
+        "proposal_status": "clear",
+        "options": [],
+        "candidates": [
+          {
+            "label": "Visitors avoiding post-2010 museums",
+            "question": "How many distinct visitors in visitor.ID did not have any visit.visit records for museums where museum.Open_Year is after 2010, joined through visit.visitor_ID and visit.Museum_ID?",
+            "tables": [
+              "visitor",
+              "visit",
+              "museum"
+            ],
+            "columns": [
+              "visitor.ID",
+              "visit.visitor_ID",
+              "visit.Museum_ID",
+              "museum.Museum_ID",
+              "museum.Open_Year"
+            ]
+          }
+        ],
+        "selected": {
+          "label": "Visitors avoiding post-2010 museums",
+          "question": "How many distinct visitors in visitor.ID did not have any visit.visit records for museums where museum.Open_Year is after 2010, joined through visit.visitor_ID and visit.Museum_ID?",
+          "tables": [
+            "visitor",
+            "visit",
+            "museum"
+          ],
+          "columns": [
+            "visitor.ID",
+            "visit.visitor_ID",
+            "visit.Museum_ID",
+            "museum.Museum_ID",
+            "museum.Open_Year"
+          ]
+        },
+        "clusters": null,
+        "gate": null
+      },
+      "assumption": "",
+      "elapsed_ms": 13700,
+      "cost_usd": 0.0013224,
+      "input_tokens": 3078,
+      "output_tokens": 589,
+      "reasoning_tokens": 181,
+      "cached_input_tokens": 0,
+      "calls": 3,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 347,
+          "output_tokens": 33,
+          "reasoning_tokens": 0,
+          "latency_ms": 6729,
+          "cost_usd": 0.000109
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 650,
+          "output_tokens": 257,
+          "reasoning_tokens": 76,
+          "latency_ms": 3180,
+          "cost_usd": 0.0004384
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 2081,
+          "output_tokens": 299,
+          "reasoning_tokens": 105,
+          "latency_ms": 3574,
+          "cost_usd": 0.000775
+        }
+      }
+    },
+    {
+      "id": "museum_visit:51b3b0701af1",
+      "db_id": "museum_visit",
+      "question": "Find the name and age of the visitor who bought the most tickets at once.",
+      "hardness": "medium",
+      "gold_sql": "SELECT t1.name ,  t1.age FROM visitor AS t1 JOIN visit AS t2 ON t1.id  =  t2.visitor_id ORDER BY t2.num_of_ticket DESC LIMIT 1",
+      "generated_sql": "SELECT visitor.Name, visitor.Age\nFROM visit\nJOIN visitor ON visit.visitor_ID = visitor.ID\nORDER BY visit.Num_of_Ticket DESC\nLIMIT 1;",
+      "result_match": true,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "visit",
+          "visitor"
+        ],
+        "selected_tables": [
+          "museum",
+          "visit",
+          "visitor"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "museum",
+        "visit",
+        "visitor"
+      ],
+      "gold_result": {
+        "columns": [
+          "Name",
+          "Age"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "Name": "Arjen Robben",
+            "Age": 27
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Name",
+          "Age"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "Name": "Arjen Robben",
+            "Age": 27
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "clear;candidates=1",
+        "reason": "The question specifies the visitor associated with the visit having the highest Num_of_Ticket value.",
+        "assumption": null,
+        "should_clarify": false,
+        "proposal_status": "clear",
+        "options": [],
+        "candidates": [
+          {
+            "label": "Visitor with largest ticket purchase",
+            "question": "Find the name and age of the visitor whose single visit had the highest number of tickets purchased.",
+            "tables": [
+              "visit",
+              "visitor"
+            ],
+            "columns": [
+              "visit.Num_of_Ticket",
+              "visit.visitor_ID",
+              "visitor.ID",
+              "visitor.Name",
+              "visitor.Age"
+            ]
+          }
+        ],
+        "selected": {
+          "label": "Visitor with largest ticket purchase",
+          "question": "Find the name and age of the visitor whose single visit had the highest number of tickets purchased.",
+          "tables": [
+            "visit",
+            "visitor"
+          ],
+          "columns": [
+            "visit.Num_of_Ticket",
+            "visit.visitor_ID",
+            "visitor.ID",
+            "visitor.Name",
+            "visitor.Age"
+          ]
+        },
+        "clusters": null,
+        "gate": null
+      },
+      "assumption": "",
+      "elapsed_ms": 7720,
+      "cost_usd": 0.0010764,
+      "input_tokens": 3060,
+      "output_tokens": 387,
+      "reasoning_tokens": 73,
+      "cached_input_tokens": 0,
+      "calls": 3,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 346,
+          "output_tokens": 40,
+          "reasoning_tokens": 0,
+          "latency_ms": 1686,
+          "cost_usd": 0.0001172
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 649,
+          "output_tokens": 207,
+          "reasoning_tokens": 73,
+          "latency_ms": 3407,
+          "cost_usd": 0.0003782
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 2065,
+          "output_tokens": 140,
+          "reasoning_tokens": 0,
+          "latency_ms": 2441,
+          "cost_usd": 0.000581
+        }
+      }
+    },
+    {
+      "id": "wta_1:cd5d550d595b",
+      "db_id": "wta_1",
+      "question": "Find the total number of players.",
+      "hardness": "medium",
+      "gold_sql": "SELECT count(*) FROM players",
+      "generated_sql": "SELECT COUNT(*) AS total_players FROM players;",
+      "result_match": false,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": "scorer_only",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "players"
+        ],
+        "selected_tables": [
+          "matches",
+          "players",
+          "rankings"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "matches",
+        "players",
+        "rankings"
+      ],
+      "gold_result": {
+        "columns": [
+          "count(*)"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "count(*)": 20662
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "total_players"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "total_players": 20662
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "execution_gate;single_cluster;n=1",
+        "reason": "All executable candidates agree on results",
+        "assumption": "Assumed: All players in roster",
+        "should_clarify": false,
+        "proposal_status": "ambiguous",
+        "options": [],
+        "candidates": [
+          {
+            "label": "All players in roster",
+            "question": "Find the total number of players listed in the players table.",
+            "tables": [
+              "players"
+            ],
+            "columns": [
+              "players.player_id"
+            ]
+          },
+          {
+            "label": "Players who played matches",
+            "question": "Find the total number of distinct players who appeared as either a winner or loser in matches.",
+            "tables": [
+              "matches"
+            ],
+            "columns": [
+              "matches.winner_id",
+              "matches.loser_id"
+            ]
+          },
+          {
+            "label": "Players with rankings",
+            "question": "Find the total number of distinct players who have a record in rankings.",
+            "tables": [
+              "rankings"
+            ],
+            "columns": [
+              "rankings.player_id"
+            ]
+          },
+          {
+            "label": "Players in matches or rankings",
+            "question": "Find the total number of distinct players appearing in either matches or rankings.",
+            "tables": [
+              "matches",
+              "rankings"
+            ],
+            "columns": [
+              "matches.winner_id",
+              "matches.loser_id",
+              "rankings.player_id"
+            ]
+          }
+        ],
+        "selected": {
+          "label": "All players in roster",
+          "question": "Find the total number of players listed in the players table.",
+          "tables": [
+            "players"
+          ],
+          "columns": [
+            "players.player_id"
+          ]
+        },
+        "clusters": [
+          {
+            "size": 1,
+            "sql": "SELECT COUNT(*) AS total_players FROM players;",
+            "row_count": 1
+          }
+        ],
+        "gate": "execution_evidence"
+      },
+      "assumption": "Assumed: All players in roster",
+      "elapsed_ms": 12016,
+      "cost_usd": 0.00353616,
+      "input_tokens": 16845,
+      "output_tokens": 724,
+      "reasoning_tokens": 105,
+      "cached_input_tokens": 3898,
+      "calls": 6,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 337,
+          "output_tokens": 27,
+          "reasoning_tokens": 0,
+          "latency_ms": 1416,
+          "cost_usd": 9.98e-05
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 924,
+          "output_tokens": 380,
+          "reasoning_tokens": 105,
+          "latency_ms": 4415,
+          "cost_usd": 0.0006408
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 3874,
+          "output_tokens": 82,
+          "reasoning_tokens": 0,
+          "latency_ms": 1918,
+          "cost_usd": 0.0008732
+        },
+        "ambiguity_gate": {
+          "calls": 3,
+          "input_tokens": 11710,
+          "output_tokens": 235,
+          "reasoning_tokens": 0,
+          "latency_ms": 4056,
+          "cost_usd": 0.00192236
+        }
+      }
+    },
+    {
+      "id": "wta_1:c19e68320451",
+      "db_id": "wta_1",
+      "question": "What are the names of players who won in both 2013 and 2016?",
+      "hardness": "hard",
+      "gold_sql": "SELECT winner_name FROM matches WHERE YEAR  =  2013 INTERSECT SELECT winner_name FROM matches WHERE YEAR  =  2016",
+      "generated_sql": "SELECT p.first_name || ' ' || p.last_name AS player_name\nFROM players AS p\nJOIN matches AS m\n  ON p.player_id = m.winner_id\nWHERE m.year IN (2013, 2016)\nGROUP BY p.player_id, p.first_name, p.last_name\nHAVING COUNT(DISTINCT m.year) = 2;",
+      "result_match": false,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": "scorer_only",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "matches"
+        ],
+        "selected_tables": [
+          "matches",
+          "players",
+          "rankings"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "matches",
+        "players",
+        "rankings"
+      ],
+      "gold_result": {
+        "columns": [
+          "winner_name"
+        ],
+        "row_count": 5,
+        "rows": [
+          {
+            "winner_name": "Angelique Kerber"
+          },
+          {
+            "winner_name": "Petra Kvitova"
+          },
+          {
+            "winner_name": "Sara Errani"
+          },
+          {
+            "winner_name": "Serena Williams"
+          },
+          {
+            "winner_name": "Victoria Azarenka"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "player_name"
+        ],
+        "row_count": 5,
+        "rows": [
+          {
+            "player_name": "Serena Williams"
+          },
+          {
+            "player_name": "Victoria Azarenka"
+          },
+          {
+            "player_name": "Angelique Kerber"
+          },
+          {
+            "player_name": "Sara Errani"
+          },
+          {
+            "player_name": "Petra Kvitova"
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "execution_gate;single_cluster;n=3",
+        "reason": "All executable candidates agree on results",
+        "assumption": "Assumed: Won at least one match each year",
+        "should_clarify": false,
+        "proposal_status": "ambiguous",
+        "options": [],
+        "candidates": [
+          {
+            "label": "Won at least one match each year",
+            "question": "What are the names of players who won at least one match in 2013 and at least one match in 2016?",
+            "tables": [
+              "matches"
+            ],
+            "columns": [
+              "matches.winner_name",
+              "matches.year"
+            ]
+          },
+          {
+            "label": "Won a tournament in each year",
+            "question": "What are the names of players who won a tournament final in 2013 and also won a tournament final in 2016?",
+            "tables": [
+              "matches"
+            ],
+            "columns": [
+              "matches.winner_name",
+              "matches.year",
+              "matches.round"
+            ]
+          }
+        ],
+        "selected": {
+          "label": "Won at least one match each year",
+          "question": "What are the names of players who won at least one match in 2013 and at least one match in 2016?",
+          "tables": [
+            "matches"
+          ],
+          "columns": [
+            "matches.winner_name",
+            "matches.year"
+          ]
+        },
+        "clusters": [
+          {
+            "size": 3,
+            "sql": "SELECT p.first_name || ' ' || p.last_name AS player_name\nFROM players AS p\nJOIN matches AS m\n  ON p.player_id = m.winner_id\nWHERE m.year IN (2013, 2016)\nGROUP BY p.player_id, p.first_name, p.last_name\nHAVING COUNT(DISTINCT m.year) = 2;",
+            "row_count": 5
+          }
+        ],
+        "gate": "execution_evidence"
+      },
+      "assumption": "Assumed: Won at least one match each year",
+      "elapsed_ms": 21205,
+      "cost_usd": 0.00411046,
+      "input_tokens": 16967,
+      "output_tokens": 1186,
+      "reasoning_tokens": 265,
+      "cached_input_tokens": 3923,
+      "calls": 6,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 348,
+          "output_tokens": 40,
+          "reasoning_tokens": 0,
+          "latency_ms": 5590,
+          "cost_usd": 0.0001176
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 935,
+          "output_tokens": 353,
+          "reasoning_tokens": 151,
+          "latency_ms": 4496,
+          "cost_usd": 0.0006106
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 3899,
+          "output_tokens": 145,
+          "reasoning_tokens": 0,
+          "latency_ms": 2095,
+          "cost_usd": 0.0009538
+        },
+        "ambiguity_gate": {
+          "calls": 3,
+          "input_tokens": 11785,
+          "output_tokens": 648,
+          "reasoning_tokens": 114,
+          "latency_ms": 8800,
+          "cost_usd": 0.00242846
+        }
+      }
+    },
+    {
+      "id": "employee_hire_evaluation:eac8f8ebf62c",
+      "db_id": "employee_hire_evaluation",
+      "question": "Give me all the information about hiring.",
+      "hardness": "easy",
+      "gold_sql": "SELECT * FROM hiring",
+      "generated_sql": "SELECT Shop_ID, Employee_ID, Start_from, Is_full_time\nFROM hiring;",
+      "result_match": true,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "hiring"
+        ],
+        "selected_tables": [
+          "employee",
+          "evaluation",
+          "hiring",
+          "shop"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "employee",
+        "evaluation",
+        "hiring",
+        "shop"
+      ],
+      "gold_result": {
+        "columns": [
+          "Shop_ID",
+          "Employee_ID",
+          "Start_from",
+          "Is_full_time"
+        ],
+        "row_count": 7,
+        "rows": [
+          {
+            "Shop_ID": 1,
+            "Employee_ID": 1,
+            "Start_from": "2009",
+            "Is_full_time": "T"
+          },
+          {
+            "Shop_ID": 1,
+            "Employee_ID": 2,
+            "Start_from": "2003",
+            "Is_full_time": "T"
+          },
+          {
+            "Shop_ID": 8,
+            "Employee_ID": 3,
+            "Start_from": "2011",
+            "Is_full_time": "F"
+          },
+          {
+            "Shop_ID": 4,
+            "Employee_ID": 4,
+            "Start_from": "2012",
+            "Is_full_time": "T"
+          },
+          {
+            "Shop_ID": 5,
+            "Employee_ID": 5,
+            "Start_from": "2013",
+            "Is_full_time": "T"
+          },
+          {
+            "Shop_ID": 2,
+            "Employee_ID": 6,
+            "Start_from": "2010",
+            "Is_full_time": "F"
+          },
+          {
+            "Shop_ID": 6,
+            "Employee_ID": 7,
+            "Start_from": "2008",
+            "Is_full_time": "T"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Shop_ID",
+          "Employee_ID",
+          "Start_from",
+          "Is_full_time"
+        ],
+        "row_count": 7,
+        "rows": [
+          {
+            "Shop_ID": 1,
+            "Employee_ID": 1,
+            "Start_from": "2009",
+            "Is_full_time": "T"
+          },
+          {
+            "Shop_ID": 1,
+            "Employee_ID": 2,
+            "Start_from": "2003",
+            "Is_full_time": "T"
+          },
+          {
+            "Shop_ID": 8,
+            "Employee_ID": 3,
+            "Start_from": "2011",
+            "Is_full_time": "F"
+          },
+          {
+            "Shop_ID": 4,
+            "Employee_ID": 4,
+            "Start_from": "2012",
+            "Is_full_time": "T"
+          },
+          {
+            "Shop_ID": 5,
+            "Employee_ID": 5,
+            "Start_from": "2013",
+            "Is_full_time": "T"
+          },
+          {
+            "Shop_ID": 2,
+            "Employee_ID": 6,
+            "Start_from": "2010",
+            "Is_full_time": "F"
+          },
+          {
+            "Shop_ID": 6,
+            "Employee_ID": 7,
+            "Start_from": "2008",
+            "Is_full_time": "T"
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "execution_gate;single_cluster;n=2",
+        "reason": "All executable candidates agree on results",
+        "assumption": "Assumed: All hiring records",
+        "should_clarify": false,
+        "proposal_status": "ambiguous",
+        "options": [],
+        "candidates": [
+          {
+            "label": "All hiring records",
+            "question": "Show all hiring records, including Shop_ID, Employee_ID, Start_from, and Is_full_time.",
+            "tables": [
+              "hiring"
+            ],
+            "columns": [
+              "hiring.Shop_ID",
+              "hiring.Employee_ID",
+              "hiring.Start_from",
+              "hiring.Is_full_time"
+            ]
+          },
+          {
+            "label": "Hiring with employee details",
+            "question": "Show all hiring records together with the hired employee's Employee_ID, Name, Age, and City.",
+            "tables": [
+              "hiring",
+              "employee"
+            ],
+            "columns": [
+              "hiring.Shop_ID",
+              "hiring.Employee_ID",
+              "hiring.Start_from",
+              "hiring.Is_full_time",
+              "employee.Employee_ID",
+              "employee.Name",
+              "employee.Age",
+              "employee.City"
+            ]
+          },
+          {
+            "label": "Hiring with shop details",
+            "question": "Show all hiring records together with the shop's Shop_ID, Name, Location, District, and Number_products.",
+            "tables": [
+              "hiring",
+              "shop"
+            ],
+            "columns": [
+              "hiring.Shop_ID",
+              "hiring.Employee_ID",
+              "hiring.Start_from",
+              "hiring.Is_full_time",
+              "shop.Shop_ID",
+              "shop.Name",
+              "shop.Location",
+              "shop.District",
+              "shop.Number_products"
+            ]
+          },
+          {
+            "label": "Complete hiring information",
+            "question": "Show all hiring records with every available detail about the hired employee and the shop, including hiring, employee, and shop fields.",
+            "tables": [
+              "hiring",
+              "employee",
+              "shop"
+            ],
+            "columns": [
+              "hiring.Shop_ID",
+              "hiring.Employee_ID",
+              "hiring.Start_from",
+              "hiring.Is_full_time",
+              "employee.Employee_ID",
+              "employee.Name",
+              "employee.Age",
+              "employee.City",
+              "shop.Shop_ID",
+              "shop.Name",
+              "shop.Location",
+              "shop.District",
+              "shop.Number_products"
+            ]
+          }
+        ],
+        "selected": {
+          "label": "All hiring records",
+          "question": "Show all hiring records, including Shop_ID, Employee_ID, Start_from, and Is_full_time.",
+          "tables": [
+            "hiring"
+          ],
+          "columns": [
+            "hiring.Shop_ID",
+            "hiring.Employee_ID",
+            "hiring.Start_from",
+            "hiring.Is_full_time"
+          ]
+        },
+        "clusters": [
+          {
+            "size": 2,
+            "sql": "SELECT Shop_ID, Employee_ID, Start_from, Is_full_time\nFROM hiring;",
+            "row_count": 7
+          }
+        ],
+        "gate": "execution_evidence"
+      },
+      "assumption": "Assumed: All hiring records",
+      "elapsed_ms": 29225,
+      "cost_usd": 0.00301778,
+      "input_tokens": 11083,
+      "output_tokens": 1041,
+      "reasoning_tokens": 131,
+      "cached_input_tokens": 2489,
+      "calls": 6,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 338,
+          "output_tokens": 34,
+          "reasoning_tokens": 0,
+          "latency_ms": 9259,
+          "cost_usd": 0.0001084
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 797,
+          "output_tokens": 637,
+          "reasoning_tokens": 131,
+          "latency_ms": 6005,
+          "cost_usd": 0.0009238
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 2465,
+          "output_tokens": 95,
+          "reasoning_tokens": 0,
+          "latency_ms": 1671,
+          "cost_usd": 0.000607
+        },
+        "ambiguity_gate": {
+          "calls": 3,
+          "input_tokens": 7483,
+          "output_tokens": 275,
+          "reasoning_tokens": 0,
+          "latency_ms": 12045,
+          "cost_usd": 0.00137858
+        }
+      }
+    },
+    {
+      "id": "dog_kennels:6cba083ac1ce",
+      "db_id": "dog_kennels",
+      "question": "What are all the possible breed type and size type combinations?",
+      "hardness": "easy",
+      "gold_sql": "SELECT DISTINCT breed_code ,  size_code FROM dogs",
+      "generated_sql": "SELECT DISTINCT\n    b.breed_name,\n    s.size_description\nFROM Dogs AS d\nJOIN Breeds AS b\n    ON d.breed_code = b.breed_code\nJOIN Sizes AS s\n    ON d.size_code = s.size_code;",
+      "result_match": false,
+      "result_match_values": false,
+      "result_match_lenient": false,
+      "failure_label": "wrong_table",
+      "sql_match": false,
+      "clarified": true,
+      "error": null,
+      "intent": "CLARIFICATION_NEEDED",
+      "trust_level": "clarifying",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "dogs"
+        ],
+        "selected_tables": [
+          "breeds",
+          "charges",
+          "dogs",
+          "owners",
+          "professionals",
+          "sizes",
+          "treatment_types",
+          "treatments"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "Breeds",
+        "Charges",
+        "Dogs",
+        "Owners",
+        "Professionals",
+        "Sizes",
+        "Treatment_Types",
+        "Treatments"
+      ],
+      "gold_result": {
+        "columns": [
+          "breed_code",
+          "size_code"
+        ],
+        "row_count": 7,
+        "rows": [
+          {
+            "breed_code": "ESK",
+            "size_code": "LGE"
+          },
+          {
+            "breed_code": "BUL",
+            "size_code": "LGE"
+          },
+          {
+            "breed_code": "BUL",
+            "size_code": "MED"
+          },
+          {
+            "breed_code": "HUS",
+            "size_code": "MED"
+          },
+          {
+            "breed_code": "ESK",
+            "size_code": "SML"
+          },
+          {
+            "breed_code": "HUS",
+            "size_code": "SML"
+          },
+          {
+            "breed_code": "ESK",
+            "size_code": "MED"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "breed_name",
+          "size_description"
+        ],
+        "row_count": 7,
+        "rows": [
+          {
+            "breed_name": "Eskimo",
+            "size_description": "Large"
+          },
+          {
+            "breed_name": "Bulldog",
+            "size_description": "Large"
+          },
+          {
+            "breed_name": "Bulldog",
+            "size_description": "Medium"
+          },
+          {
+            "breed_name": "Husky",
+            "size_description": "Medium"
+          },
+          {
+            "breed_name": "Eskimo",
+            "size_description": "Small"
+          },
+          {
+            "breed_name": "Husky",
+            "size_description": "Small"
+          },
+          {
+            "breed_name": "Eskimo",
+            "size_description": "Medium"
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "ambiguous",
+        "decision_why": "execution_gate;split;mass=0.67;threshold=0.67;clusters=2",
+        "reason": "Candidates produce materially different results; please choose the intended reading",
+        "assumption": null,
+        "should_clarify": true,
+        "proposal_status": "ambiguous",
+        "options": [
+          "Use reading where: Different SQL implementations",
+          "Other (describe what you mean)"
+        ],
+        "candidates": [
+          {
+            "label": "Observed breed-size combinations",
+            "question": "What are all distinct combinations of breed name and size description represented by dogs?",
+            "tables": [
+              "Dogs",
+              "Breeds",
+              "Sizes"
+            ],
+            "columns": [
+              "Dogs.breed_code",
+              "Breeds.breed_code",
+              "Breeds.breed_name",
+              "Dogs.size_code",
+              "Sizes.size_code",
+              "Sizes.size_description"
+            ]
+          },
+          {
+            "label": "All catalog combinations",
+            "question": "What are all possible combinations of every breed name in Breeds and every size description in Sizes, regardless of whether a dog currently has that combination?",
+            "tables": [
+              "Breeds",
+              "Sizes"
+            ],
+            "columns": [
+              "Breeds.breed_name",
+              "Sizes.size_description"
+            ]
+          }
+        ],
+        "selected": {
+          "label": "Observed breed-size combinations",
+          "question": "What are all distinct combinations of breed name and size description represented by dogs?",
+          "tables": [
+            "dogs",
+            "breeds",
+            "sizes"
+          ],
+          "columns": [
+            "Dogs.breed_code",
+            "Breeds.breed_code",
+            "Breeds.breed_name",
+            "Dogs.size_code",
+            "Sizes.size_code",
+            "Sizes.size_description"
+          ]
+        },
+        "clusters": [
+          {
+            "size": 2,
+            "sql": "SELECT DISTINCT b.breed_name, s.size_description\nFROM Dogs AS d\nJOIN Breeds AS b ON d.breed_code = b.breed_code\nJOIN Sizes AS s ON d.size_code = s.size_code;",
+            "row_count": 7
+          },
+          {
+            "size": 1,
+            "sql": "SELECT b.breed_name, s.size_description\nFROM Breeds AS b\nCROSS JOIN Sizes AS s;",
+            "row_count": 9
+          }
+        ],
+        "gate": "execution_evidence"
+      },
+      "assumption": "",
+      "elapsed_ms": 28013,
+      "cost_usd": 0.00541258,
+      "input_tokens": 24839,
+      "output_tokens": 1173,
+      "reasoning_tokens": 156,
+      "cached_input_tokens": 5349,
+      "calls": 7,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 342,
+          "output_tokens": 30,
+          "reasoning_tokens": 0,
+          "latency_ms": 7996,
+          "cost_usd": 0.0001044
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 1592,
+          "output_tokens": 323,
+          "reasoning_tokens": 102,
+          "latency_ms": 4258,
+          "cost_usd": 0.000706
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 5325,
+          "output_tokens": 246,
+          "reasoning_tokens": 54,
+          "latency_ms": 3847,
+          "cost_usd": 0.0013602
+        },
+        "ambiguity_gate": {
+          "calls": 3,
+          "input_tokens": 16063,
+          "output_tokens": 478,
+          "reasoning_tokens": 0,
+          "latency_ms": 9498,
+          "cost_usd": 0.00282338
+        },
+        "direct_response": {
+          "calls": 1,
+          "input_tokens": 1517,
+          "output_tokens": 96,
+          "reasoning_tokens": 0,
+          "latency_ms": 1911,
+          "cost_usd": 0.0004186
+        }
+      }
+    },
+    {
+      "id": "dog_kennels:d66eb9ded2a4",
+      "db_id": "dog_kennels",
+      "question": "Which owner has paid for the most treatments on his or her dogs? List the owner id and last name.",
+      "hardness": "hard",
+      "gold_sql": "SELECT T1.owner_id ,  T1.last_name FROM Owners AS T1 JOIN Dogs AS T2 ON T1.owner_id  =  T2.owner_id JOIN Treatments AS T3 ON T2.dog_id  =  T3.dog_id GROUP BY T1.owner_id ORDER BY count(*) DESC LIMIT 1",
+      "generated_sql": "SELECT o.owner_id, o.last_name\nFROM Owners AS o\nJOIN Dogs AS d ON o.owner_id = d.owner_id\nJOIN Treatments AS t ON d.dog_id = t.dog_id\nGROUP BY o.owner_id, o.last_name\nORDER BY SUM(t.cost_of_treatment) DESC\nLIMIT 1;",
+      "result_match": false,
+      "result_match_values": false,
+      "result_match_lenient": false,
+      "failure_label": "aggregation_or_grouping",
+      "sql_match": false,
+      "clarified": true,
+      "error": null,
+      "intent": "CLARIFICATION_NEEDED",
+      "trust_level": "clarifying",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "dogs",
+          "owners",
+          "treatments"
+        ],
+        "selected_tables": [
+          "breeds",
+          "charges",
+          "dogs",
+          "owners",
+          "professionals",
+          "sizes",
+          "treatment_types",
+          "treatments"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "Breeds",
+        "Charges",
+        "Dogs",
+        "Owners",
+        "Professionals",
+        "Sizes",
+        "Treatment_Types",
+        "Treatments"
+      ],
+      "gold_result": {
+        "columns": [
+          "owner_id",
+          "last_name"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "owner_id": 14,
+            "last_name": "Funk"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "owner_id",
+          "last_name"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "owner_id": 3,
+            "last_name": "Stoltenberg"
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "ambiguous",
+        "decision_why": "execution_gate;split;mass=0.50;threshold=0.67;clusters=2",
+        "reason": "Candidates produce materially different results; please choose the intended reading",
+        "assumption": null,
+        "should_clarify": true,
+        "proposal_status": "ambiguous",
+        "options": [
+          "Use reading where: Different SQL implementations",
+          "Other (describe what you mean)"
+        ],
+        "candidates": [
+          {
+            "label": "Most treatments by count",
+            "question": "Which owner has the greatest number of treatments recorded for their dogs? List the owner ID and last name.",
+            "tables": [
+              "Owners",
+              "Dogs",
+              "Treatments"
+            ],
+            "columns": [
+              "Owners.owner_id",
+              "Owners.last_name",
+              "Dogs.owner_id",
+              "Dogs.dog_id",
+              "Treatments.dog_id",
+              "Treatments.treatment_id"
+            ]
+          },
+          {
+            "label": "Highest treatment cost",
+            "question": "Which owner has the highest total cost of treatments recorded for their dogs? List the owner ID and last name.",
+            "tables": [
+              "Owners",
+              "Dogs",
+              "Treatments"
+            ],
+            "columns": [
+              "Owners.owner_id",
+              "Owners.last_name",
+              "Dogs.owner_id",
+              "Dogs.dog_id",
+              "Treatments.dog_id",
+              "Treatments.cost_of_treatment"
+            ]
+          }
+        ],
+        "selected": {
+          "label": "Most treatments by count",
+          "question": "Which owner has the greatest number of treatments recorded for their dogs? List the owner ID and last name.",
+          "tables": [
+            "owners",
+            "dogs",
+            "treatments"
+          ],
+          "columns": [
+            "Owners.owner_id",
+            "Owners.last_name",
+            "Dogs.owner_id",
+            "Dogs.dog_id",
+            "Treatments.dog_id",
+            "Treatments.treatment_id"
+          ]
+        },
+        "clusters": [
+          {
+            "size": 1,
+            "sql": "SELECT o.owner_id, o.last_name\nFROM Owners AS o\nJOIN Dogs AS d ON o.owner_id = d.owner_id\nJOIN Treatments AS t ON d.dog_id = t.dog_id\nGROUP BY o.owner_id, o.last_name\nORDER BY COUNT(t.treatment_id) DESC\nLIMIT 1;",
+            "row_count": 1
+          },
+          {
+            "size": 1,
+            "sql": "SELECT o.owner_id, o.last_name\nFROM Owners AS o\nJOIN Dogs AS d ON o.owner_id = d.owner_id\nJOIN Treatments AS t ON d.dog_id = t.dog_id\nGROUP BY o.owner_id, o.last_name\nORDER BY SUM(t.cost_of_treatment) DESC\nLIMIT 1;",
+            "row_count": 1
+          }
+        ],
+        "gate": "execution_evidence"
+      },
+      "assumption": "",
+      "elapsed_ms": 36970,
+      "cost_usd": 0.00579336,
+      "input_tokens": 24945,
+      "output_tokens": 1696,
+      "reasoning_tokens": 337,
+      "cached_input_tokens": 6838,
+      "calls": 7,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 352,
+          "output_tokens": 41,
+          "reasoning_tokens": 0,
+          "latency_ms": 5682,
+          "cost_usd": 0.0001196
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 1602,
+          "output_tokens": 327,
+          "reasoning_tokens": 76,
+          "latency_ms": 4113,
+          "cost_usd": 0.0007128
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 5344,
+          "output_tokens": 297,
+          "reasoning_tokens": 59,
+          "latency_ms": 4505,
+          "cost_usd": 0.0014252
+        },
+        "ambiguity_gate": {
+          "calls": 3,
+          "input_tokens": 16120,
+          "output_tokens": 833,
+          "reasoning_tokens": 202,
+          "latency_ms": 12757,
+          "cost_usd": 0.00325736
+        },
+        "direct_response": {
+          "calls": 1,
+          "input_tokens": 1527,
+          "output_tokens": 198,
+          "reasoning_tokens": 0,
+          "latency_ms": 9626,
+          "cost_usd": 0.0002784
+        }
+      }
+    },
+    {
+      "id": "network_1:76c75a92d3d7",
+      "db_id": "network_1",
+      "question": "Show name of all students who have some friends and also are liked by someone else.",
+      "hardness": "extra",
+      "gold_sql": "SELECT T2.name FROM Friend AS T1 JOIN Highschooler AS T2 ON T1.student_id  =  T2.id INTERSECT SELECT T2.name FROM Likes AS T1 JOIN Highschooler AS T2 ON T1.liked_id  =  T2.id",
+      "generated_sql": "SELECT DISTINCT h.name\nFROM Highschooler AS h\nJOIN Friend AS f ON h.ID = f.student_id\nJOIN Likes AS l ON h.ID = l.liked_id;",
+      "result_match": true,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "friend",
+          "highschooler",
+          "likes"
+        ],
+        "selected_tables": [
+          "friend",
+          "highschooler",
+          "likes"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "Friend",
+        "Highschooler",
+        "Likes"
+      ],
+      "gold_result": {
+        "columns": [
+          "name"
+        ],
+        "row_count": 8,
+        "rows": [
+          {
+            "name": "Alexis"
+          },
+          {
+            "name": "Cassandra"
+          },
+          {
+            "name": "Gabriel"
+          },
+          {
+            "name": "Haley"
+          },
+          {
+            "name": "Jessica"
+          },
+          {
+            "name": "Jordan"
+          },
+          {
+            "name": "Kris"
+          },
+          {
+            "name": "Kyle"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "name"
+        ],
+        "row_count": 8,
+        "rows": [
+          {
+            "name": "Cassandra"
+          },
+          {
+            "name": "Gabriel"
+          },
+          {
+            "name": "Alexis"
+          },
+          {
+            "name": "Kris"
+          },
+          {
+            "name": "Jordan"
+          },
+          {
+            "name": "Kyle"
+          },
+          {
+            "name": "Jessica"
+          },
+          {
+            "name": "Haley"
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "execution_gate;single_cluster;n=2",
+        "reason": "All executable candidates agree on results",
+        "assumption": "Assumed: Students who list friends",
+        "should_clarify": false,
+        "proposal_status": "ambiguous",
+        "options": [],
+        "candidates": [
+          {
+            "label": "Students who list friends",
+            "question": "Show the names of all students who appear in Friend.student_id for at least one friendship and are liked by someone else through Likes.liked_id, where Likes.student_id is a different student.",
+            "tables": [
+              "Highschooler",
+              "Friend",
+              "Likes"
+            ],
+            "columns": [
+              "Highschooler.ID",
+              "Highschooler.name",
+              "Friend.student_id",
+              "Likes.liked_id",
+              "Likes.student_id"
+            ]
+          },
+          {
+            "label": "Students listed as friends",
+            "question": "Show the names of all students who appear in Friend.friend_id for at least one friendship and are liked by someone else through Likes.liked_id, where Likes.student_id is a different student.",
+            "tables": [
+              "Highschooler",
+              "Friend",
+              "Likes"
+            ],
+            "columns": [
+              "Highschooler.ID",
+              "Highschooler.name",
+              "Friend.friend_id",
+              "Likes.liked_id",
+              "Likes.student_id"
+            ]
+          },
+          {
+            "label": "Students in any friendship",
+            "question": "Show the names of all students who participate in at least one Friend relationship, either as Friend.student_id or Friend.friend_id, and are liked by someone else through Likes.liked_id, where Likes.student_id is a different student.",
+            "tables": [
+              "Highschooler",
+              "Friend",
+              "Likes"
+            ],
+            "columns": [
+              "Highschooler.ID",
+              "Highschooler.name",
+              "Friend.student_id",
+              "Friend.friend_id",
+              "Likes.liked_id",
+              "Likes.student_id"
+            ]
+          }
+        ],
+        "selected": {
+          "label": "Students who list friends",
+          "question": "Show the names of all students who appear in Friend.student_id for at least one friendship and are liked by someone else through Likes.liked_id, where Likes.student_id is a different student.",
+          "tables": [
+            "highschooler",
+            "friend",
+            "likes"
+          ],
+          "columns": [
+            "Highschooler.ID",
+            "Highschooler.name",
+            "Friend.student_id",
+            "Likes.liked_id",
+            "Likes.student_id"
+          ]
+        },
+        "clusters": [
+          {
+            "size": 2,
+            "sql": "SELECT DISTINCT h.name\nFROM Highschooler AS h\nJOIN Friend AS f ON h.ID = f.student_id\nJOIN Likes AS l ON h.ID = l.liked_id;",
+            "row_count": 8
+          }
+        ],
+        "gate": "execution_evidence"
+      },
+      "assumption": "Assumed: Students who list friends",
+      "elapsed_ms": 25058,
+      "cost_usd": 0.00340388,
+      "input_tokens": 8224,
+      "output_tokens": 1741,
+      "reasoning_tokens": 534,
+      "cached_input_tokens": 1834,
+      "calls": 6,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 347,
+          "output_tokens": 32,
+          "reasoning_tokens": 0,
+          "latency_ms": 2625,
+          "cost_usd": 0.0001078
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 549,
+          "output_tokens": 658,
+          "reasoning_tokens": 271,
+          "latency_ms": 7486,
+          "cost_usd": 0.0008994
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1810,
+          "output_tokens": 433,
+          "reasoning_tokens": 194,
+          "latency_ms": 5512,
+          "cost_usd": 0.0008816
+        },
+        "ambiguity_gate": {
+          "calls": 3,
+          "input_tokens": 5518,
+          "output_tokens": 618,
+          "reasoning_tokens": 69,
+          "latency_ms": 9185,
+          "cost_usd": 0.00151508
+        }
+      }
+    },
+    {
+      "id": "network_1:9fb303e26199",
+      "db_id": "network_1",
+      "question": "How many likes correspond to each student id?",
+      "hardness": "medium",
+      "gold_sql": "SELECT student_id ,  count(*) FROM Likes GROUP BY student_id",
+      "generated_sql": "SELECT student_id, COUNT(*) AS like_count\nFROM Likes\nGROUP BY student_id;",
+      "result_match": false,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": "scorer_only",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "likes"
+        ],
+        "selected_tables": [
+          "friend",
+          "highschooler",
+          "likes"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "Friend",
+        "Highschooler",
+        "Likes"
+      ],
+      "gold_result": {
+        "columns": [
+          "student_id",
+          "count(*)"
+        ],
+        "row_count": 10,
+        "rows": [
+          {
+            "student_id": 1025,
+            "count(*)": 1
+          },
+          {
+            "student_id": 1247,
+            "count(*)": 1
+          },
+          {
+            "student_id": 1316,
+            "count(*)": 1
+          },
+          {
+            "student_id": 1501,
+            "count(*)": 1
+          },
+          {
+            "student_id": 1641,
+            "count(*)": 1
+          },
+          {
+            "student_id": 1689,
+            "count(*)": 1
+          },
+          {
+            "student_id": 1709,
+            "count(*)": 1
+          },
+          {
+            "student_id": 1782,
+            "count(*)": 1
+          }
+        ],
+        "truncated": true
+      },
+      "generated_result": {
+        "columns": [
+          "student_id",
+          "like_count"
+        ],
+        "row_count": 10,
+        "rows": [
+          {
+            "student_id": 1025,
+            "like_count": 1
+          },
+          {
+            "student_id": 1247,
+            "like_count": 1
+          },
+          {
+            "student_id": 1316,
+            "like_count": 1
+          },
+          {
+            "student_id": 1501,
+            "like_count": 1
+          },
+          {
+            "student_id": 1641,
+            "like_count": 1
+          },
+          {
+            "student_id": 1689,
+            "like_count": 1
+          },
+          {
+            "student_id": 1709,
+            "like_count": 1
+          },
+          {
+            "student_id": 1782,
+            "like_count": 1
+          }
+        ],
+        "truncated": true
+      },
+      "ambiguity": {
+        "status": "assumed",
+        "decision_why": "assumed_immaterial;candidates=2",
+        "reason": "The question could mean likes given by each student or likes received by each student.",
+        "assumption": "Assumed: Likes given by student",
+        "should_clarify": false,
+        "proposal_status": "ambiguous",
+        "options": [
+          "How many likes did each student ID receive?"
+        ],
+        "candidates": [
+          {
+            "label": "Likes given by student",
+            "question": "How many likes did each student ID give?",
+            "tables": [
+              "Likes"
+            ],
+            "columns": [
+              "Likes.student_id",
+              "Likes.liked_id"
+            ]
+          },
+          {
+            "label": "Likes received by student",
+            "question": "How many likes did each student ID receive?",
+            "tables": [
+              "Likes"
+            ],
+            "columns": [
+              "Likes.liked_id",
+              "Likes.student_id"
+            ]
+          }
+        ],
+        "selected": {
+          "label": "Likes given by student",
+          "question": "How many likes did each student ID give?",
+          "tables": [
+            "likes"
+          ],
+          "columns": [
+            "Likes.student_id",
+            "Likes.liked_id"
+          ]
+        },
+        "clusters": null,
+        "gate": null
+      },
+      "assumption": "Assumed: Likes given by student",
+      "elapsed_ms": 10197,
+      "cost_usd": 0.0010652,
+      "input_tokens": 2674,
+      "output_tokens": 442,
+      "reasoning_tokens": 154,
+      "cached_input_tokens": 0,
+      "calls": 3,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 339,
+          "output_tokens": 28,
+          "reasoning_tokens": 0,
+          "latency_ms": 4769,
+          "cost_usd": 0.0001014
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 541,
+          "output_tokens": 219,
+          "reasoning_tokens": 65,
+          "latency_ms": 2835,
+          "cost_usd": 0.000371
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1794,
+          "output_tokens": 195,
+          "reasoning_tokens": 89,
+          "latency_ms": 2420,
+          "cost_usd": 0.0005928
+        }
+      }
+    },
+    {
+      "id": "car_1:8b720fc8727c",
+      "db_id": "car_1",
+      "question": "In 1980, how many cars were made?",
+      "hardness": "medium",
+      "gold_sql": "SELECT count(*) FROM CARS_DATA WHERE YEAR  =  1980;",
+      "generated_sql": "SELECT COUNT(*) AS cars_made FROM cars_data WHERE Year = 1980;",
+      "result_match": false,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": "scorer_only",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "cars_data"
+        ],
+        "selected_tables": [
+          "car_makers",
+          "car_names",
+          "cars_data",
+          "continents",
+          "countries",
+          "model_list"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "car_makers",
+        "car_names",
+        "cars_data",
+        "continents",
+        "countries",
+        "model_list"
+      ],
+      "gold_result": {
+        "columns": [
+          "count(*)"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "count(*)": 29
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "cars_made"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "cars_made": 29
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "assumed",
+        "decision_why": "resolved_known;candidates=1",
+        "reason": "The schema supports counting cars_data records for a given Year, but it has no production-quantity column.",
+        "assumption": "Interpret \u201ccars made\u201d as the number of car records in cars_data with Year = 1980.",
+        "should_clarify": false,
+        "proposal_status": "assumed",
+        "options": [],
+        "candidates": [
+          {
+            "label": "Count 1980 car records",
+            "question": "How many car records in cars_data have Year = 1980?",
+            "tables": [
+              "cars_data"
+            ],
+            "columns": [
+              "cars_data.Year",
+              "cars_data.Id"
+            ]
+          }
+        ],
+        "selected": {
+          "label": "Count 1980 car records",
+          "question": "How many car records in cars_data have Year = 1980?",
+          "tables": [
+            "cars_data"
+          ],
+          "columns": [
+            "cars_data.Year",
+            "cars_data.Id"
+          ]
+        },
+        "clusters": null,
+        "gate": null
+      },
+      "assumption": "Interpret \u201ccars made\u201d as the number of car records in cars_data with Year = 1980.",
+      "elapsed_ms": 12648,
+      "cost_usd": 0.0015176,
+      "input_tokens": 4120,
+      "output_tokens": 578,
+      "reasoning_tokens": 306,
+      "cached_input_tokens": 0,
+      "calls": 3,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 341,
+          "output_tokens": 33,
+          "reasoning_tokens": 0,
+          "latency_ms": 3770,
+          "cost_usd": 0.0001078
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 781,
+          "output_tokens": 443,
+          "reasoning_tokens": 306,
+          "latency_ms": 6670,
+          "cost_usd": 0.0006878
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 2998,
+          "output_tokens": 102,
+          "reasoning_tokens": 0,
+          "latency_ms": 2007,
+          "cost_usd": 0.000722
+        }
+      }
+    }
+  ],
+  "accuracy": {
+    "overall": {
+      "n": 12,
+      "strict_correct": 4,
+      "values_correct": 9,
+      "lenient_correct": 9,
+      "strict_accuracy": 0.3333,
+      "values_accuracy": 0.75,
+      "lenient_accuracy": 0.75
+    },
+    "by_hardness": {
+      "easy": {
+        "n": 4,
+        "strict_correct": 2,
+        "values_correct": 2,
+        "lenient_correct": 2,
+        "strict_accuracy": 0.5,
+        "values_accuracy": 0.5,
+        "lenient_accuracy": 0.5
+      },
+      "extra": {
+        "n": 1,
+        "strict_correct": 1,
+        "values_correct": 1,
+        "lenient_correct": 1,
+        "strict_accuracy": 1.0,
+        "values_accuracy": 1.0,
+        "lenient_accuracy": 1.0
+      },
+      "hard": {
+        "n": 3,
+        "strict_correct": 0,
+        "values_correct": 2,
+        "lenient_correct": 2,
+        "strict_accuracy": 0.0,
+        "values_accuracy": 0.6667,
+        "lenient_accuracy": 0.6667
+      },
+      "medium": {
+        "n": 4,
+        "strict_correct": 1,
+        "values_correct": 4,
+        "lenient_correct": 4,
+        "strict_accuracy": 0.25,
+        "values_accuracy": 1.0,
+        "lenient_accuracy": 1.0
+      }
+    },
+    "by_database": {
+      "car_1": {
+        "n": 1,
+        "strict_correct": 0,
+        "values_correct": 1,
+        "lenient_correct": 1,
+        "strict_accuracy": 0.0,
+        "values_accuracy": 1.0,
+        "lenient_accuracy": 1.0
+      },
+      "dog_kennels": {
+        "n": 2,
+        "strict_correct": 0,
+        "values_correct": 0,
+        "lenient_correct": 0,
+        "strict_accuracy": 0.0,
+        "values_accuracy": 0.0,
+        "lenient_accuracy": 0.0
+      },
+      "employee_hire_evaluation": {
+        "n": 1,
+        "strict_correct": 1,
+        "values_correct": 1,
+        "lenient_correct": 1,
+        "strict_accuracy": 1.0,
+        "values_accuracy": 1.0,
+        "lenient_accuracy": 1.0
+      },
+      "museum_visit": {
+        "n": 2,
+        "strict_correct": 1,
+        "values_correct": 2,
+        "lenient_correct": 2,
+        "strict_accuracy": 0.5,
+        "values_accuracy": 1.0,
+        "lenient_accuracy": 1.0
+      },
+      "network_1": {
+        "n": 2,
+        "strict_correct": 1,
+        "values_correct": 2,
+        "lenient_correct": 2,
+        "strict_accuracy": 0.5,
+        "values_accuracy": 1.0,
+        "lenient_accuracy": 1.0
+      },
+      "orchestra": {
+        "n": 1,
+        "strict_correct": 1,
+        "values_correct": 1,
+        "lenient_correct": 1,
+        "strict_accuracy": 1.0,
+        "values_accuracy": 1.0,
+        "lenient_accuracy": 1.0
+      },
+      "tvshow": {
+        "n": 1,
+        "strict_correct": 0,
+        "values_correct": 0,
+        "lenient_correct": 0,
+        "strict_accuracy": 0.0,
+        "values_accuracy": 0.0,
+        "lenient_accuracy": 0.0
+      },
+      "wta_1": {
+        "n": 2,
+        "strict_correct": 0,
+        "values_correct": 2,
+        "lenient_correct": 2,
+        "strict_accuracy": 0.0,
+        "values_accuracy": 1.0,
+        "lenient_accuracy": 1.0
+      }
+    },
+    "failure_labels": {
+      "other": 1,
+      "wrong_table": 1,
+      "aggregation_or_grouping": 1
+    },
+    "schema_linking_recall": {
+      "n": 12,
+      "full_hit": 12,
+      "rate": 1.0
+    }
+  },
+  "totals": {
+    "cost_usd": 0.035681,
+    "elapsed_ms": 252495,
+    "input_tokens": 127320,
+    "output_tokens": 12164,
+    "reasoning_tokens": 3728,
+    "calls": 57,
+    "estimated_calls": 0,
+    "correct_strict": 4,
+    "correct_values": 9,
+    "n": 12
+  },
+  "by_stage": {
+    "intent_classifier": {
+      "calls": 12,
+      "input_tokens": 4129,
+      "output_tokens": 405,
+      "reasoning_tokens": 0,
+      "latency_ms": 64605,
+      "cost_usd": 0.0013118
+    },
+    "interpretation_resolver": {
+      "calls": 12,
+      "input_tokens": 10729,
+      "output_tokens": 4254,
+      "reasoning_tokens": 1543,
+      "latency_ms": 54142,
+      "cost_usd": 0.0072506
+    },
+    "query_generator": {
+      "calls": 13,
+      "input_tokens": 40739,
+      "output_tokens": 4124,
+      "reasoning_tokens": 1800,
+      "latency_ms": 62191,
+      "cost_usd": 0.0130966
+    },
+    "ambiguity_gate": {
+      "calls": 18,
+      "input_tokens": 68679,
+      "output_tokens": 3087,
+      "reasoning_tokens": 385,
+      "latency_ms": 56341,
+      "cost_usd": 0.01332522
+    },
+    "direct_response": {
+      "calls": 2,
+      "input_tokens": 3044,
+      "output_tokens": 294,
+      "reasoning_tokens": 0,
+      "latency_ms": 11537,
+      "cost_usd": 0.000697
+    }
+  },
+  "extrapolation": {
+    "spider_dev_1034": {
+      "n_questions": 1034,
+      "setup_cost_usd": 0.0,
+      "questions_cost_usd": 3.074532,
+      "total_cost_usd": 3.074532,
+      "avg_cost_per_question_usd": 0.002973,
+      "avg_latency_ms": 21041.2,
+      "estimated_total_latency_ms": 21756688.5
+    },
+    "bird_mini_dev_500": {
+      "n_questions": 500,
+      "setup_cost_usd": 0.0,
+      "questions_cost_usd": 1.486717,
+      "total_cost_usd": 1.486717,
+      "avg_cost_per_question_usd": 0.002973,
+      "avg_latency_ms": 21041.2,
+      "estimated_total_latency_ms": 10520661.0
+    }
+  },
+  "usage": {
+    "total_cost_usd": 0.03568122,
+    "total_calls": 57,
+    "estimated_calls": 0,
+    "by_stage": {
+      "intent_classifier": {
+        "calls": 12,
+        "input_tokens": 4129,
+        "output_tokens": 405,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 64605,
+        "cost_usd": 0.0013118,
+        "estimated_calls": 0
+      },
+      "interpretation_resolver": {
+        "calls": 12,
+        "input_tokens": 10729,
+        "output_tokens": 4254,
+        "reasoning_tokens": 1543,
+        "cached_input_tokens": 0,
+        "latency_ms": 54142,
+        "cost_usd": 0.0072506,
+        "estimated_calls": 0
+      },
+      "query_generator": {
+        "calls": 13,
+        "input_tokens": 40739,
+        "output_tokens": 4124,
+        "reasoning_tokens": 1800,
+        "cached_input_tokens": 0,
+        "latency_ms": 62191,
+        "cost_usd": 0.0130966,
+        "estimated_calls": 0
+      },
+      "ambiguity_gate": {
+        "calls": 18,
+        "input_tokens": 68679,
+        "output_tokens": 3087,
+        "reasoning_tokens": 385,
+        "cached_input_tokens": 22861,
+        "latency_ms": 56341,
+        "cost_usd": 0.01332522,
+        "estimated_calls": 0
+      },
+      "direct_response": {
+        "calls": 2,
+        "input_tokens": 3044,
+        "output_tokens": 294,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1470,
+        "latency_ms": 11537,
+        "cost_usd": 0.000697,
+        "estimated_calls": 0
+      }
+    },
+    "records": [
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "orchestra:c1d9e8230efa",
+        "label": "",
+        "input_tokens": 349,
+        "output_tokens": 34,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 7980,
+        "cost_usd": 0.0001106,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "orchestra:c1d9e8230efa",
+        "label": "",
+        "input_tokens": 664,
+        "output_tokens": 280,
+        "reasoning_tokens": 142,
+        "cached_input_tokens": 0,
+        "latency_ms": 4495,
+        "cost_usd": 0.0004688,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "orchestra:c1d9e8230efa",
+        "label": "",
+        "input_tokens": 2336,
+        "output_tokens": 102,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2457,
+        "cost_usd": 0.0005896,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "tvshow:9c7549d28457",
+        "label": "",
+        "input_tokens": 343,
+        "output_tokens": 33,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 7103,
+        "cost_usd": 0.0001082,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "tvshow:9c7549d28457",
+        "label": "",
+        "input_tokens": 1045,
+        "output_tokens": 170,
+        "reasoning_tokens": 45,
+        "cached_input_tokens": 0,
+        "latency_ms": 2782,
+        "cost_usd": 0.000413,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "tvshow:9c7549d28457",
+        "label": "",
+        "input_tokens": 3263,
+        "output_tokens": 775,
+        "reasoning_tokens": 512,
+        "cached_input_tokens": 0,
+        "latency_ms": 11653,
+        "cost_usd": 0.0015826,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "tvshow:9c7549d28457",
+        "label": "",
+        "input_tokens": 3485,
+        "output_tokens": 1213,
+        "reasoning_tokens": 787,
+        "cached_input_tokens": 0,
+        "latency_ms": 18091,
+        "cost_usd": 0.0021526,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "museum_visit:a8f4449a0292",
+        "label": "",
+        "input_tokens": 347,
+        "output_tokens": 33,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 6729,
+        "cost_usd": 0.000109,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "museum_visit:a8f4449a0292",
+        "label": "",
+        "input_tokens": 650,
+        "output_tokens": 257,
+        "reasoning_tokens": 76,
+        "cached_input_tokens": 0,
+        "latency_ms": 3180,
+        "cost_usd": 0.0004384,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "museum_visit:a8f4449a0292",
+        "label": "",
+        "input_tokens": 2081,
+        "output_tokens": 299,
+        "reasoning_tokens": 105,
+        "cached_input_tokens": 0,
+        "latency_ms": 3574,
+        "cost_usd": 0.000775,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "museum_visit:51b3b0701af1",
+        "label": "",
+        "input_tokens": 346,
+        "output_tokens": 40,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1686,
+        "cost_usd": 0.0001172,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "museum_visit:51b3b0701af1",
+        "label": "",
+        "input_tokens": 649,
+        "output_tokens": 207,
+        "reasoning_tokens": 73,
+        "cached_input_tokens": 0,
+        "latency_ms": 3407,
+        "cost_usd": 0.0003782,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "museum_visit:51b3b0701af1",
+        "label": "",
+        "input_tokens": 2065,
+        "output_tokens": 140,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2441,
+        "cost_usd": 0.000581,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "wta_1:cd5d550d595b",
+        "label": "",
+        "input_tokens": 337,
+        "output_tokens": 27,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1416,
+        "cost_usd": 9.98e-05,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "wta_1:cd5d550d595b",
+        "label": "",
+        "input_tokens": 924,
+        "output_tokens": 380,
+        "reasoning_tokens": 105,
+        "cached_input_tokens": 0,
+        "latency_ms": 4415,
+        "cost_usd": 0.0006408,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "wta_1:cd5d550d595b",
+        "label": "",
+        "input_tokens": 3874,
+        "output_tokens": 82,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1918,
+        "cost_usd": 0.0008732,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "wta_1:cd5d550d595b",
+        "label": "",
+        "input_tokens": 3901,
+        "output_tokens": 82,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1285,
+        "cost_usd": 0.0008786,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "wta_1:cd5d550d595b",
+        "label": "",
+        "input_tokens": 3908,
+        "output_tokens": 71,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1500,
+        "cost_usd": 0.0008668,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "wta_1:cd5d550d595b",
+        "label": "",
+        "input_tokens": 3901,
+        "output_tokens": 82,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 3898,
+        "latency_ms": 1271,
+        "cost_usd": 0.00017696,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "wta_1:c19e68320451",
+        "label": "",
+        "input_tokens": 348,
+        "output_tokens": 40,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 5590,
+        "cost_usd": 0.0001176,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "wta_1:c19e68320451",
+        "label": "",
+        "input_tokens": 935,
+        "output_tokens": 353,
+        "reasoning_tokens": 151,
+        "cached_input_tokens": 0,
+        "latency_ms": 4496,
+        "cost_usd": 0.0006106,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "wta_1:c19e68320451",
+        "label": "",
+        "input_tokens": 3899,
+        "output_tokens": 145,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2095,
+        "cost_usd": 0.0009538,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "wta_1:c19e68320451",
+        "label": "",
+        "input_tokens": 3926,
+        "output_tokens": 343,
+        "reasoning_tokens": 114,
+        "cached_input_tokens": 0,
+        "latency_ms": 4151,
+        "cost_usd": 0.0011968,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "wta_1:c19e68320451",
+        "label": "",
+        "input_tokens": 3933,
+        "output_tokens": 143,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2376,
+        "cost_usd": 0.0009582,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "wta_1:c19e68320451",
+        "label": "",
+        "input_tokens": 3926,
+        "output_tokens": 162,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 3923,
+        "latency_ms": 2273,
+        "cost_usd": 0.00027346,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "employee_hire_evaluation:eac8f8ebf62c",
+        "label": "",
+        "input_tokens": 338,
+        "output_tokens": 34,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 9259,
+        "cost_usd": 0.0001084,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "employee_hire_evaluation:eac8f8ebf62c",
+        "label": "",
+        "input_tokens": 797,
+        "output_tokens": 637,
+        "reasoning_tokens": 131,
+        "cached_input_tokens": 0,
+        "latency_ms": 6005,
+        "cost_usd": 0.0009238,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "employee_hire_evaluation:eac8f8ebf62c",
+        "label": "",
+        "input_tokens": 2465,
+        "output_tokens": 95,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1671,
+        "cost_usd": 0.000607,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "employee_hire_evaluation:eac8f8ebf62c",
+        "label": "",
+        "input_tokens": 2492,
+        "output_tokens": 93,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1643,
+        "cost_usd": 0.00061,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "employee_hire_evaluation:eac8f8ebf62c",
+        "label": "",
+        "input_tokens": 2499,
+        "output_tokens": 90,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 8339,
+        "cost_usd": 0.0006078,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "employee_hire_evaluation:eac8f8ebf62c",
+        "label": "",
+        "input_tokens": 2492,
+        "output_tokens": 92,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 2489,
+        "latency_ms": 2063,
+        "cost_usd": 0.00016078,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "dog_kennels:6cba083ac1ce",
+        "label": "",
+        "input_tokens": 342,
+        "output_tokens": 30,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 7996,
+        "cost_usd": 0.0001044,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "dog_kennels:6cba083ac1ce",
+        "label": "",
+        "input_tokens": 1592,
+        "output_tokens": 323,
+        "reasoning_tokens": 102,
+        "cached_input_tokens": 0,
+        "latency_ms": 4258,
+        "cost_usd": 0.000706,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "dog_kennels:6cba083ac1ce",
+        "label": "",
+        "input_tokens": 5325,
+        "output_tokens": 246,
+        "reasoning_tokens": 54,
+        "cached_input_tokens": 0,
+        "latency_ms": 3847,
+        "cost_usd": 0.0013602,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "dog_kennels:6cba083ac1ce",
+        "label": "",
+        "input_tokens": 5352,
+        "output_tokens": 142,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2343,
+        "cost_usd": 0.0012408,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "dog_kennels:6cba083ac1ce",
+        "label": "",
+        "input_tokens": 5359,
+        "output_tokens": 147,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 4584,
+        "cost_usd": 0.0012482,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "dog_kennels:6cba083ac1ce",
+        "label": "",
+        "input_tokens": 5352,
+        "output_tokens": 189,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 5349,
+        "latency_ms": 2571,
+        "cost_usd": 0.00033438,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "direct_response",
+        "case_id": "dog_kennels:6cba083ac1ce",
+        "label": "",
+        "input_tokens": 1517,
+        "output_tokens": 96,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1911,
+        "cost_usd": 0.0004186,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "dog_kennels:d66eb9ded2a4",
+        "label": "",
+        "input_tokens": 352,
+        "output_tokens": 41,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 5682,
+        "cost_usd": 0.0001196,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "dog_kennels:d66eb9ded2a4",
+        "label": "",
+        "input_tokens": 1602,
+        "output_tokens": 327,
+        "reasoning_tokens": 76,
+        "cached_input_tokens": 0,
+        "latency_ms": 4113,
+        "cost_usd": 0.0007128,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "dog_kennels:d66eb9ded2a4",
+        "label": "",
+        "input_tokens": 5344,
+        "output_tokens": 297,
+        "reasoning_tokens": 59,
+        "cached_input_tokens": 0,
+        "latency_ms": 4505,
+        "cost_usd": 0.0014252,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "dog_kennels:d66eb9ded2a4",
+        "label": "",
+        "input_tokens": 5371,
+        "output_tokens": 348,
+        "reasoning_tokens": 123,
+        "cached_input_tokens": 0,
+        "latency_ms": 5498,
+        "cost_usd": 0.0014918,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "dog_kennels:d66eb9ded2a4",
+        "label": "",
+        "input_tokens": 5378,
+        "output_tokens": 181,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2895,
+        "cost_usd": 0.0012928,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "dog_kennels:d66eb9ded2a4",
+        "label": "",
+        "input_tokens": 5371,
+        "output_tokens": 304,
+        "reasoning_tokens": 79,
+        "cached_input_tokens": 5368,
+        "latency_ms": 4364,
+        "cost_usd": 0.00047276,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "direct_response",
+        "case_id": "dog_kennels:d66eb9ded2a4",
+        "label": "",
+        "input_tokens": 1527,
+        "output_tokens": 198,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1470,
+        "latency_ms": 9626,
+        "cost_usd": 0.0002784,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "network_1:76c75a92d3d7",
+        "label": "",
+        "input_tokens": 347,
+        "output_tokens": 32,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2625,
+        "cost_usd": 0.0001078,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "network_1:76c75a92d3d7",
+        "label": "",
+        "input_tokens": 549,
+        "output_tokens": 658,
+        "reasoning_tokens": 271,
+        "cached_input_tokens": 0,
+        "latency_ms": 7486,
+        "cost_usd": 0.0008994,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "network_1:76c75a92d3d7",
+        "label": "",
+        "input_tokens": 1810,
+        "output_tokens": 433,
+        "reasoning_tokens": 194,
+        "cached_input_tokens": 0,
+        "latency_ms": 5512,
+        "cost_usd": 0.0008816,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "network_1:76c75a92d3d7",
+        "label": "",
+        "input_tokens": 1837,
+        "output_tokens": 191,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2603,
+        "cost_usd": 0.0005966,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "network_1:76c75a92d3d7",
+        "label": "",
+        "input_tokens": 1844,
+        "output_tokens": 126,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2225,
+        "cost_usd": 0.00052,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "network_1:76c75a92d3d7",
+        "label": "",
+        "input_tokens": 1837,
+        "output_tokens": 301,
+        "reasoning_tokens": 69,
+        "cached_input_tokens": 1834,
+        "latency_ms": 4357,
+        "cost_usd": 0.00039848,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "network_1:9fb303e26199",
+        "label": "",
+        "input_tokens": 339,
+        "output_tokens": 28,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 4769,
+        "cost_usd": 0.0001014,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "network_1:9fb303e26199",
+        "label": "",
+        "input_tokens": 541,
+        "output_tokens": 219,
+        "reasoning_tokens": 65,
+        "cached_input_tokens": 0,
+        "latency_ms": 2835,
+        "cost_usd": 0.000371,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "network_1:9fb303e26199",
+        "label": "",
+        "input_tokens": 1794,
+        "output_tokens": 195,
+        "reasoning_tokens": 89,
+        "cached_input_tokens": 0,
+        "latency_ms": 2420,
+        "cost_usd": 0.0005928,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "intent_classifier",
+        "case_id": "car_1:8b720fc8727c",
+        "label": "",
+        "input_tokens": 341,
+        "output_tokens": 33,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 3770,
+        "cost_usd": 0.0001078,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "interpretation_resolver",
+        "case_id": "car_1:8b720fc8727c",
+        "label": "",
+        "input_tokens": 781,
+        "output_tokens": 443,
+        "reasoning_tokens": 306,
+        "cached_input_tokens": 0,
+        "latency_ms": 6670,
+        "cost_usd": 0.0006878,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "car_1:8b720fc8727c",
+        "label": "",
+        "input_tokens": 2998,
+        "output_tokens": 102,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2007,
+        "cost_usd": 0.000722,
+        "estimated": false
+      }
+    ]
+  }
+}

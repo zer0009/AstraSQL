@@ -47,8 +47,10 @@ def list_database_types() -> list[str]:
 
 def provider_from_connection(connection: Connection) -> BaseDatabaseProvider:
     """Build a database provider from a Connection ORM row (decrypts password)."""
+    from src.config.settings import get_settings
     from src.storage.crypto import decrypt_password
 
+    settings = get_settings()
     return get_database_provider(
         connection.db_type,
         host=connection.host,
@@ -57,4 +59,5 @@ def provider_from_connection(connection: Connection) -> BaseDatabaseProvider:
         username=connection.username,
         password=decrypt_password(connection.encrypted_password),
         ssl_enabled=bool(connection.ssl_enabled),
+        query_timeout_seconds=settings.query_timeout_seconds,
     )

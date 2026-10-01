@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import asyncio
 import json
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Callable, Optional
@@ -11,13 +13,27 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.agent.catalog import identity_keys_from_tables, serialize_keys
+from src.agent.verified_cache import find_verified_sql, token_overlap
 from src.config.settings import get_settings
 from src.context.business_rules import BusinessRulesStore
 from src.context.golden_records import GoldenRecordsStore
-from src.context.schema_enrichment import SchemaEnrichmentStore
+from src.context.relationships import shortest_join_path
+from src.context.schema_enrichment import (
+    SchemaEnrichmentStore,
+    discover_and_merge_relationships,
+)
 from src.context.schema_linker import SchemaLinker
+from src.context.semantic_layer import append_semantic_to_rules, parse_semantic_layer
+from src.context.value_grounding import (
+    build_value_index,
+    extract_literals,
+    format_value_hints,
+    match_literals_to_values,
+)
 from src.providers.database.base import BaseDatabaseProvider
 from src.storage.models import Connection, SchemaCache
+
+logger = logging.getLogger(__name__)
 
 # Cap how many FK-neighbor tables we add after fine_select.
 _FK_EXPAND_MAX_EXTRA = 15
@@ -33,6 +49,162 @@ _FORCE_FACT_FK_MAX = 8
 _LABEL_COLUMN_NAMES = frozenset(
     {"name", "title", "label", "code", "display_name", "displayname"}
 )
+# Name-like columns to keep when expanding sparse fine_select on huge schemas.
+_NAME_LIKE_COLUMNS = frozenset(
+    {
+        "name",
+        "title",
+        "label",
+        "code",
+        "description",
+        "display_name",
+        "displayname",
+        "fullname",
+        "slug",
+    }
+)
+# Cap intermediate join tables added via relationship shortest-path.
+_JOIN_PATH_EXPAND_MAX = 12
+
+
+def _approx_tokens(text: str) -> int:
+    """Rough token estimate (~4 chars per token) for schema budget checks."""
+    return max(0, len(text or "") // 4)
+
+
+def group_tables_by_pattern(table_names: list[str]) -> dict[str, list[str]]:
+    """Group tables that share a prefix/suffix pattern (e.g. sales_2020, sales_2021).
+
+    Strips trailing year/numeric/date-like segments and groups by the remaining
+    stem. Singleton groups are omitted.
+    """
+    import re
+
+    groups: dict[str, list[str]] = {}
+    for name in table_names:
+        if not name:
+            continue
+        stem = re.sub(
+            r"([_\-]?(?:19|20)\d{2}|[_\-]?\d{4}[_\-]?\d{2}(?:[_\-]?\d{2})?|[_\-]?\d+)$",
+            "",
+            name,
+            flags=re.IGNORECASE,
+        ).rstrip("_-")
+        if not stem or stem == name:
+            continue
+        groups.setdefault(stem.lower(), []).append(name)
+    return {k: sorted(v) for k, v in groups.items() if len(v) >= 2}
+
+
+def _expand_columns_for_huge_schema(
+    selected_tables: list[str],
+    cache_by_name: dict[str, SchemaCache],
+) -> list[dict]:
+    """When fine_select returns no columns on huge schemas, keep PK/FK + name-like."""
+    selected_columns: list[dict] = []
+    for name in selected_tables:
+        cache = cache_by_name.get(name)
+        columns = _safe_json_loads(
+            cache.columns_json if cache else None, default=[]
+        ) or []
+        for col in columns:
+            if not isinstance(col, dict):
+                continue
+            col_name = col.get("name") or col.get("column_name")
+            if not col_name:
+                continue
+            lower = str(col_name).lower()
+            keep = (
+                bool(col.get("primary_key"))
+                or bool(col.get("foreign_key"))
+                or lower in _NAME_LIKE_COLUMNS
+                or lower.endswith("_name")
+                or lower.endswith("_code")
+            )
+            if keep:
+                selected_columns.append({"table": name, "column": str(col_name)})
+    return selected_columns
+
+
+def _relationship_edges_from_connection(
+    connection: Connection | None,
+    cache_by_name: dict[str, SchemaCache],
+) -> list[dict]:
+    """Load relationship edges from semantic layer, falling back to declared FKs."""
+    edges: list[dict] = []
+    if connection is not None:
+        layer = parse_semantic_layer(getattr(connection, "semantic_layer_json", None))
+        rels = layer.get("relationships") or []
+        if isinstance(rels, list):
+            for e in rels:
+                if isinstance(e, dict):
+                    edges.append(e)
+    if edges:
+        return edges
+
+    # Fallback: structural FKs from schema cache.
+    for tname, cache in cache_by_name.items():
+        columns = _safe_json_loads(cache.columns_json, default=[]) or []
+        for col in columns:
+            if not isinstance(col, dict):
+                continue
+            fk = col.get("foreign_key")
+            if not isinstance(fk, dict):
+                continue
+            cname = col.get("name") or col.get("column_name")
+            tt = fk.get("table") or fk.get("foreign_table_name")
+            tc = fk.get("column") or fk.get("foreign_column_name")
+            if cname and tt and tc:
+                edges.append(
+                    {
+                        "from_table": tname,
+                        "from_col": str(cname),
+                        "to_table": str(tt),
+                        "to_col": str(tc),
+                        "status": "approved",
+                        "score": 1.0,
+                        "evidence": ["declared_fk"],
+                    }
+                )
+    return edges
+
+
+def _expand_via_join_paths(
+    selected_tables: list[str],
+    edges: list[dict],
+    *,
+    max_extra: int = _JOIN_PATH_EXPAND_MAX,
+) -> list[str]:
+    """Add intermediate tables needed to connect selected tables via relationships."""
+    if len(selected_tables) < 2 or not edges or max_extra <= 0:
+        return list(selected_tables)
+
+    ordered = list(selected_tables)
+    selected_set = set(ordered)
+    remaining = max_extra
+
+    # Connect each subsequent selected table back to the growing component.
+    component = {ordered[0]}
+    for dest in ordered[1:]:
+        if dest in component:
+            continue
+        path = shortest_join_path(edges, component, {dest})
+        for edge in path:
+            if remaining <= 0:
+                break
+            # edge: (from_table, from_col, to_table, to_col)
+            for node in (edge[0], edge[2]):
+                if node not in selected_set:
+                    selected_set.add(node)
+                    ordered.append(node)
+                    remaining -= 1
+                    if remaining <= 0:
+                        break
+            component.add(edge[0])
+            component.add(edge[2])
+        component.add(dest)
+
+    return ordered
 
 
 def _dynamic_faiss_top_k(table_count: int, default: int) -> int:
@@ -243,6 +415,10 @@ def _expand_fk_targets(
     return ordered
 
 
+# Near-exact golden match threshold for verified_sql injection.
+_VERIFIED_SQL_OVERLAP = 0.92
+
+
 @dataclass
 class RetrievedContext:
     enriched_schema: str
@@ -254,7 +430,12 @@ class RetrievedContext:
     used_golden: bool = False
     golden_sqls: list[str] = field(default_factory=list)
     golden_questions: list[str] = field(default_factory=list)
+    verified_sql: str = ""
     steps: list[dict] = field(default_factory=list)
+    # Compact digest inputs (from SchemaCache columns_json + enrichments).
+    fk_edges: list[tuple[str, str, str, str]] = field(default_factory=list)
+    column_types: dict[str, dict[str, str]] = field(default_factory=dict)
+    example_values: dict[str, dict[str, list]] = field(default_factory=dict)
 
 
 def _safe_json_loads(raw: Optional[str], default: Any = None) -> Any:
@@ -381,9 +562,16 @@ async def _expand_link_query(question: str) -> str:
 
         from src.providers.llm import get_llm_provider
 
+        settings = get_settings()
+        model_name = (
+            (settings.expansion_model or "").strip()
+            or (settings.enrichment_model or "").strip()
+            or None
+        )
         chat = get_llm_provider().get_chat_model(
             temperature=0.0,
             max_tokens=256,
+            model=model_name,
         )
         response = await chat.ainvoke(
             [
@@ -519,6 +707,57 @@ async def scan_connection_schema(
         linker = SchemaLinker()
         await linker.build_table_index(session, connection.id)
 
+    # Best-effort value grounding for low-cardinality string columns.
+    try:
+        from src.context.value_grounding import populate_example_values
+
+        _progress(
+            phase="value_grounding",
+            message="Sampling distinct values for categorical columns…",
+            current_table=None,
+        )
+        await populate_example_values(
+            session, connection.id, upserted, db_provider
+        )
+    except Exception:
+        logger.exception(
+            "Value grounding failed for connection %s (scan kept)",
+            connection.id,
+        )
+
+    # Best-effort relationship discovery → semantic_layer_json.
+    settings = get_settings()
+    if settings.relationship_discovery_enabled:
+        try:
+            _progress(
+                phase="relationships",
+                message="Discovering join relationships…",
+                current_table=None,
+            )
+            tables_data: list[dict[str, Any]] = []
+            for name, _ddl, columns_json, sample_rows_json in remote:
+                tables_data.append(
+                    {
+                        "table_name": name,
+                        "columns": _safe_json_loads(columns_json, default=[]) or [],
+                        "sample_rows": _safe_json_loads(sample_rows_json, default=[])
+                        or [],
+                    }
+                )
+            await discover_and_merge_relationships(
+                session,
+                connection,
+                tables_data,
+                db_provider,
+                auto_approve=settings.relationship_auto_approve,
+                max_probes=50,
+            )
+        except Exception:
+            logger.exception(
+                "Relationship discovery failed for connection %s (scan kept)",
+                connection.id,
+            )
+
     _progress(
         phase="done",
         message=f"Scan complete — {len(upserted)} tables",
@@ -577,143 +816,348 @@ class ContextRetriever:
         cache_by_name = {c.table_name: c for c in caches}
         known_tables = set(all_table_names)
 
-        # 2. SchemaLinker coarse + fine (history-aware + semantic expansion)
-        link_query = _build_link_query(question, conversation_history)
-        expanded_query = await _expand_link_query(link_query)
+        # Prefetch full enriched schema for token-budget / full-schema policy.
+        tables_data_all: list[dict[str, Any]] = []
+        for name in all_table_names:
+            cache = cache_by_name.get(name)
+            tables_data_all.append(
+                {
+                    "table_name": name,
+                    "columns": _safe_json_loads(
+                        cache.columns_json if cache else None, default=[]
+                    )
+                    or [],
+                    "sample_rows": _safe_json_loads(
+                        cache.sample_rows_json if cache else None, default=[]
+                    )
+                    or [],
+                }
+            )
+        full_schema_text = await self.enrichments.format_enriched_schema(
+            session, connection_id, tables_data_all
+        )
+        full_tokens = _approx_tokens(full_schema_text)
+        link_mode = (self._settings.schema_link_mode or "auto").strip().lower()
+        token_budget = int(self._settings.schema_full_token_budget)
+        use_full_schema = link_mode == "full" or (
+            link_mode == "auto" and full_tokens <= token_budget
+        )
+        # "Huge" -> prefer FAISS coarse without LLM fine_select.
+        large_threshold = int(self._settings.large_schema_table_threshold)
+        schema_is_huge = (
+            len(all_table_names) >= large_threshold or full_tokens > token_budget
+        )
+        # Pattern groups (partitioned/yearly tables) for coarse recall hints.
+        table_patterns = group_tables_by_pattern(all_table_names)
+
         history_text = _format_history_for_linker(conversation_history)
         prior_tables = _prior_tables_from_history(
             conversation_history, known_tables
         )
+        selected_tables: list[str] = []
+        selected_columns: list[dict] = []
+        skip_fk_expand = False
+        # Golden FAISS search is independent of expansion; gather when both run.
+        golden_hits: list[dict[str, str]] | None = None
 
-        top_k = _dynamic_faiss_top_k(
-            len(all_table_names),
-            self._settings.faiss_top_k_tables,
-        )
-        candidates = await self.linker.coarse_filter(
-            connection_id,
-            expanded_query,
-            all_table_names,
-            top_k=top_k,
-        )
-        # Keep prior-turn fact tables even if FAISS dropped them this turn.
-        for name in prior_tables:
-            if name not in candidates:
-                candidates.append(name)
-
-        steps.append(
-            {
-                "step": "schema_coarse",
-                "detail": (
-                    f"Coarse filter selected {len(candidates)} of "
-                    f"{len(all_table_names)} tables (top_k={top_k})"
-                    + (
-                        f" (+{len(prior_tables)} from prior SQL)"
-                        if prior_tables
-                        else ""
-                    )
-                ),
-                "tables": candidates,
-                "prior_tables": prior_tables,
-                "expanded_query": expanded_query[:300],
-            }
-        )
-
-        candidate_payload: list[dict[str, Any]] = []
-        for name in candidates:
-            cache = cache_by_name.get(name)
-            columns = _safe_json_loads(
-                cache.columns_json if cache else None, default=[]
-            ) or []
-            table_enrich = enrich_map.get(name, {})
-            col_enrich = table_enrich.get("columns") or {}
-            enriched_cols = []
-            for col in columns:
-                col_name = col.get("name") or col.get("column_name")
-                meta = col_enrich.get(col_name, {}) if col_name else {}
-                enriched_cols.append(
+        if use_full_schema:
+            if schema_is_huge:
+                link_query = _build_link_query(question, conversation_history)
+                expanded_query, golden_hits = await asyncio.gather(
+                    _expand_link_query(link_query),
+                    self.golden.search(
+                        session,
+                        connection_id,
+                        question,
+                        top_k=self._settings.golden_records_top_k,
+                    ),
+                )
+                top_k = _dynamic_faiss_top_k(
+                    len(all_table_names),
+                    self._settings.faiss_top_k_tables,
+                )
+                selected_tables = await self.linker.coarse_filter(
+                    connection_id,
+                    expanded_query,
+                    all_table_names,
+                    top_k=top_k,
+                )
+                for name in prior_tables:
+                    if name not in selected_tables:
+                        selected_tables.append(name)
+                if table_patterns and selected_tables:
+                    selected_lower = {t.lower() for t in selected_tables}
+                    for members in table_patterns.values():
+                        if any(m.lower() in selected_lower for m in members):
+                            for m in members:
+                                if m not in selected_tables:
+                                    selected_tables.append(m)
+                steps.append(
                     {
-                        **col,
-                        "description": meta.get("description")
-                        or col.get("description"),
+                        "step": "schema_coarse",
+                        "detail": (
+                            f"Full/auto path (huge schema): FAISS coarse only, "
+                            f"{len(selected_tables)}/{len(all_table_names)} tables "
+                            f"(~{full_tokens} tokens, budget={token_budget}, "
+                            f"mode={link_mode}; skipped fine_select)"
+                        ),
+                        "tables": selected_tables,
+                        "prior_tables": prior_tables,
+                        "expanded_query": expanded_query[:300],
+                        "schema_link_mode": link_mode,
+                        "approx_tokens": full_tokens,
                     }
                 )
-            candidate_payload.append(
-                {
-                    "name": name,
-                    "table_name": name,
-                    "description": table_enrich.get("description") or "",
-                    "columns": enriched_cols,
-                }
-            )
-
-        fine = await self.linker.fine_select(
-            question,
-            candidate_payload,
-            conversation_history=history_text,
-        )
-        selected_tables: list[str] = fine.get("tables") or []
-        selected_columns: list[dict] = fine.get("columns") or []
-
-        # Union prior SQL tables into the fine-selected set before FK expand.
-        for name in prior_tables:
-            if name not in selected_tables:
-                selected_tables.append(name)
-
-        steps.append(
-            {
-                "step": "schema_fine",
-                "detail": (
-                    f"Fine select linked {len(selected_tables)} tables, "
-                    f"{len(selected_columns)} columns"
+            else:
+                selected_tables = list(all_table_names)
+                skip_fk_expand = True
+                steps.append(
+                    {
+                        "step": "schema_full",
+                        "detail": (
+                            f"Passing full schema ({len(selected_tables)} tables, "
+                            f"~{full_tokens} tokens <= budget {token_budget}; "
+                            f"mode={link_mode}; skipped fine_select)"
+                        ),
+                        "tables": selected_tables,
+                        "schema_link_mode": link_mode,
+                        "approx_tokens": full_tokens,
+                    }
+                )
+        else:
+            # faiss mode, or auto over budget -> FAISS + LLM fine_select
+            link_query = _build_link_query(question, conversation_history)
+            expanded_query, golden_hits = await asyncio.gather(
+                _expand_link_query(link_query),
+                self.golden.search(
+                    session,
+                    connection_id,
+                    question,
+                    top_k=self._settings.golden_records_top_k,
                 ),
-                "tables": selected_tables,
-                "columns": selected_columns,
-            }
-        )
+            )
 
-        before_expand = list(selected_tables)
-        fk_indegree = _build_fk_indegree(cache_by_name)
-        forced = _force_fact_fk_targets(
-            selected_tables,
-            cache_by_name,
-            fk_indegree,
-            max_force=_FORCE_FACT_FK_MAX,
-            min_outgoing=_FACT_TABLE_MIN_OUTGOING_FKS,
-        )
-        if forced:
-            selected_tables = list(selected_tables) + forced
+            top_k = _dynamic_faiss_top_k(
+                len(all_table_names),
+                self._settings.faiss_top_k_tables,
+            )
+            candidates = await self.linker.coarse_filter(
+                connection_id,
+                expanded_query,
+                all_table_names,
+                top_k=top_k,
+            )
+            for name in prior_tables:
+                if name not in candidates:
+                    candidates.append(name)
+
             steps.append(
                 {
-                    "step": "schema_fact_fk_force",
+                    "step": "schema_coarse",
                     "detail": (
-                        f"Force-included {len(forced)} high in-degree "
-                        f"FK target(s) from fact tables "
-                        f"(cap {_FORCE_FACT_FK_MAX})"
+                        f"Coarse filter selected {len(candidates)} of "
+                        f"{len(all_table_names)} tables (top_k={top_k}, "
+                        f"mode={link_mode}, ~{full_tokens} tokens)"
+                        + (
+                            f" (+{len(prior_tables)} from prior SQL)"
+                            if prior_tables
+                            else ""
+                        )
                     ),
-                    "tables": forced,
+                    "tables": candidates,
+                    "prior_tables": prior_tables,
+                    "expanded_query": expanded_query[:300],
+                    "schema_link_mode": link_mode,
+                    "approx_tokens": full_tokens,
                 }
             )
 
-        selected_tables = _expand_fk_targets(
-            selected_tables,
-            cache_by_name,
-            fk_indegree=fk_indegree,
-            max_extra=_FK_EXPAND_MAX_EXTRA,
-            max_depth=_FK_EXPAND_MAX_DEPTH,
-        )
-        added_fk = [t for t in selected_tables if t not in before_expand]
-        if added_fk:
+            candidate_payload: list[dict[str, Any]] = []
+            for name in candidates:
+                cache = cache_by_name.get(name)
+                columns = _safe_json_loads(
+                    cache.columns_json if cache else None, default=[]
+                ) or []
+                table_enrich = enrich_map.get(name, {})
+                col_enrich = table_enrich.get("columns") or {}
+                enriched_cols = []
+                for col in columns:
+                    col_name = col.get("name") or col.get("column_name")
+                    meta = col_enrich.get(col_name, {}) if col_name else {}
+                    enriched_cols.append(
+                        {
+                            **col,
+                            "description": meta.get("description")
+                            or col.get("description"),
+                        }
+                    )
+                candidate_payload.append(
+                    {
+                        "name": name,
+                        "table_name": name,
+                        "description": table_enrich.get("description") or "",
+                        "columns": enriched_cols,
+                    }
+                )
+
+            fine = await self.linker.fine_select(
+                question,
+                candidate_payload,
+                conversation_history=history_text,
+            )
+            selected_tables = fine.get("tables") or []
+            selected_columns = fine.get("columns") or []
+
+            for name in prior_tables:
+                if name not in selected_tables:
+                    selected_tables.append(name)
+
+            # Huge schemas: if fine_select left columns empty, expand PK/FK + name-like.
+            if (
+                schema_is_huge
+                and selected_tables
+                and not selected_columns
+            ):
+                selected_columns = _expand_columns_for_huge_schema(
+                    selected_tables, cache_by_name
+                )
+                if selected_columns:
+                    steps.append(
+                        {
+                            "step": "schema_column_expand",
+                            "detail": (
+                                f"Expanded {len(selected_columns)} PK/FK/name-like "
+                                f"columns for huge schema "
+                                f"(threshold={large_threshold})"
+                            ),
+                        }
+                    )
+
+            # Include patterned siblings when any member is selected (e.g. sales_2021).
+            if table_patterns and selected_tables:
+                selected_lower = {t.lower() for t in selected_tables}
+                pattern_added: list[str] = []
+                for members in table_patterns.values():
+                    if any(m.lower() in selected_lower for m in members):
+                        for m in members:
+                            if m not in selected_tables:
+                                selected_tables.append(m)
+                                pattern_added.append(m)
+                if pattern_added:
+                    steps.append(
+                        {
+                            "step": "schema_pattern_expand",
+                            "detail": (
+                                f"Added {len(pattern_added)} patterned sibling "
+                                f"table(s)"
+                            ),
+                            "tables": pattern_added[:20],
+                        }
+                    )
+
             steps.append(
                 {
-                    "step": "schema_fk_expand",
+                    "step": "schema_fine",
                     "detail": (
-                        f"Added {len(added_fk)} FK neighbor table(s) "
-                        f"(BFS depth={_FK_EXPAND_MAX_DEPTH}, "
-                        f"in-degree-ranked, cap {_FK_EXPAND_MAX_EXTRA})"
+                        f"Fine select linked {len(selected_tables)} tables, "
+                        f"{len(selected_columns)} columns"
                     ),
-                    "tables": added_fk,
+                    "tables": selected_tables,
+                    "columns": selected_columns,
                 }
             )
+
+        # Also expand columns on FAISS-only huge path when columns are empty.
+        if (
+            schema_is_huge
+            and selected_tables
+            and not selected_columns
+            and use_full_schema
+        ):
+            selected_columns = _expand_columns_for_huge_schema(
+                selected_tables, cache_by_name
+            )
+            if selected_columns:
+                steps.append(
+                    {
+                        "step": "schema_column_expand",
+                        "detail": (
+                            f"Expanded {len(selected_columns)} PK/FK/name-like "
+                            f"columns for huge FAISS path "
+                            f"(threshold={large_threshold})"
+                        ),
+                    }
+                )
+
+        if not skip_fk_expand:
+            before_expand = list(selected_tables)
+            fk_indegree = _build_fk_indegree(cache_by_name)
+            forced = _force_fact_fk_targets(
+                selected_tables,
+                cache_by_name,
+                fk_indegree,
+                max_force=_FORCE_FACT_FK_MAX,
+                min_outgoing=_FACT_TABLE_MIN_OUTGOING_FKS,
+            )
+            if forced:
+                selected_tables = list(selected_tables) + forced
+                steps.append(
+                    {
+                        "step": "schema_fact_fk_force",
+                        "detail": (
+                            f"Force-included {len(forced)} high in-degree "
+                            f"FK target(s) from fact tables "
+                            f"(cap {_FORCE_FACT_FK_MAX})"
+                        ),
+                        "tables": forced,
+                    }
+                )
+
+            selected_tables = _expand_fk_targets(
+                selected_tables,
+                cache_by_name,
+                fk_indegree=fk_indegree,
+                max_extra=_FK_EXPAND_MAX_EXTRA,
+                max_depth=_FK_EXPAND_MAX_DEPTH,
+            )
+            added_fk = [t for t in selected_tables if t not in before_expand]
+            if added_fk:
+                steps.append(
+                    {
+                        "step": "schema_fk_expand",
+                        "detail": (
+                            f"Added {len(added_fk)} FK neighbor table(s) "
+                            f"(BFS depth={_FK_EXPAND_MAX_DEPTH}, "
+                            f"in-degree-ranked, cap {_FK_EXPAND_MAX_EXTRA})"
+                        ),
+                        "tables": added_fk,
+                    }
+                )
+
+            # Expand intermediate join tables via discovered/declared relationships.
+            connection_for_rels = await session.get(Connection, connection_id)
+            rel_edges = _relationship_edges_from_connection(
+                connection_for_rels, cache_by_name
+            )
+            before_join = list(selected_tables)
+            selected_tables = _expand_via_join_paths(
+                selected_tables,
+                rel_edges,
+                max_extra=_JOIN_PATH_EXPAND_MAX,
+            )
+            added_join = [t for t in selected_tables if t not in before_join]
+            if added_join:
+                steps.append(
+                    {
+                        "step": "schema_join_path_expand",
+                        "detail": (
+                            f"Added {len(added_join)} intermediate join table(s) "
+                            f"via relationship shortest path "
+                            f"(cap {_JOIN_PATH_EXPAND_MAX})"
+                        ),
+                        "tables": added_join,
+                    }
+                )
 
         # 3. Format enriched schema for selected tables (filter columns when known)
         cols_by_table: dict[str, set[str]] = {}
@@ -723,40 +1167,106 @@ class ContextRetriever:
             if t and c:
                 cols_by_table.setdefault(t, set()).add(c)
 
-        tables_data: list[dict[str, Any]] = []
-        for name in selected_tables:
-            cache = cache_by_name.get(name)
-            columns = _safe_json_loads(
-                cache.columns_json if cache else None, default=[]
-            ) or []
-            allowed = cols_by_table.get(name)
-            if allowed:
-                # Keep PK/FK columns even if not explicitly selected
-                filtered = []
-                for col in columns:
-                    col_name = col.get("name") or col.get("column_name")
-                    if (
-                        col_name in allowed
-                        or col.get("primary_key")
-                        or col.get("foreign_key")
-                    ):
-                        filtered.append(col)
-                columns = filtered or columns
+        if (
+            use_full_schema
+            and not schema_is_huge
+            and set(selected_tables) == set(all_table_names)
+        ):
+            enriched_schema = full_schema_text
+            tables_data = tables_data_all
+        else:
+            tables_data = []
+            for name in selected_tables:
+                cache = cache_by_name.get(name)
+                columns = _safe_json_loads(
+                    cache.columns_json if cache else None, default=[]
+                ) or []
+                allowed = cols_by_table.get(name)
+                if allowed:
+                    filtered = []
+                    for col in columns:
+                        col_name = col.get("name") or col.get("column_name")
+                        if (
+                            col_name in allowed
+                            or col.get("primary_key")
+                            or col.get("foreign_key")
+                        ):
+                            filtered.append(col)
+                    columns = filtered or columns
 
-            sample_rows = _safe_json_loads(
-                cache.sample_rows_json if cache else None, default=[]
-            ) or []
-            tables_data.append(
+                sample_rows = _safe_json_loads(
+                    cache.sample_rows_json if cache else None, default=[]
+                ) or []
+                tables_data.append(
+                    {
+                        "table_name": name,
+                        "columns": columns,
+                        "sample_rows": sample_rows,
+                    }
+                )
+
+            enriched_schema = await self.enrichments.format_enriched_schema(
+                session, connection_id, tables_data
+            )
+
+        # Digest inputs + value hints from enrichments / selected schema.
+        column_types: dict[str, dict[str, str]] = {}
+        fk_edges: list[tuple[str, str, str, str]] = []
+        example_values: dict[str, dict[str, list]] = {}
+        for entry in tables_data:
+            name = entry.get("table_name") or entry.get("name")
+            if not name:
+                continue
+            columns = entry.get("columns") or []
+            for col in columns:
+                if not isinstance(col, dict):
+                    continue
+                col_name = col.get("name") or col.get("column_name")
+                if not col_name:
+                    continue
+                col_type = col.get("type") or col.get("data_type")
+                if col_type:
+                    column_types.setdefault(name, {})[str(col_name)] = str(col_type)
+                fk = col.get("foreign_key")
+                if isinstance(fk, dict):
+                    to_table = fk.get("table") or fk.get("foreign_table_name")
+                    to_col = fk.get("column") or fk.get("foreign_column_name")
+                    if to_table and to_col:
+                        edge = (name, str(col_name), str(to_table), str(to_col))
+                        if edge not in fk_edges:
+                            fk_edges.append(edge)
+
+            col_enrich = (enrich_map.get(name) or {}).get("columns") or {}
+            for col_name, meta in col_enrich.items():
+                if not isinstance(meta, dict):
+                    continue
+                raw_ex = meta.get("example_values")
+                if raw_ex is None:
+                    continue
+                if isinstance(raw_ex, str):
+                    parsed = _safe_json_loads(raw_ex, default=None)
+                    if parsed is None:
+                        parsed = [raw_ex]
+                    raw_ex = parsed
+                if isinstance(raw_ex, list) and raw_ex:
+                    example_values.setdefault(name, {})[str(col_name)] = list(
+                        raw_ex
+                    )[:5]
+
+        value_index = build_value_index(enrich_map)
+        literals = extract_literals(question)
+        value_hints = match_literals_to_values(literals, value_index)
+        hints_block = format_value_hints(value_hints)
+        if hints_block:
+            enriched_schema = f"{enriched_schema}\n\n{hints_block}"
+            steps.append(
                 {
-                    "table_name": name,
-                    "columns": columns,
-                    "sample_rows": sample_rows,
+                    "step": "value_hints",
+                    "detail": f"Matched {len(value_hints)} value hint(s)",
+                    "hints": value_hints[:8],
                 }
             )
 
-        enriched_schema = await self.enrichments.format_enriched_schema(
-            session, connection_id, tables_data
-        )
         steps.append(
             {
                 "step": "enrichment",
@@ -764,8 +1274,11 @@ class ContextRetriever:
             }
         )
 
-        # 4. Business rules
+        # 4. Business rules + optional semantic layer
         business_rules = await self.rules.get_rules_text(session, connection_id)
+        connection_row = await session.get(Connection, connection_id)
+        semantic_json = getattr(connection_row, "semantic_layer_json", None)
+        business_rules = append_semantic_to_rules(business_rules, semantic_json)
         steps.append(
             {
                 "step": "business_rules",
@@ -777,13 +1290,14 @@ class ContextRetriever:
             }
         )
 
-        # 5. Golden records
-        golden_hits = await self.golden.search(
-            session,
-            connection_id,
-            question,
-            top_k=self._settings.golden_records_top_k,
-        )
+        # 5. Golden records (may already have run in parallel with expansion)
+        if golden_hits is None:
+            golden_hits = await self.golden.search(
+                session,
+                connection_id,
+                question,
+                top_k=self._settings.golden_records_top_k,
+            )
         golden_records_text = self.golden.format_few_shot(golden_hits)
         used_golden = len(golden_hits) > 0
         golden_sqls = [str(h.get("sql") or "") for h in golden_hits if h.get("sql")]
@@ -797,6 +1311,33 @@ class ContextRetriever:
                 "used_golden": used_golden,
             }
         )
+
+        # 6. Verified-answer cache: near-exact golden → trust certified SQL
+        verified_sql = ""
+        verified = await find_verified_sql(
+            session,
+            connection_id,
+            question,
+            min_overlap=_VERIFIED_SQL_OVERLAP,
+        )
+        if verified is not None:
+            sql_text = (verified.sql or "").strip()
+            if sql_text:
+                overlap = token_overlap(question, verified.question or "")
+                verified_sql = sql_text
+                used_golden = True
+                if sql_text not in golden_sqls:
+                    golden_sqls.insert(0, sql_text)
+                steps.append(
+                    {
+                        "step": "verified_cache",
+                        "detail": (
+                            f"Verified SQL match "
+                            f"(overlap={overlap:.2f} >= {_VERIFIED_SQL_OVERLAP})"
+                        ),
+                        "question": verified.question,
+                    }
+                )
 
         return RetrievedContext(
             enriched_schema=enriched_schema,
@@ -821,5 +1362,9 @@ class ContextRetriever:
             used_golden=used_golden,
             golden_sqls=golden_sqls,
             golden_questions=golden_questions,
+            verified_sql=verified_sql,
             steps=steps,
+            fk_edges=fk_edges,
+            column_types=column_types,
+            example_values=example_values,
         )

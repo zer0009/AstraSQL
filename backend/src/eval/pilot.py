@@ -24,9 +24,15 @@ from typing import Any, Optional
 from sqlalchemy import select
 
 from src.config.settings import get_settings
-from src.eval.compare import results_equal, results_equal_values, sql_equal
+from src.eval.compare import (
+    results_equal,
+    results_equal_lenient,
+    results_equal_values,
+    sql_equal,
+)
 from src.eval.failure_labels import extract_tables, label_failure
 from src.eval.models import CaseResult, GoldItem
+from src.eval.paired import compare_reports
 from src.eval.spider_data import (
     db_sqlite_path,
     default_pilot_db,
@@ -52,12 +58,44 @@ _BACKEND = Path(__file__).resolve().parents[2]
 _RESULT_PREVIEW_ROWS = 8
 
 
-def _pin_models(model: str, reasoning_effort: str) -> dict[str, str]:
+def _pin_models(
+    model: str,
+    reasoning_effort: str,
+    *,
+    interpretation_mode: str = "",
+    validator_mode: str = "",
+    schema_link_mode: str = "",
+    format_response: Optional[bool] = None,
+    sql_candidate_count: Optional[int] = None,
+    execution_evidence_gate: Optional[bool] = None,
+    merge_interpret_generate: Optional[bool] = None,
+) -> dict[str, Any]:
     os.environ["OPENAI_MODEL"] = model
     os.environ["ENRICHMENT_MODEL"] = model
     os.environ["INTERPRETATION_MODEL"] = model
     if reasoning_effort:
         os.environ["LLM_REASONING_EFFORT"] = reasoning_effort
+    if interpretation_mode:
+        os.environ["INTERPRETATION_MODE"] = interpretation_mode
+    if validator_mode:
+        os.environ["VALIDATOR_MODE"] = validator_mode
+    if schema_link_mode:
+        os.environ["SCHEMA_LINK_MODE"] = schema_link_mode
+    if format_response is not None:
+        os.environ["FORMAT_RESPONSE"] = "true" if format_response else "false"
+    if sql_candidate_count is not None:
+        os.environ["SQL_CANDIDATE_COUNT"] = str(sql_candidate_count)
+    if execution_evidence_gate is not None:
+        os.environ["EXECUTION_EVIDENCE_GATE"] = (
+            "true" if execution_evidence_gate else "false"
+        )
+    if merge_interpret_generate is not None:
+        os.environ["MERGE_INTERPRET_GENERATE"] = (
+            "true" if merge_interpret_generate else "false"
+        )
+    # Eval runs skip NL formatter by default for speed unless overridden.
+    if format_response is None and "FORMAT_RESPONSE" not in os.environ:
+        os.environ["FORMAT_RESPONSE"] = "false"
     get_settings.cache_clear()
     settings = get_settings()
     return {
@@ -66,6 +104,13 @@ def _pin_models(model: str, reasoning_effort: str) -> dict[str, str]:
         "interpretation_model": settings.interpretation_model or settings.enrichment_model,
         "llm_reasoning_effort": settings.llm_reasoning_effort,
         "embedding_model": settings.openai_embedding_model,
+        "interpretation_mode": settings.interpretation_mode,
+        "validator_mode": settings.validator_mode,
+        "schema_link_mode": settings.schema_link_mode,
+        "format_response": settings.format_response,
+        "sql_candidate_count": settings.sql_candidate_count,
+        "execution_evidence_gate": settings.execution_evidence_gate,
+        "merge_interpret_generate": settings.merge_interpret_generate,
     }
 
 
@@ -239,6 +284,7 @@ async def _score_one(
     sql_match: Optional[bool] = None
     result_match: Optional[bool] = None
     result_match_values: Optional[bool] = None
+    result_match_lenient: Optional[bool] = None
     gold_result: Optional[dict] = None
     gen_result: Optional[dict] = None
     exec_error: Optional[str] = None
@@ -256,9 +302,13 @@ async def _score_one(
                 result_match_values = results_equal_values(
                     gold_result, gen_result, gold_sql=item.gold_sql
                 )
+                result_match_lenient = results_equal_lenient(
+                    gold_result, gen_result, gold_sql=item.gold_sql
+                )
             elif sql and gold_result is not None:
                 result_match = False
                 result_match_values = False
+                result_match_lenient = False
 
     error = state.get("error") or exec_error
     failure_label: Optional[str] = None
@@ -275,6 +325,21 @@ async def _score_one(
             error=error,
             dialect="sqlite",
         )
+
+    ambiguity = state.get("ambiguity") if isinstance(state.get("ambiguity"), dict) else {}
+    ambiguity_diag = {
+        "status": ambiguity.get("status"),
+        "decision_why": ambiguity.get("decision_why"),
+        "reason": ambiguity.get("reason"),
+        "assumption": ambiguity.get("assumption") or state.get("assumption"),
+        "should_clarify": ambiguity.get("should_clarify"),
+        "proposal_status": ambiguity.get("proposal_status"),
+        "options": list(ambiguity.get("options") or [])[:6],
+        "candidates": list(ambiguity.get("candidates") or [])[:6],
+        "selected": ambiguity.get("selected"),
+        "clusters": ambiguity.get("clusters"),
+        "gate": ambiguity.get("gate"),
+    }
 
     case = CaseResult(
         id=item.id,
@@ -295,12 +360,15 @@ async def _score_one(
         "db_id": db_id,
         "hardness": hardness,
         "result_match_values": result_match_values,
+        "result_match_lenient": result_match_lenient,
         "failure_label": failure_label,
         "gold_result": _preview_result(gold_result),
         "generated_result": _preview_result(gen_result),
         "schema_linking": linking,
         "retries": int(state.get("retries") or 0),
         "selected_tables": selected_tables,
+        "ambiguity": ambiguity_diag,
+        "assumption": state.get("assumption") or ambiguity.get("assumption"),
     }
     return case, usage, elapsed_ms, detail
 
@@ -310,12 +378,15 @@ def _accuracy_breakdown(question_rows: list[dict[str, Any]]) -> dict[str, Any]:
         n = len(rows)
         strict = sum(1 for r in rows if r.get("result_match") is True)
         values = sum(1 for r in rows if r.get("result_match_values") is True)
+        lenient = sum(1 for r in rows if r.get("result_match_lenient") is True)
         return {
             "n": n,
             "strict_correct": strict,
             "values_correct": values,
+            "lenient_correct": lenient,
             "strict_accuracy": round(strict / n, 4) if n else 0.0,
             "values_accuracy": round(values / n, 4) if n else 0.0,
+            "lenient_accuracy": round(lenient / n, 4) if n else 0.0,
         }
 
     by_hardness: dict[str, Any] = {}
@@ -386,6 +457,8 @@ def _print_report(report: dict[str, Any]) -> None:
         f"\nAccuracy: values-only "
         f"{overall.get('values_correct', 0)}/{overall.get('n', 0)} "
         f"({100 * float(overall.get('values_accuracy') or 0):.1f}%)  |  "
+        f"lenient {overall.get('lenient_correct', 0)}/{overall.get('n', 0)} "
+        f"({100 * float(overall.get('lenient_accuracy') or 0):.1f}%)  |  "
         f"strict {overall.get('strict_correct', 0)}/{overall.get('n', 0)} "
         f"({100 * float(overall.get('strict_accuracy') or 0):.1f}%)"
     )
@@ -515,6 +588,11 @@ async def _rescore_report(path: Path) -> dict[str, Any]:
                 if gold_result is not None and gen_result is not None
                 else False
             )
+            lenient = (
+                results_equal_lenient(gold_result, gen_result, gold_sql=gold_sql)
+                if gold_result is not None and gen_result is not None
+                else False
+            )
             label = None
             if values and not strict:
                 label = "scorer_only"
@@ -533,6 +611,7 @@ async def _rescore_report(path: Path) -> dict[str, Any]:
             updated["db_id"] = db_id
             updated["result_match"] = strict
             updated["result_match_values"] = values
+            updated["result_match_lenient"] = lenient
             updated["failure_label"] = label
             updated["gold_result"] = _preview_result(gold_result)
             updated["generated_result"] = _preview_result(gen_result)
@@ -624,7 +703,17 @@ async def _run(args: argparse.Namespace) -> dict[str, Any]:
         print(root)
         return {"root": str(root)}
 
-    model_info = _pin_models(args.model, args.reasoning_effort)
+    model_info = _pin_models(
+        args.model,
+        args.reasoning_effort,
+        interpretation_mode=getattr(args, "interpretation_mode", "") or "",
+        validator_mode=getattr(args, "validator_mode", "") or "",
+        schema_link_mode=getattr(args, "schema_link_mode", "") or "",
+        format_response=getattr(args, "format_response", None),
+        sql_candidate_count=getattr(args, "sql_candidate_count", None),
+        execution_evidence_gate=getattr(args, "execution_evidence_gate", None),
+        merge_interpret_generate=getattr(args, "merge_interpret_generate", None),
+    )
     settings = get_settings()
     if not (settings.openai_api_key or "").strip():
         raise SystemExit("OPENAI_API_KEY is not set")
@@ -710,6 +799,7 @@ async def _run(args: argparse.Namespace) -> dict[str, Any]:
                         "generated_sql": case.generated_sql,
                         "result_match": case.result_match,
                         "result_match_values": detail["result_match_values"],
+                        "result_match_lenient": detail.get("result_match_lenient"),
                         "failure_label": detail["failure_label"],
                         "sql_match": case.sql_match,
                         "clarified": case.clarified,
@@ -721,6 +811,8 @@ async def _run(args: argparse.Namespace) -> dict[str, Any]:
                         "selected_tables": detail["selected_tables"],
                         "gold_result": detail["gold_result"],
                         "generated_result": detail["generated_result"],
+                        "ambiguity": detail.get("ambiguity"),
+                        "assumption": detail.get("assumption"),
                         "elapsed_ms": elapsed_ms,
                         "cost_usd": cost,
                         "input_tokens": usage.get("input_tokens", 0),
@@ -833,6 +925,37 @@ async def _run(args: argparse.Namespace) -> dict[str, Any]:
     return report
 
 
+def _compare_reports_cli(path_a: Path, path_b: Path) -> dict[str, Any]:
+    a = json.loads(path_a.read_text(encoding="utf-8"))
+    b = json.loads(path_b.read_text(encoding="utf-8"))
+    result = compare_reports(a, b)
+    print("\n======== PAIRED COMPARISON ========")
+    print(f"A: {path_a}")
+    print(f"B: {path_b}")
+    print(f"A accuracy (values): {100 * result['a_accuracy']:.1f}%")
+    print(f"B accuracy (values): {100 * result['b_accuracy']:.1f}%")
+    m = result["mcnemar"]
+    print(
+        f"McNemar: n={m['n_paired']} a_only={m['a_only']} b_only={m['b_only']} "
+        f"p={m['p_value']} significant@0.05={m['significant_0_05']}"
+    )
+    boot = result["bootstrap"]
+    print(
+        f"Bootstrap diff(B-A): mean={boot['mean_diff']} "
+        f"CI95={boot['ci95']} excludes_zero={boot['ci_excludes_zero']}"
+    )
+    if result["flips"]:
+        print(f"Flips ({len(result['flips'])}):")
+        for f in result["flips"][:20]:
+            print(f"  {f['id']}: A={f['a']} -> B={f['b']}")
+    print("===================================\n")
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    out = path_b.parent / f"compare-{stamp}.json"
+    out.write_text(json.dumps(result, indent=2, default=str), encoding="utf-8")
+    print(f"Wrote {out}")
+    return result
+
+
 def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
     argv = list(argv) if argv is not None else sys.argv[1:]
 
@@ -842,6 +965,15 @@ def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
         p.add_argument("rescore_path", help="Path to pilot JSON")
         ns = p.parse_args(argv[1:])
         ns.command = "rescore"
+        return ns
+
+    # Subcommand: compare <a.json> <b.json>
+    if argv and argv[0] == "compare":
+        p = argparse.ArgumentParser(description="Paired significance between two reports")
+        p.add_argument("report_a", help="Baseline report JSON")
+        p.add_argument("report_b", help="Candidate report JSON")
+        ns = p.parse_args(argv[1:])
+        ns.command = "compare"
         return ns
 
     p = argparse.ArgumentParser(description="AstraSQL Spider accuracy pilot")
@@ -875,20 +1007,84 @@ def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
         default="low",
         help="Reasoning effort for gpt-5 family (none|low|medium|high)",
     )
+    p.add_argument(
+        "--interpretation-mode",
+        default="",
+        help="Ablation: on|off|assume_only (env INTERPRETATION_MODE)",
+    )
+    p.add_argument(
+        "--validator-mode",
+        default="",
+        help="Ablation: full|deterministic|off",
+    )
+    p.add_argument(
+        "--schema-link-mode",
+        default="",
+        help="Ablation: auto|full|faiss",
+    )
+    p.add_argument(
+        "--format-response",
+        choices=["true", "false", ""],
+        default="",
+        help="Ablation: run NL formatter (default false for eval)",
+    )
+    p.add_argument(
+        "--sql-candidate-count",
+        type=int,
+        default=None,
+        help="Ablation: multi-candidate generation count",
+    )
+    p.add_argument(
+        "--execution-evidence-gate",
+        choices=["true", "false", ""],
+        default="",
+        help="Ablation: execution-evidence clarify gate (default: settings)",
+    )
+    p.add_argument(
+        "--merge-interpret-generate",
+        choices=["true", "false", ""],
+        default="",
+        help="Ablation: merge interpretation into generator",
+    )
     p.add_argument("--seed", type=int, default=42, help="Question selection seed")
     p.add_argument("--max-cost", type=float, default=1.0, help="Stop if cost exceeds this USD")
     p.add_argument("--out", default="", help="Output JSON path")
     p.add_argument("--download-only", action="store_true", help="Only download Spider data")
     p.add_argument("--force-download", action="store_true", help="Re-download Spider zip")
     ns = p.parse_args(argv)
+    if ns.format_response == "true":
+        ns.format_response = True
+    elif ns.format_response == "false":
+        ns.format_response = False
+    else:
+        ns.format_response = None
+    if getattr(ns, "execution_evidence_gate", "") == "true":
+        ns.execution_evidence_gate = True
+    elif getattr(ns, "execution_evidence_gate", "") == "false":
+        ns.execution_evidence_gate = False
+    else:
+        ns.execution_evidence_gate = None
+    if getattr(ns, "merge_interpret_generate", "") == "true":
+        ns.merge_interpret_generate = True
+    elif getattr(ns, "merge_interpret_generate", "") == "false":
+        ns.merge_interpret_generate = False
+    else:
+        ns.merge_interpret_generate = None
     ns.command = "run"
     return ns
 
 
 def main(argv: Optional[list[str]] = None) -> int:
     args = parse_args(argv)
-    if getattr(args, "command", "run") == "rescore":
+    cmd = getattr(args, "command", "run")
+    if cmd == "rescore":
         asyncio.run(_rescore_report(_resolve_path(args.rescore_path)))
+        return 0
+    if cmd == "compare":
+        _compare_reports_cli(
+            _resolve_path(args.report_a),
+            _resolve_path(args.report_b),
+        )
         return 0
     asyncio.run(_run(args))
     return 0

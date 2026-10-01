@@ -10,15 +10,17 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 
 from src.agent.ambiguity import (
+    PolicyDecision,
     apply_interpretation_policy,
     build_schema_digest,
     build_schema_index,
     parse_interpretation_payload,
+    validate_candidates,
 )
 from src.agent.prompts.generator import format_conversation_history
 from src.agent.prompts.interpretation import render_interpretation_prompt
 from src.agent.state import AgentState
-from src.agent.utils import append_step, extract_json, message_text
+from src.agent.utils import append_step, extract_json, get_configurable, message_text
 from src.config.settings import get_settings
 from src.providers.llm import get_llm_provider
 
@@ -43,23 +45,82 @@ def _golden_text(questions: list[str]) -> str:
     return "\n".join(f"- {q}" for q in lines[:10])
 
 
+def _grounded_clarification_enabled(connection: Any, settings: Any) -> bool:
+    """Connection override (None → settings.grounded_clarification_enabled)."""
+    if connection is not None:
+        flag = getattr(connection, "grounded_clarification_enabled", None)
+        if flag is not None:
+            return bool(flag)
+    return bool(settings.grounded_clarification_enabled)
+
+
+def _force_assume_only(
+    decision: PolicyDecision,
+    *,
+    proposal: Any,
+    tables: set[str],
+    column_pairs: set[tuple[str, str]],
+    bare_columns: set[str],
+) -> PolicyDecision:
+    """Rewrite a clarify decision into assumed proceed (interpretation_mode=assume_only)."""
+    if not decision.should_clarify:
+        return decision
+    selected = decision.selected
+    if selected is None:
+        valid = validate_candidates(
+            proposal.candidates,
+            tables=tables,
+            column_pairs=column_pairs,
+            bare_columns=bare_columns,
+        )
+        selected = valid[0] if valid else None
+    options = [
+        o
+        for o in (decision.options or [])
+        if "Other" not in o and (selected is None or o != selected.question)
+    ][:3]
+    if selected is None and not options:
+        options = decision.options or []
+    return PolicyDecision(
+        should_clarify=False,
+        status="assumed" if selected is not None else decision.status,
+        reason=decision.reason or "assume_only mode; proceeding without clarification",
+        assumption=decision.assumption
+        or (
+            f"Assumed: {selected.label or selected.question}" if selected else ""
+        ),
+        options=options,
+        decision_why=f"assume_only;was={decision.decision_why}",
+        selected=selected,
+        needs_execution_gate=decision.needs_execution_gate,
+        decision_points=decision.decision_points,
+    )
+
+
 async def interpretation_resolver(
     state: AgentState, config: RunnableConfig
 ) -> dict[str, Any]:
     """Propose schema-grounded readings; policy decides whether to ask."""
     settings = get_settings()
+    cfg = get_configurable(config)
+    connection = cfg.get("connection")
     question = (state.get("question") or "").strip()
     context = state.get("context") or {}
     history = state.get("conversation_history") or []
 
-    # Feature flag off → passthrough (legacy: generate SQL immediately).
-    if not settings.grounded_clarification_enabled:
+    mode = (settings.interpretation_mode or "on").strip().lower()
+    if mode not in {"on", "off", "assume_only"}:
+        mode = "on"
+
+    # Feature flag / mode off → passthrough (legacy: generate SQL immediately).
+    if mode == "off" or not _grounded_clarification_enabled(connection, settings):
+        why = "interpretation_mode=off" if mode == "off" else "grounded_clarification_enabled=false"
         return {
             "steps": append_step(
                 state,
                 "interpretation_skipped",
-                "grounded_clarification_enabled=false",
-                decision_why="flag_off",
+                why,
+                decision_why=why,
             ),
         }
 
@@ -80,6 +141,9 @@ async def interpretation_resolver(
     schema_digest = context.get("schema_digest") or build_schema_digest(
         selected_tables,
         selected_columns,
+        fk_edges=context.get("fk_edges"),
+        column_types=context.get("column_types"),
+        example_values=context.get("example_values"),
     )
     rules_text = str(context.get("business_rules") or "")
     golden_questions = list(context.get("golden_questions") or [])
@@ -134,6 +198,7 @@ async def interpretation_resolver(
         selected_tables,
         selected_columns,
     )
+    defer_gate = bool(getattr(settings, "execution_evidence_gate", True))
     decision = apply_interpretation_policy(
         proposal,
         question=question,
@@ -143,8 +208,34 @@ async def interpretation_resolver(
         rules=_rules_from_text(rules_text),
         golden_questions=golden_questions,
         conversation_history=history,
+        defer_ask_to_execution_gate=defer_gate and mode == "on",
     )
+    if mode == "assume_only":
+        decision = _force_assume_only(
+            decision,
+            proposal=proposal,
+            tables=tables,
+            column_pairs=column_pairs,
+            bare_columns=bare_columns,
+        )
 
+    candidates_payload = [
+        {
+            "label": c.label,
+            "question": c.question,
+            "tables": list(c.tables),
+            "columns": list(c.columns),
+        }
+        for c in proposal.candidates
+    ]
+    selected_payload = None
+    if decision.selected is not None:
+        selected_payload = {
+            "label": decision.selected.label,
+            "question": decision.selected.question,
+            "tables": list(decision.selected.tables),
+            "columns": list(decision.selected.columns),
+        }
     update: dict[str, Any] = {
         "ambiguity": {
             "should_clarify": decision.should_clarify,
@@ -153,6 +244,11 @@ async def interpretation_resolver(
             "status": decision.status,
             "decision_why": decision.decision_why,
             "assumption": decision.assumption,
+            "proposal_status": proposal.status,
+            "candidates": candidates_payload,
+            "selected": selected_payload,
+            "needs_execution_gate": decision.needs_execution_gate,
+            "decision_points": list(decision.decision_points),
         },
         "steps": append_step(
             state,
@@ -167,6 +263,7 @@ async def interpretation_resolver(
             elapsed_ms=elapsed_ms,
             candidate_count=len(proposal.candidates),
             option_count=len(decision.options),
+            proposal_status=proposal.status,
         ),
     }
 

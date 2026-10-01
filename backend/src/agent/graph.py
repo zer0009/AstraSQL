@@ -6,6 +6,7 @@ from typing import Any, Callable, Literal
 from langgraph.graph import END, START, StateGraph
 
 from src.agent.nodes import (
+    ambiguity_gate,
     context_retriever_node,
     direct_response,
     intent_classifier,
@@ -17,6 +18,7 @@ from src.agent.nodes import (
 )
 from src.agent.state import AgentState
 from src.agent.utils import max_retries
+from src.config.settings import get_settings
 from src.observability.usage import usage_stage
 
 _SQL_INTENTS = frozenset({"SQL_QUERY"})
@@ -42,10 +44,32 @@ def route_intent(state: AgentState) -> Literal["sql", "direct"]:
     return "direct"
 
 
-def route_after_context(state: AgentState) -> Literal["resolve", "clarify"]:
+def route_after_parallel_join(
+    state: AgentState,
+) -> Literal["resolve", "generate", "clarify", "direct"]:
+    """Join after parallel intent + retrieval."""
+    intent = (state.get("intent") or "SQL_QUERY").upper()
+    if intent not in _SQL_INTENTS:
+        return "direct"
     ambiguity = state.get("ambiguity") or {}
     if isinstance(ambiguity, dict) and ambiguity.get("should_clarify"):
         return "clarify"
+    settings = get_settings()
+    if bool(getattr(settings, "merge_interpret_generate", False)):
+        return "generate"
+    return "resolve"
+
+
+def route_after_context(
+    state: AgentState,
+) -> Literal["resolve", "generate", "clarify"]:
+    ambiguity = state.get("ambiguity") or {}
+    if isinstance(ambiguity, dict) and ambiguity.get("should_clarify"):
+        return "clarify"
+    # Merged interpret+generate skips the separate resolver LLM call.
+    settings = get_settings()
+    if bool(getattr(settings, "merge_interpret_generate", False)):
+        return "generate"
     return "resolve"
 
 
@@ -56,6 +80,30 @@ def route_after_interpretation(
     if isinstance(ambiguity, dict) and ambiguity.get("should_clarify"):
         return "clarify"
     return "generate"
+
+
+def route_after_generate(
+    state: AgentState,
+) -> Literal["gate", "validate"]:
+    """Run execution-evidence gate when flagged; else go straight to validate."""
+    settings = get_settings()
+    if not bool(getattr(settings, "execution_evidence_gate", True)):
+        return "validate"
+    ambiguity = state.get("ambiguity") or {}
+    if not isinstance(ambiguity, dict):
+        return "validate"
+    if ambiguity.get("needs_execution_gate") or ambiguity.get("decision_points"):
+        return "gate"
+    return "validate"
+
+
+def route_after_gate(
+    state: AgentState,
+) -> Literal["validate", "clarify"]:
+    ambiguity = state.get("ambiguity") or {}
+    if isinstance(ambiguity, dict) and ambiguity.get("should_clarify"):
+        return "clarify"
+    return "validate"
 
 
 def route_after_validate(
@@ -77,11 +125,18 @@ def route_after_execute(
     ambiguity = state.get("ambiguity") or {}
     if isinstance(ambiguity, dict) and ambiguity.get("should_clarify"):
         return "clarify"
+    if state.get("shape_retry") and int(state.get("retries") or 0) < max_retries():
+        return "retry"
     if not state.get("error"):
         return "format"
     if int(state.get("retries") or 0) < max_retries():
         return "retry"
     return "fail"
+
+
+def _passthrough_join(state: AgentState) -> dict[str, Any]:
+    """No-op join node so parallel intent + retrieval can converge."""
+    return {}
 
 
 def build_graph():
@@ -92,11 +147,13 @@ def build_graph():
         "context_retriever",
         _with_stage("context_retriever", context_retriever_node),
     )
+    g.add_node("parallel_join", _passthrough_join)
     g.add_node(
         "interpretation_resolver",
         _with_stage("interpretation_resolver", interpretation_resolver),
     )
     g.add_node("query_generator", _with_stage("query_generator", query_generator))
+    g.add_node("ambiguity_gate", _with_stage("ambiguity_gate", ambiguity_gate))
     g.add_node("query_validator", _with_stage("query_validator", query_validator))
     g.add_node("query_executor", _with_stage("query_executor", query_executor))
     g.add_node(
@@ -105,23 +162,54 @@ def build_graph():
     )
     g.add_node("direct_response", _with_stage("direct_response", direct_response))
 
-    g.add_edge(START, "intent_classifier")
-    g.add_conditional_edges(
-        "intent_classifier",
-        route_intent,
-        {"sql": "context_retriever", "direct": "direct_response"},
-    )
-    g.add_conditional_edges(
-        "context_retriever",
-        route_after_context,
-        {"resolve": "interpretation_resolver", "clarify": "direct_response"},
-    )
+    settings = get_settings()
+    if bool(getattr(settings, "parallel_intent_retrieval", True)):
+        # Fan-out: intent and retrieval run concurrently, then join.
+        g.add_edge(START, "intent_classifier")
+        g.add_edge(START, "context_retriever")
+        g.add_edge("intent_classifier", "parallel_join")
+        g.add_edge("context_retriever", "parallel_join")
+        g.add_conditional_edges(
+            "parallel_join",
+            route_after_parallel_join,
+            {
+                "resolve": "interpretation_resolver",
+                "generate": "query_generator",
+                "clarify": "direct_response",
+                "direct": "direct_response",
+            },
+        )
+    else:
+        g.add_edge(START, "intent_classifier")
+        g.add_conditional_edges(
+            "intent_classifier",
+            route_intent,
+            {"sql": "context_retriever", "direct": "direct_response"},
+        )
+        g.add_conditional_edges(
+            "context_retriever",
+            route_after_context,
+            {
+                "resolve": "interpretation_resolver",
+                "generate": "query_generator",
+                "clarify": "direct_response",
+            },
+        )
     g.add_conditional_edges(
         "interpretation_resolver",
         route_after_interpretation,
         {"generate": "query_generator", "clarify": "direct_response"},
     )
-    g.add_edge("query_generator", "query_validator")
+    g.add_conditional_edges(
+        "query_generator",
+        route_after_generate,
+        {"gate": "ambiguity_gate", "validate": "query_validator"},
+    )
+    g.add_conditional_edges(
+        "ambiguity_gate",
+        route_after_gate,
+        {"validate": "query_validator", "clarify": "direct_response"},
+    )
     g.add_conditional_edges(
         "query_validator",
         route_after_validate,

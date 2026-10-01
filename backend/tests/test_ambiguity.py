@@ -1,7 +1,9 @@
 from src.agent.ambiguity import (
     InterpretationCandidate,
     InterpretationProposal,
+    _candidates_materially_different,
     apply_interpretation_policy,
+    build_schema_digest,
     build_schema_index,
     candidate_is_grounded,
     decide_ambiguity,
@@ -167,6 +169,7 @@ def test_candidate_is_grounded_requires_schema_refs():
 
 
 def test_policy_asks_when_two_valid_candidates():
+    """Different tables/measures → clarify when status=ambiguous."""
     tables, pairs, bare = _shop_schema()
     proposal = InterpretationProposal(
         status="ambiguous",
@@ -200,6 +203,147 @@ def test_policy_asks_when_two_valid_candidates():
     assert decision.status == "ambiguous"
     assert len(decision.options) >= 2
     assert any("Other" in o for o in decision.options)
+
+
+def test_policy_assumes_when_same_schema_different_phrasing():
+    """Same tables/columns, join-path wording only → do not clarify."""
+    tables, pairs, bare = _shop_schema()
+    proposal = InterpretationProposal(
+        status="ambiguous",
+        assumption="",
+        reason="two phrasings",
+        candidates=(
+            InterpretationCandidate(
+                label="most orders",
+                question="Which customer placed the most orders?",
+                tables=("customers", "orders"),
+                columns=("customers.name", "orders.id"),
+            ),
+            InterpretationCandidate(
+                label="most orders via join",
+                question=(
+                    "Which customer placed the most orders via a join "
+                    "through the orders table path?"
+                ),
+                tables=("customers", "orders"),
+                columns=("customers.name", "orders.id"),
+            ),
+        ),
+    )
+    decision = apply_interpretation_policy(
+        proposal,
+        question="who placed the most orders",
+        tables=tables,
+        column_pairs=pairs,
+        bare_columns=bare,
+        rules=[],
+        golden_questions=[],
+    )
+    assert decision.should_clarify is False
+    assert decision.status == "assumed"
+    assert "immaterial" in decision.decision_why
+    assert decision.selected is not None
+    assert len(decision.options) >= 1
+
+
+def test_policy_asks_when_different_measures_same_entity():
+    """Same tables but count vs sum → material → clarify."""
+    tables, pairs, bare = _shop_schema()
+    proposal = InterpretationProposal(
+        status="ambiguous",
+        assumption="",
+        reason="count or sum",
+        candidates=(
+            InterpretationCandidate(
+                label="count orders",
+                question="What is the count of orders per customer?",
+                tables=("customers", "orders"),
+                columns=("customers.name", "orders.id"),
+            ),
+            InterpretationCandidate(
+                label="sum spend",
+                question="What is the sum of order_items.unit_price per customer?",
+                tables=("customers", "order_items"),
+                columns=("customers.name", "order_items.unit_price"),
+            ),
+        ),
+    )
+    assert _candidates_materially_different(list(proposal.candidates)) is True
+    decision = apply_interpretation_policy(
+        proposal,
+        question="customer totals",
+        tables=tables,
+        column_pairs=pairs,
+        bare_columns=bare,
+        rules=[],
+        golden_questions=[],
+    )
+    assert decision.should_clarify is True
+    assert decision.status == "ambiguous"
+
+
+def test_policy_clear_with_immaterial_candidates_does_not_ask():
+    """Clear + 2 phrasing variants → assume, do not ask."""
+    tables, pairs, bare = _shop_schema()
+    proposal = InterpretationProposal(
+        status="clear",
+        assumption="",
+        reason="clear enough",
+        candidates=(
+            InterpretationCandidate(
+                label="list names",
+                question="List customer names",
+                tables=("customers",),
+                columns=("customers.name",),
+            ),
+            InterpretationCandidate(
+                label="list names alt",
+                question="List customer names from the customers table",
+                tables=("customers",),
+                columns=("customers.name",),
+            ),
+        ),
+    )
+    decision = apply_interpretation_policy(
+        proposal,
+        question="list customer names",
+        tables=tables,
+        column_pairs=pairs,
+        bare_columns=bare,
+        rules=[],
+        golden_questions=[],
+    )
+    assert decision.should_clarify is False
+    assert decision.status == "assumed"
+
+
+def test_build_schema_digest_includes_types_examples_and_relationships():
+    digest = build_schema_digest(
+        ["customers", "orders"],
+        [
+            {"table": "customers", "column": "id"},
+            {"table": "customers", "column": "status"},
+            {"table": "orders", "column": "customer_id"},
+        ],
+        column_types={
+            "customers": {"id": "INTEGER", "status": "TEXT"},
+            "orders": {"customer_id": "INTEGER"},
+        },
+        example_values={"customers": {"status": ["A", "B", "C"]}},
+        fk_edges=[
+            {
+                "from_table": "orders",
+                "from_col": "customer_id",
+                "to_table": "customers",
+                "to_col": "id",
+            }
+        ],
+    )
+    assert "customers" in digest
+    assert "status (TEXT)" in digest
+    assert "e.g. A, B, C" in digest
+    assert "Relationships:" in digest
+    assert "orders.customer_id → customers.id" in digest
 
 
 def test_policy_assumes_single_valid_candidate():
