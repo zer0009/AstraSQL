@@ -18,12 +18,14 @@ _IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
 def _quote_ident(name: str) -> str:
-    """Quote a SQLite identifier (handles spaces and reserved words)."""
+    """Quote a SQLite identifier (handles spaces and reserved words).
+
+    Always double-quote: names like ``order`` / ``group`` are valid table
+    names but unquoted PRAGMA/SELECT would fail as SQL keywords.
+    """
     text_name = (name or "").replace('"', '""')
     if not text_name:
         raise ValueError("Empty SQL identifier")
-    if _IDENT_RE.match(text_name):
-        return text_name
     return f'"{text_name}"'
 
 

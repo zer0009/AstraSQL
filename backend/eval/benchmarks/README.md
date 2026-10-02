@@ -48,6 +48,13 @@ print(report["scores"])  # precision / recall / f1
 
 ```bash
 uv run python -m src.eval.pilot --download-only
+# Tune split (historical small DBs) vs held-out (disjoint DBs/seed)
+uv run python -m src.eval.pilot --split tune --dbs 5 --per-db 4 --max-cost 0.4 --out eval/results/tune.json
+uv run python -m src.eval.pilot --split held_out --dbs 5 --per-db 12 --seed 99 --max-cost 0.5 --out eval/results/held_out.json
+# Speed ablation (merged interpret+generate)
+uv run python -m src.eval.pilot --split held_out --dbs 5 --per-db 4 --seed 99 \
+  --merge-interpret-generate true --concurrency 1 --max-cost 0.25 \
+  --out eval/results/held_out_merged.json
 uv run python -m src.eval.pilot --dbs 5 --per-db 5 --model gpt-5.6-luna --out eval/results/run25.json
 uv run python -m src.eval.pilot --dbs 10 --per-db 10 --model gpt-5.6-luna --out eval/results/run100.json
 uv run python -m src.eval.pilot compare eval/results/run25.json eval/results/run25-variance.json
@@ -108,7 +115,33 @@ Does **not** generate TPC data — only executes fixed aggregate SQLs.
 ## BIRD Mini-Dev
 
 Treat as a **relative** metric — annotation error rates are high in published studies.
-Place files under `data/bird/mini_dev_sqlite/` (see `src/eval/bird_data.py`). No auto-download.
+
+```bash
+# License notice printed first; downloads Mini-Dev JSON + BIRD-dev SQLite DBs
+# (requires: uv add huggingface_hub)
+uv run python scripts/fetch_benchmarks.py bird
+# Stratified baseline (start small — BIRD schemas are slow/expensive)
+uv run python -m src.eval.pilot --dataset bird --n 40 --seed 42 \
+  --max-cost 0.5 --concurrency 1 --evidence true \
+  --merge-interpret-generate true \
+  --out eval/results/bird40-baseline.json
+# Full Mini-Dev 150 when budget allows
+uv run python -m src.eval.pilot --dataset bird --n 150 --seed 42 \
+  --max-cost 1.0 --concurrency 1 --evidence true \
+  --out eval/results/bird150-baseline.json
+# Ablation without evidence (knowledge vs schema understanding)
+uv run python -m src.eval.pilot --dataset bird --n 20 --seed 42 \
+  --evidence false --max-cost 0.3 --out eval/results/bird20-no-evidence.json
+```
+
+Large-schema / dropped-FK stress (no LLM):
+
+```bash
+uv run python scripts/large_schema_stress.py
+```
+
+Data root: `eval/benchmarks/data/bird/` (gitignored). Dictionary CSVs are imported
+via `src.context.dictionary_import` when present.
 
 ## Spider 2.0-lite
 

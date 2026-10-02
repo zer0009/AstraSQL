@@ -283,8 +283,11 @@ async def submit_feedback(
         connection = await db.get(Connection, row.connection_id)
         if connection is not None:
             layer = parse_semantic_layer(connection.semantic_layer_json)
+            from src.context.conventions import record_join_type_convention
+
             if body.rating == 1 and (row.sql or "").strip():
                 record_reviewed_query(layer, row.question, row.sql)
+                record_join_type_convention(layer, row.sql)
             corrected = (body.corrected_sql or "").strip()
             if corrected:
                 record_repair_memory(
@@ -295,6 +298,7 @@ async def submit_feedback(
                     sql_after=corrected,
                 )
                 record_reviewed_query(layer, row.question, corrected)
+                record_join_type_convention(layer, corrected)
             try:
                 connection.semantic_layer_json = json.dumps(layer)
             except (TypeError, ValueError):

@@ -1,0 +1,4126 @@
+{
+  "kind": "bird-pilot",
+  "dataset": "bird",
+  "include_evidence": true,
+  "created_at": "2026-10-01T18:47:16.398063+00:00",
+  "models": {
+    "openai_model": "gpt-5.6-luna",
+    "enrichment_model": "gpt-5.6-luna",
+    "interpretation_model": "gpt-5.6-luna",
+    "llm_reasoning_effort": "low",
+    "embedding_model": "text-embedding-3-small",
+    "interpretation_mode": "on",
+    "validator_mode": "full",
+    "schema_link_mode": "auto",
+    "format_response": false,
+    "sql_candidate_count": 1,
+    "execution_evidence_gate": true,
+    "merge_interpret_generate": true
+  },
+  "rate_card": {
+    "gpt-5.6-luna": {
+      "input": 0.2,
+      "output": 1.2,
+      "cached_input": 0.02
+    },
+    "embedding": 0.02
+  },
+  "db_id": null,
+  "db_ids": [
+    "debit_card_specializing",
+    "student_club",
+    "superhero",
+    "thrombosis_prediction"
+  ],
+  "question_ids": [
+    "debit_card_specializing:cc86ad0a4d81",
+    "debit_card_specializing:986ce6c4a44c",
+    "debit_card_specializing:87a1c4076e3e",
+    "student_club:a93399d99ac6",
+    "student_club:bcc1cc5329a9",
+    "student_club:ab9c694f3149",
+    "superhero:66b54793d540",
+    "superhero:a698b84453d2",
+    "superhero:4b5f3fad5c35",
+    "thrombosis_prediction:b9d363403f2b",
+    "thrombosis_prediction:059480ffe756",
+    "thrombosis_prediction:e29060e5e08b",
+    "debit_card_specializing:398a7b846ff7",
+    "debit_card_specializing:95dedac7bdb1",
+    "debit_card_specializing:decde0065517",
+    "student_club:fd57662d3f56",
+    "student_club:d9da2ece44d9",
+    "student_club:7d54456eda4d",
+    "superhero:e803fda95445",
+    "superhero:8855285df05f",
+    "superhero:3cf832a182e0",
+    "thrombosis_prediction:c20143fa2f7c",
+    "thrombosis_prediction:fb0bb69d09ad",
+    "thrombosis_prediction:1283842141de"
+  ],
+  "n": 24,
+  "seed": 42,
+  "split": "",
+  "concurrency": 1,
+  "max_cost": 0.4,
+  "setup": {
+    "by_db": {
+      "debit_card_specializing": {
+        "tables": 5,
+        "enriched": 0,
+        "elapsed_ms": 22,
+        "cost_usd": 0,
+        "usage": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "latency_ms": 0,
+          "cost_usd": 0,
+          "estimated_calls": 0,
+          "by_stage": {}
+        },
+        "dictionary_rows": 0
+      },
+      "student_club": {
+        "tables": 8,
+        "enriched": 0,
+        "elapsed_ms": 9,
+        "cost_usd": 0,
+        "usage": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "latency_ms": 0,
+          "cost_usd": 0,
+          "estimated_calls": 0,
+          "by_stage": {}
+        },
+        "dictionary_rows": 0
+      },
+      "superhero": {
+        "tables": 10,
+        "enriched": 0,
+        "elapsed_ms": 6,
+        "cost_usd": 0,
+        "usage": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "latency_ms": 0,
+          "cost_usd": 0,
+          "estimated_calls": 0,
+          "by_stage": {}
+        },
+        "dictionary_rows": 0
+      },
+      "thrombosis_prediction": {
+        "tables": 3,
+        "enriched": 0,
+        "elapsed_ms": 10,
+        "cost_usd": 0,
+        "usage": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "latency_ms": 0,
+          "cost_usd": 0,
+          "estimated_calls": 0,
+          "by_stage": {}
+        },
+        "dictionary_rows": 0
+      }
+    },
+    "cost_usd": 0.0,
+    "elapsed_ms": 47
+  },
+  "questions": [
+    {
+      "id": "debit_card_specializing:cc86ad0a4d81",
+      "db_id": "debit_card_specializing",
+      "question": "What is the difference in the annual average consumption of the customers with the least amount of consumption paid in CZK for 2013 between SME and LAM, LAM and KAM, and KAM and SME?",
+      "hardness": "challenging",
+      "split": "",
+      "dataset": "bird",
+      "evidence": "annual average consumption of customer with the lowest consumption in each segment = total consumption per year / the number of customer with lowest consumption in each segment; Difference in annual average = SME's annual average - LAM's annual average; Difference in annual average = LAM's annual average - KAM's annual average; Year 2013 can be presented as Between 201301 And 201312; The first 4 strings of the Date values in the yearmonth table can represent year.",
+      "gold_sql": "SELECT CAST(SUM(IIF(T1.Segment = 'SME', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID) - CAST(SUM(IIF(T1.Segment = 'LAM', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID) , CAST(SUM(IIF(T1.Segment = 'LAM', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID) - CAST(SUM(IIF(T1.Segment = 'KAM', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID) , CAST(SUM(IIF(T1.Segment = 'KAM', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID) - CAST(SUM(IIF(T1.Segment = 'SME', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID) FROM customers AS T1 INNER JOIN yearmonth AS T2 ON T1.CustomerID = T2.CustomerID WHERE T1.Currency = 'CZK' AND T2.Consumption = ( SELECT MIN(Consumption) FROM yearmonth ) AND T2.Date BETWEEN 201301 AND 201312",
+      "generated_sql": "WITH annual_customer AS (\n    SELECT\n        c.CustomerID,\n        c.Segment,\n        SUM(y.Consumption) AS annual_consumption\n    FROM customers AS c\n    JOIN yearmonth AS y\n      ON y.CustomerID = c.CustomerID\n    WHERE c.Currency = 'CZK'\n      AND substr(y.Date, 1, 4) = '2013'\n      AND c.Segment IN ('SME', 'LAM', 'KAM')\n    GROUP BY c.CustomerID, c.Segment\n), segment_minimums AS (\n    SELECT\n        Segment,\n        MIN(annual_consumption) AS minimum_consumption\n    FROM annual_customer\n    GROUP BY Segment\n), segment_averages AS (\n    SELECT\n        a.Segment,\n        AVG(a.annual_consumption) AS annual_average\n    FROM annual_customer AS a\n    JOIN segment_minimums AS m\n      ON m.Segment = a.Segment\n     AND m.minimum_consumption = a.annual_consumption\n    GROUP BY a.Segment\n)\nSELECT\n    'SME - LAM' AS comparison,\n    sme.annual_average - lam.annual_average AS difference\nFROM segment_averages AS sme\nJOIN segment_averages AS lam\n  ON lam.Segment = 'LAM'\nWHERE sme.Segment = 'SME'\nUNION ALL\nSELECT\n    'LAM - KAM' AS comparison,\n    lam.annual_average - kam.annual_average AS difference\nFROM segment_averages AS lam\nJOIN segment_averages AS kam\n  ON kam.Segment = 'KAM'\nWHERE lam.Segment = 'LAM'\nUNION ALL\nSELECT\n    'KAM - SME' AS comparison,\n    kam.annual_average - sme.annual_average AS difference\nFROM segment_averages AS kam\nJOIN segment_averages AS sme\n  ON sme.Segment = 'SME'\nWHERE kam.Segment = 'KAM';",
+      "result_match": false,
+      "result_match_values": false,
+      "result_match_lenient": false,
+      "failure_label": "wrong_table",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "customers",
+          "yearmonth"
+        ],
+        "selected_tables": [
+          "customers",
+          "gasstations",
+          "products",
+          "transactions_1k",
+          "yearmonth"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "customers",
+        "gasstations",
+        "products",
+        "transactions_1k",
+        "yearmonth"
+      ],
+      "gold_result": {
+        "columns": [
+          "CAST(SUM(IIF(T1.Segment = 'SME', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID) - CAST(SUM(IIF(T1.Segment = 'LAM', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID)",
+          "CAST(SUM(IIF(T1.Segment = 'LAM', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID) - CAST(SUM(IIF(T1.Segment = 'KAM', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID)",
+          "CAST(SUM(IIF(T1.Segment = 'KAM', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID) - CAST(SUM(IIF(T1.Segment = 'SME', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID)"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "CAST(SUM(IIF(T1.Segment = 'SME', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID) - CAST(SUM(IIF(T1.Segment = 'LAM', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID)": 0.0,
+            "CAST(SUM(IIF(T1.Segment = 'LAM', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID) - CAST(SUM(IIF(T1.Segment = 'KAM', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID)": 582092.86,
+            "CAST(SUM(IIF(T1.Segment = 'KAM', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID) - CAST(SUM(IIF(T1.Segment = 'SME', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID)": -582092.86
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "comparison",
+          "difference"
+        ],
+        "row_count": 3,
+        "rows": [
+          {
+            "comparison": "SME - LAM",
+            "difference": -14009.339999999998
+          },
+          {
+            "comparison": "LAM - KAM",
+            "difference": 6046.619999999999
+          },
+          {
+            "comparison": "KAM - SME",
+            "difference": 7962.719999999999
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "merged_generate",
+        "reason": "Deferred to schema-grounded / execution-evidence path",
+        "assumption": "For CZK customers in 2013, find the minimum annual consumption within each segment, average consumption across customers tied at that minimum, and calculate the signed differences for SME-LAM, LAM-KAM, and KAM-SME.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": null,
+        "gate": "merged"
+      },
+      "assumption": "For CZK customers in 2013, find the minimum annual consumption within each segment, average consumption across customers tied at that minimum, and calculate the signed differences for SME-LAM, LAM-KAM, and KAM-SME.",
+      "elapsed_ms": 22882,
+      "cost_usd": 0.00264624,
+      "input_tokens": 4110,
+      "output_tokens": 1807,
+      "reasoning_tokens": 765,
+      "cached_input_tokens": 1912,
+      "calls": 2,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1915,
+          "output_tokens": 1044,
+          "reasoning_tokens": 464,
+          "latency_ms": 11763,
+          "cost_usd": 0.00129164
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 2195,
+          "output_tokens": 763,
+          "reasoning_tokens": 301,
+          "latency_ms": 8087,
+          "cost_usd": 0.0013546
+        }
+      }
+    },
+    {
+      "id": "debit_card_specializing:986ce6c4a44c",
+      "db_id": "debit_card_specializing",
+      "question": "In 2012, who had the least consumption in LAM?",
+      "hardness": "moderate",
+      "split": "",
+      "dataset": "bird",
+      "evidence": "Year 2012 can be presented as Between 201201 And 201212; The first 4 strings of the Date values in the yearmonth table can represent year.",
+      "gold_sql": "SELECT T1.CustomerID FROM customers AS T1 INNER JOIN yearmonth AS T2 ON T1.CustomerID = T2.CustomerID WHERE T1.Segment = 'LAM' AND SUBSTR(T2.Date, 1, 4) = '2012' GROUP BY T1.CustomerID ORDER BY SUM(T2.Consumption) ASC LIMIT 1",
+      "generated_sql": "WITH lam_consumption AS (\n    SELECT\n        y.CustomerID,\n        SUM(y.Consumption) AS total_consumption\n    FROM yearmonth AS y\n    JOIN customers AS c\n        ON c.CustomerID = y.CustomerID\n    WHERE c.Segment = 'LAM'\n      AND y.Date BETWEEN '201201' AND '201212'\n    GROUP BY y.CustomerID\n), minimum_consumption AS (\n    SELECT MIN(total_consumption) AS min_total_consumption\n    FROM lam_consumption\n)\nSELECT lc.CustomerID\nFROM lam_consumption AS lc\nJOIN minimum_consumption AS mc\n    ON lc.total_consumption = mc.min_total_consumption;",
+      "result_match": true,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "customers",
+          "yearmonth"
+        ],
+        "selected_tables": [
+          "customers",
+          "gasstations",
+          "products",
+          "transactions_1k",
+          "yearmonth"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "customers",
+        "gasstations",
+        "products",
+        "transactions_1k",
+        "yearmonth"
+      ],
+      "gold_result": {
+        "columns": [
+          "CustomerID"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "CustomerID": 47273
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "CustomerID"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "CustomerID": 47273
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "merged_generate",
+        "reason": "Deferred to schema-grounded / execution-evidence path",
+        "assumption": "Find the LAM customer or customers with the lowest total consumption across all months in 2012.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": null,
+        "gate": "merged"
+      },
+      "assumption": "Find the LAM customer or customers with the lowest total consumption across all months in 2012.",
+      "elapsed_ms": 12698,
+      "cost_usd": 0.001501,
+      "input_tokens": 3692,
+      "output_tokens": 904,
+      "reasoning_tokens": 447,
+      "cached_input_tokens": 1790,
+      "calls": 2,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1793,
+          "output_tokens": 497,
+          "reasoning_tokens": 221,
+          "latency_ms": 4751,
+          "cost_usd": 0.0006328
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1899,
+          "output_tokens": 407,
+          "reasoning_tokens": 226,
+          "latency_ms": 7323,
+          "cost_usd": 0.0008682
+        }
+      }
+    },
+    {
+      "id": "debit_card_specializing:87a1c4076e3e",
+      "db_id": "debit_card_specializing",
+      "question": "What segment did the customer have at 2012/8/23 21:20:00?",
+      "hardness": "simple",
+      "split": "",
+      "dataset": "bird",
+      "evidence": "'2012/8/23' can be represented by '2012-08-23'",
+      "gold_sql": "SELECT T2.Segment FROM transactions_1k AS T1 INNER JOIN customers AS T2 ON T1.CustomerID = T2.CustomerID WHERE T1.date = '2012-08-23' AND T1.time = '21:20:00'",
+      "generated_sql": "SELECT DISTINCT c.Segment\nFROM transactions_1k AS t\nJOIN customers AS c ON c.CustomerID = t.CustomerID\nWHERE t.Date = '2012-08-23'\n  AND t.Time = '21:20:00';",
+      "result_match": true,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "customers",
+          "transactions_1k"
+        ],
+        "selected_tables": [
+          "customers",
+          "gasstations",
+          "products",
+          "transactions_1k",
+          "yearmonth"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "customers",
+        "gasstations",
+        "products",
+        "transactions_1k",
+        "yearmonth"
+      ],
+      "gold_result": {
+        "columns": [
+          "Segment"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "Segment": "KAM"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Segment"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "Segment": "KAM"
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "merged_generate",
+        "reason": "Deferred to schema-grounded / execution-evidence path",
+        "assumption": "Find the customer segment associated with transaction(s) occurring at 2012-08-23 21:20:00.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": null,
+        "gate": "merged"
+      },
+      "assumption": "Find the customer segment associated with transaction(s) occurring at 2012-08-23 21:20:00.",
+      "elapsed_ms": 5760,
+      "cost_usd": 0.00054854,
+      "input_tokens": 3613,
+      "output_tokens": 396,
+      "reasoning_tokens": 127,
+      "cached_input_tokens": 3607,
+      "calls": 2,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1792,
+          "output_tokens": 310,
+          "reasoning_tokens": 127,
+          "latency_ms": 4100,
+          "cost_usd": 0.00040838
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1821,
+          "output_tokens": 86,
+          "reasoning_tokens": 0,
+          "latency_ms": 1415,
+          "cost_usd": 0.00014016
+        }
+      }
+    },
+    {
+      "id": "student_club:a93399d99ac6",
+      "db_id": "student_club",
+      "question": "Give the full name and contact number of members who had to spend more than average on each expense.",
+      "hardness": "challenging",
+      "split": "",
+      "dataset": "bird",
+      "evidence": "full name refers to first_name, last_name; contact number refers to phone; had spent more than average on each expense refers to cost > AVG(cost)",
+      "gold_sql": "SELECT DISTINCT T3.first_name, T3.last_name, T3.phone FROM expense AS T1 INNER JOIN budget AS T2 ON T1.link_to_budget = T2.budget_id INNER JOIN member AS T3 ON T3.member_id = T1.link_to_member WHERE T1.cost > ( SELECT AVG(T1.cost) FROM expense AS T1 INNER JOIN budget AS T2 ON T1.link_to_budget = T2.budget_id INNER JOIN member AS T3 ON T3.member_id = T1.link_to_member )",
+      "generated_sql": "SELECT DISTINCT m.first_name || ' ' || m.last_name AS full_name, m.phone AS contact_number\nFROM member AS m\nJOIN expense AS e\n  ON e.link_to_member = m.member_id\nWHERE e.cost > (SELECT AVG(cost) FROM expense);",
+      "result_match": false,
+      "result_match_values": false,
+      "result_match_lenient": false,
+      "failure_label": "missing_table",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "budget",
+          "expense",
+          "member"
+        ],
+        "selected_tables": [
+          "attendance",
+          "budget",
+          "event",
+          "expense",
+          "income",
+          "major",
+          "member",
+          "zip_code"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "attendance",
+        "budget",
+        "event",
+        "expense",
+        "income",
+        "major",
+        "member",
+        "zip_code"
+      ],
+      "gold_result": {
+        "columns": [
+          "first_name",
+          "last_name",
+          "phone"
+        ],
+        "row_count": 3,
+        "rows": [
+          {
+            "first_name": "Sacha",
+            "last_name": "Harrison",
+            "phone": "840-555-4781"
+          },
+          {
+            "first_name": "Phillip",
+            "last_name": "Cullen",
+            "phone": "905-555-5035"
+          },
+          {
+            "first_name": "Elijah",
+            "last_name": "Allen",
+            "phone": "724-555-5721"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "full_name",
+          "contact_number"
+        ],
+        "row_count": 3,
+        "rows": [
+          {
+            "full_name": "Sacha Harrison",
+            "contact_number": "840-555-4781"
+          },
+          {
+            "full_name": "Phillip Cullen",
+            "contact_number": "905-555-5035"
+          },
+          {
+            "full_name": "Elijah Allen",
+            "contact_number": "724-555-5721"
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": null,
+        "decision_why": null,
+        "reason": "Deferred to schema-grounded / execution-evidence path",
+        "assumption": null,
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": null,
+        "gate": null
+      },
+      "assumption": null,
+      "elapsed_ms": 11427,
+      "cost_usd": 0.0067182,
+      "input_tokens": 29247,
+      "output_tokens": 724,
+      "reasoning_tokens": 262,
+      "cached_input_tokens": 0,
+      "calls": 3,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 2,
+          "input_tokens": 20069,
+          "output_tokens": 442,
+          "reasoning_tokens": 75,
+          "latency_ms": 6888,
+          "cost_usd": 0.0045442
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 9178,
+          "output_tokens": 282,
+          "reasoning_tokens": 187,
+          "latency_ms": 4112,
+          "cost_usd": 0.002174
+        }
+      }
+    },
+    {
+      "id": "student_club:bcc1cc5329a9",
+      "db_id": "student_club",
+      "question": "Calculate the amount budgeted for 'April Speaker' event. List all the budgeted categories for said event in an ascending order based on their amount budgeted.",
+      "hardness": "moderate",
+      "split": "",
+      "dataset": "bird",
+      "evidence": "'April Speaker' is an event name; amount budgeted refers to SUM(amount); budget categories refers to category",
+      "gold_sql": "SELECT T2.category, SUM(T2.amount) FROM event AS T1 JOIN budget AS T2 ON T1.event_id = T2.link_to_event WHERE T1.event_name = 'April Speaker' GROUP BY T2.category ORDER BY SUM(T2.amount) ASC",
+      "generated_sql": "SELECT b.category, SUM(b.amount) AS amount_budgeted FROM event AS e JOIN budget AS b ON b.link_to_event = e.event_id WHERE e.event_name = 'April Speaker' GROUP BY b.category ORDER BY amount_budgeted ASC;",
+      "result_match": false,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": "scorer_only",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "budget",
+          "event"
+        ],
+        "selected_tables": [
+          "attendance",
+          "budget",
+          "event",
+          "expense",
+          "income",
+          "major",
+          "member",
+          "zip_code"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "attendance",
+        "budget",
+        "event",
+        "expense",
+        "income",
+        "major",
+        "member",
+        "zip_code"
+      ],
+      "gold_result": {
+        "columns": [
+          "category",
+          "SUM(T2.amount)"
+        ],
+        "row_count": 4,
+        "rows": [
+          {
+            "category": "Parking",
+            "SUM(T2.amount)": 10
+          },
+          {
+            "category": "Speaker Gifts",
+            "SUM(T2.amount)": 25
+          },
+          {
+            "category": "Advertisement",
+            "SUM(T2.amount)": 75
+          },
+          {
+            "category": "Food",
+            "SUM(T2.amount)": 150
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "category",
+          "amount_budgeted"
+        ],
+        "row_count": 4,
+        "rows": [
+          {
+            "category": "Parking",
+            "amount_budgeted": 10
+          },
+          {
+            "category": "Speaker Gifts",
+            "amount_budgeted": 25
+          },
+          {
+            "category": "Advertisement",
+            "amount_budgeted": 75
+          },
+          {
+            "category": "Food",
+            "amount_budgeted": 150
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "merged_generate",
+        "reason": "Deferred to schema-grounded / execution-evidence path",
+        "assumption": "List each budget category for the event named 'April Speaker' with its total budgeted amount, ordered from lowest to highest amount.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": null,
+        "gate": "merged"
+      },
+      "assumption": "List each budget category for the event named 'April Speaker' with its total budgeted amount, ordered from lowest to highest amount.",
+      "elapsed_ms": 4979,
+      "cost_usd": 0.0043366,
+      "input_tokens": 19955,
+      "output_tokens": 288,
+      "reasoning_tokens": 51,
+      "cached_input_tokens": 0,
+      "calls": 2,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 10758,
+          "output_tokens": 149,
+          "reasoning_tokens": 0,
+          "latency_ms": 2178,
+          "cost_usd": 0.0023304
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 9197,
+          "output_tokens": 139,
+          "reasoning_tokens": 51,
+          "latency_ms": 2551,
+          "cost_usd": 0.0020062
+        }
+      }
+    },
+    {
+      "id": "student_club:ab9c694f3149",
+      "db_id": "student_club",
+      "question": "What's Angela Sanders's major?",
+      "hardness": "simple",
+      "split": "",
+      "dataset": "bird",
+      "evidence": "Angela Sanders is the full name; full name refers to first_name, last_name; major refers to major_name.",
+      "gold_sql": "SELECT T2.major_name FROM member AS T1 INNER JOIN major AS T2 ON T1.link_to_major = T2.major_id WHERE T1.first_name = 'Angela' AND T1.last_name = 'Sanders'",
+      "generated_sql": "SELECT major.major_name FROM member JOIN major ON member.link_to_major = major.major_id WHERE member.first_name = 'Angela' AND member.last_name = 'Sanders';",
+      "result_match": true,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "major",
+          "member"
+        ],
+        "selected_tables": [
+          "attendance",
+          "budget",
+          "event",
+          "expense",
+          "income",
+          "major",
+          "member",
+          "zip_code"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "attendance",
+        "budget",
+        "event",
+        "expense",
+        "income",
+        "major",
+        "member",
+        "zip_code"
+      ],
+      "gold_result": {
+        "columns": [
+          "major_name"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "major_name": "Business"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "major_name"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "major_name": "Business"
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "merged_generate",
+        "reason": "Deferred to schema-grounded / execution-evidence path",
+        "assumption": "Find the major name associated with the member whose first name is Angela and last name is Sanders.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": null,
+        "gate": "merged"
+      },
+      "assumption": "Find the major name associated with the member whose first name is Angela and last name is Sanders.",
+      "elapsed_ms": 3845,
+      "cost_usd": 0.004192,
+      "input_tokens": 19862,
+      "output_tokens": 183,
+      "reasoning_tokens": 0,
+      "cached_input_tokens": 0,
+      "calls": 2,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 10706,
+          "output_tokens": 115,
+          "reasoning_tokens": 0,
+          "latency_ms": 1697,
+          "cost_usd": 0.0022792
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 9156,
+          "output_tokens": 68,
+          "reasoning_tokens": 0,
+          "latency_ms": 1874,
+          "cost_usd": 0.0019128
+        }
+      }
+    },
+    {
+      "id": "superhero:66b54793d540",
+      "db_id": "superhero",
+      "question": "What is the percentage of superheroes who act in their own self-interest or make decisions based on their own moral code? Indicate how many of the said superheroes were published by Marvel Comics.",
+      "hardness": "challenging",
+      "split": "",
+      "dataset": "bird",
+      "evidence": "published by Marvel Comics refers to publisher_name = 'Marvel Comics'; superheroes who act in their own self-interest or make decisions based on their own moral code refers to alignment = 'Bad'; calculation = MULTIPLY(DIVIDE(SUM(alignment = 'Bad); count(id)), 100)",
+      "gold_sql": "SELECT (CAST(COUNT(*) AS REAL) * 100 / (SELECT COUNT(*) FROM superhero)), CAST(SUM(CASE WHEN T2.publisher_name = 'Marvel Comics' THEN 1 ELSE 0 END) AS REAL) FROM superhero AS T1 INNER JOIN publisher AS T2 ON T1.publisher_id = T2.id INNER JOIN alignment AS T3 ON T3.id = T1.alignment_id WHERE T3.alignment = 'Bad'",
+      "generated_sql": "SELECT ROUND(100.0 * SUM(CASE WHEN a.alignment = 'Bad' THEN 1 ELSE 0 END) / COUNT(s.id), 2) AS bad_alignment_percentage, SUM(CASE WHEN a.alignment = 'Bad' AND p.publisher_name = 'Marvel Comics' THEN 1 ELSE 0 END) AS bad_aligned_marvel_count FROM superhero AS s LEFT JOIN alignment AS a ON s.alignment_id = a.id LEFT JOIN publisher AS p ON s.publisher_id = p.id;",
+      "result_match": false,
+      "result_match_values": false,
+      "result_match_lenient": false,
+      "failure_label": "wrong_filter_or_value",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "alignment",
+          "publisher",
+          "superhero"
+        ],
+        "selected_tables": [
+          "alignment",
+          "attribute",
+          "colour",
+          "gender",
+          "hero_attribute",
+          "hero_power",
+          "publisher",
+          "race",
+          "superhero",
+          "superpower"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "alignment",
+        "attribute",
+        "colour",
+        "gender",
+        "hero_attribute",
+        "hero_power",
+        "publisher",
+        "race",
+        "superhero",
+        "superpower"
+      ],
+      "gold_result": {
+        "columns": [
+          "(CAST(COUNT(*) AS REAL) * 100 / (SELECT COUNT(*) FROM superhero))",
+          "CAST(SUM(CASE WHEN T2.publisher_name = 'Marvel Comics' THEN 1 ELSE 0 END) AS REAL)"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "(CAST(COUNT(*) AS REAL) * 100 / (SELECT COUNT(*) FROM superhero))": 28.266666666666666,
+            "CAST(SUM(CASE WHEN T2.publisher_name = 'Marvel Comics' THEN 1 ELSE 0 END) AS REAL)": 118.0
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "bad_alignment_percentage",
+          "bad_aligned_marvel_count"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "bad_alignment_percentage": 28.27,
+            "bad_aligned_marvel_count": 118
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": null,
+        "decision_why": null,
+        "reason": "Deferred to schema-grounded / execution-evidence path",
+        "assumption": null,
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": null,
+        "gate": null
+      },
+      "assumption": null,
+      "elapsed_ms": 13471,
+      "cost_usd": 0.0032716,
+      "input_tokens": 9464,
+      "output_tokens": 1149,
+      "reasoning_tokens": 366,
+      "cached_input_tokens": 0,
+      "calls": 3,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 2,
+          "input_tokens": 6907,
+          "output_tokens": 883,
+          "reasoning_tokens": 243,
+          "latency_ms": 9149,
+          "cost_usd": 0.002441
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 2557,
+          "output_tokens": 266,
+          "reasoning_tokens": 123,
+          "latency_ms": 4020,
+          "cost_usd": 0.0008306
+        }
+      }
+    },
+    {
+      "id": "superhero:a698b84453d2",
+      "db_id": "superhero",
+      "question": "Which superheroes have blue eyes with brown hair?",
+      "hardness": "moderate",
+      "split": "",
+      "dataset": "bird",
+      "evidence": "which superheroes refers to superhero_name; blue eyes refers to color = 'Blue' and color.id = eye_colour_id; brown hair refers to color = 'Brown' and color.id = hair_colour_id;",
+      "gold_sql": "SELECT T1.superhero_name FROM superhero AS T1 INNER JOIN colour AS T2 ON T1.eye_colour_id = T2.id INNER JOIN colour AS T3 ON T1.hair_colour_id = T3.id WHERE T2.colour = 'Blue' AND T3.colour = 'Brown'",
+      "generated_sql": "SELECT s.superhero_name\nFROM superhero AS s\nJOIN colour AS eye ON eye.id = s.eye_colour_id\nJOIN colour AS hair ON hair.id = s.hair_colour_id\nWHERE eye.colour = 'Blue'\n  AND hair.colour = 'Brown';",
+      "result_match": true,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "colour",
+          "superhero"
+        ],
+        "selected_tables": [
+          "alignment",
+          "attribute",
+          "colour",
+          "gender",
+          "hero_attribute",
+          "hero_power",
+          "publisher",
+          "race",
+          "superhero",
+          "superpower"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "alignment",
+        "attribute",
+        "colour",
+        "gender",
+        "hero_attribute",
+        "hero_power",
+        "publisher",
+        "race",
+        "superhero",
+        "superpower"
+      ],
+      "gold_result": {
+        "columns": [
+          "superhero_name"
+        ],
+        "row_count": 22,
+        "rows": [
+          {
+            "superhero_name": "Atlas"
+          },
+          {
+            "superhero_name": "Atlas"
+          },
+          {
+            "superhero_name": "Big Man"
+          },
+          {
+            "superhero_name": "Bloodaxe"
+          },
+          {
+            "superhero_name": "Blue Beetle"
+          },
+          {
+            "superhero_name": "Blue Beetle II"
+          },
+          {
+            "superhero_name": "Captain Epic"
+          },
+          {
+            "superhero_name": "Chewbacca"
+          }
+        ],
+        "truncated": true
+      },
+      "generated_result": {
+        "columns": [
+          "superhero_name"
+        ],
+        "row_count": 22,
+        "rows": [
+          {
+            "superhero_name": "Atlas"
+          },
+          {
+            "superhero_name": "Atlas"
+          },
+          {
+            "superhero_name": "Big Man"
+          },
+          {
+            "superhero_name": "Bloodaxe"
+          },
+          {
+            "superhero_name": "Blue Beetle"
+          },
+          {
+            "superhero_name": "Blue Beetle II"
+          },
+          {
+            "superhero_name": "Captain Epic"
+          },
+          {
+            "superhero_name": "Chewbacca"
+          }
+        ],
+        "truncated": true
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "merged_generate",
+        "reason": "Deferred to schema-grounded / execution-evidence path",
+        "assumption": "List the superhero names of heroes whose eye colour is Blue and hair colour is Brown.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": null,
+        "gate": "merged"
+      },
+      "assumption": "List the superhero names of heroes whose eye colour is Blue and hair colour is Brown.",
+      "elapsed_ms": 4421,
+      "cost_usd": 0.0013426,
+      "input_tokens": 5369,
+      "output_tokens": 224,
+      "reasoning_tokens": 0,
+      "cached_input_tokens": 0,
+      "calls": 2,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 2889,
+          "output_tokens": 134,
+          "reasoning_tokens": 0,
+          "latency_ms": 2259,
+          "cost_usd": 0.0007386
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 2480,
+          "output_tokens": 90,
+          "reasoning_tokens": 0,
+          "latency_ms": 1880,
+          "cost_usd": 0.000604
+        }
+      }
+    },
+    {
+      "id": "superhero:4b5f3fad5c35",
+      "db_id": "superhero",
+      "question": "Which superheroes have a durability attribute value of less than 50?",
+      "hardness": "simple",
+      "split": "",
+      "dataset": "bird",
+      "evidence": "durability of less than 50 refers to attribute_name = 'Durability' AND attribute_value < 50",
+      "gold_sql": "SELECT superhero_name FROM superhero AS T1 WHERE EXISTS (SELECT 1 FROM hero_attribute AS T2 INNER JOIN attribute AS T3 ON T2.attribute_id = T3.id WHERE T3.attribute_name = 'Durability' AND T2.attribute_value < 50 AND T1.id = T2.hero_id)",
+      "generated_sql": "SELECT s.superhero_name\nFROM superhero AS s\nJOIN hero_attribute AS ha ON ha.hero_id = s.id\nJOIN attribute AS a ON a.id = ha.attribute_id\nWHERE a.attribute_name = 'Durability'\n  AND ha.attribute_value < 50;",
+      "result_match": true,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "attribute",
+          "hero_attribute",
+          "superhero"
+        ],
+        "selected_tables": [
+          "alignment",
+          "attribute",
+          "colour",
+          "gender",
+          "hero_attribute",
+          "hero_power",
+          "publisher",
+          "race",
+          "superhero",
+          "superpower"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "alignment",
+        "attribute",
+        "colour",
+        "gender",
+        "hero_attribute",
+        "hero_power",
+        "publisher",
+        "race",
+        "superhero",
+        "superpower"
+      ],
+      "gold_result": {
+        "columns": [
+          "superhero_name"
+        ],
+        "row_count": 371,
+        "rows": [
+          {
+            "superhero_name": "3-D Man"
+          },
+          {
+            "superhero_name": "A-Bomb"
+          },
+          {
+            "superhero_name": "Abe Sapien"
+          },
+          {
+            "superhero_name": "Adam Monroe"
+          },
+          {
+            "superhero_name": "Adam Strange"
+          },
+          {
+            "superhero_name": "Agent 13"
+          },
+          {
+            "superhero_name": "Agent Bob"
+          },
+          {
+            "superhero_name": "Agent Zero"
+          }
+        ],
+        "truncated": true
+      },
+      "generated_result": {
+        "columns": [
+          "superhero_name"
+        ],
+        "row_count": 371,
+        "rows": [
+          {
+            "superhero_name": "3-D Man"
+          },
+          {
+            "superhero_name": "A-Bomb"
+          },
+          {
+            "superhero_name": "Abe Sapien"
+          },
+          {
+            "superhero_name": "Adam Monroe"
+          },
+          {
+            "superhero_name": "Adam Strange"
+          },
+          {
+            "superhero_name": "Agent 13"
+          },
+          {
+            "superhero_name": "Agent Bob"
+          },
+          {
+            "superhero_name": "Agent Zero"
+          }
+        ],
+        "truncated": true
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "merged_generate",
+        "reason": "Deferred to schema-grounded / execution-evidence path",
+        "assumption": "List the superhero names whose Durability attribute value is less than 50.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": null,
+        "gate": "merged"
+      },
+      "assumption": "List the superhero names whose Durability attribute value is less than 50.",
+      "elapsed_ms": 9578,
+      "cost_usd": 0.0013496,
+      "input_tokens": 5362,
+      "output_tokens": 231,
+      "reasoning_tokens": 0,
+      "cached_input_tokens": 0,
+      "calls": 2,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 2879,
+          "output_tokens": 143,
+          "reasoning_tokens": 0,
+          "latency_ms": 8008,
+          "cost_usd": 0.0007474
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 2483,
+          "output_tokens": 88,
+          "reasoning_tokens": 0,
+          "latency_ms": 1313,
+          "cost_usd": 0.0006022
+        }
+      }
+    },
+    {
+      "id": "thrombosis_prediction:b9d363403f2b",
+      "db_id": "thrombosis_prediction",
+      "question": "Among the male patients who have a normal level of white blood cells, how many of them have an abnormal fibrinogen level?",
+      "hardness": "challenging",
+      "split": "",
+      "dataset": "bird",
+      "evidence": "male patients refers to Sex = 'M'; normal level of white blood cells refers to WBC > 3.5 and WBC <9.0; abnormal fibrinogen level refers to FG < = 150 or FG > = 450; Don't compute repetitive ones.",
+      "gold_sql": "SELECT COUNT(DISTINCT T1.ID) FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID WHERE T2.FG <= 150 OR T2.FG >= 450 AND T2.WBC > 3.5 AND T2.WBC < 9.0 AND T1.SEX = 'M'",
+      "generated_sql": "SELECT COUNT(DISTINCT p.ID) AS patient_count\nFROM Patient AS p\nJOIN Laboratory AS l ON l.ID = p.ID\nWHERE p.SEX = 'M'\n  AND l.WBC > 3.5\n  AND l.WBC < 9.0\n  AND (l.FG <= 150 OR l.FG >= 450);",
+      "result_match": false,
+      "result_match_values": false,
+      "result_match_lenient": false,
+      "failure_label": "wrong_filter_or_value",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "laboratory",
+          "patient"
+        ],
+        "selected_tables": [
+          "examination",
+          "laboratory",
+          "patient"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "Examination",
+        "Laboratory",
+        "Patient"
+      ],
+      "gold_result": {
+        "columns": [
+          "COUNT(DISTINCT T1.ID)"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "COUNT(DISTINCT T1.ID)": 75
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "patient_count"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "patient_count": 6
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "merged_generate",
+        "reason": "Deferred to schema-grounded / execution-evidence path",
+        "assumption": "Count distinct male patients with a laboratory record showing normal WBC levels and an abnormal fibrinogen level.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": null,
+        "gate": "merged"
+      },
+      "assumption": "Count distinct male patients with a laboratory record showing normal WBC levels and an abnormal fibrinogen level.",
+      "elapsed_ms": 5333,
+      "cost_usd": 0.0019158,
+      "input_tokens": 7221,
+      "output_tokens": 393,
+      "reasoning_tokens": 118,
+      "cached_input_tokens": 0,
+      "calls": 2,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 3799,
+          "output_tokens": 283,
+          "reasoning_tokens": 118,
+          "latency_ms": 3558,
+          "cost_usd": 0.0010994
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 3422,
+          "output_tokens": 110,
+          "reasoning_tokens": 0,
+          "latency_ms": 1473,
+          "cost_usd": 0.0008164
+        }
+      }
+    },
+    {
+      "id": "thrombosis_prediction:059480ffe756",
+      "db_id": "thrombosis_prediction",
+      "question": "How old was the patient who had the highest hemoglobin count at the time of the examination, and what is the doctor's diagnosis?",
+      "hardness": "moderate",
+      "split": "",
+      "dataset": "bird",
+      "evidence": "How old the patient refers to SUBTRACT(year(`Examination Date`), year(Birthday)); the highest hemoglobin count refers to MAX(HGB)",
+      "gold_sql": "SELECT STRFTIME('%Y', T2.Date) - STRFTIME('%Y', T1.Birthday), T1.Diagnosis FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID ORDER BY T2.HGB DESC LIMIT 1",
+      "generated_sql": "SELECT (CAST(strftime('%Y', e.\"Examination Date\") AS INTEGER) - CAST(strftime('%Y', p.Birthday) AS INTEGER) - CASE WHEN strftime('%m-%d', e.\"Examination Date\") < strftime('%m-%d', p.Birthday) THEN 1 ELSE 0 END) AS age, e.Diagnosis AS diagnosis FROM Laboratory AS l JOIN Patient AS p ON l.ID = p.ID JOIN Examination AS e ON e.ID = p.ID AND e.\"Examination Date\" = l.\"Date\" WHERE l.HGB IS NOT NULL ORDER BY l.HGB DESC LIMIT 1;",
+      "result_match": false,
+      "result_match_values": false,
+      "result_match_lenient": false,
+      "failure_label": "wrong_table",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "laboratory",
+          "patient"
+        ],
+        "selected_tables": [
+          "examination",
+          "laboratory",
+          "patient"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "Examination",
+        "Laboratory",
+        "Patient"
+      ],
+      "gold_result": {
+        "columns": [
+          "STRFTIME('%Y', T2.Date) - STRFTIME('%Y', T1.Birthday)",
+          "Diagnosis"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "STRFTIME('%Y', T2.Date) - STRFTIME('%Y', T1.Birthday)": 28,
+            "Diagnosis": "SLE"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "age",
+          "diagnosis"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "age": 11,
+            "diagnosis": "SjS, BOOP"
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "execution_gate;single_cluster;n=2",
+        "reason": "All executable candidates agree on results",
+        "assumption": "Find the laboratory record with the highest HGB, match it to an examination on the same date, calculate the patient's age from the examination date and birthday, and return the examination diagnosis.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": [
+          {
+            "size": 2,
+            "sql": "SELECT CAST(strftime('%Y', Examination.\"Examination Date\") AS INTEGER) - CAST(strftime('%Y', Patient.Birthday) AS INTEGER) AS age, Examination.Diagnosis AS diagnosis FROM Laboratory JOIN Patient ON Laboratory.ID = Patient.ID JOIN Examination ON Examination.ID = Patient.ID AND Examination.\"Examination Date\" = Laboratory.\"Date\" WHERE Laboratory.HGB IS NOT NULL ORDER BY Laboratory.HGB DESC LIMIT 1;",
+            "row_count": 1
+          }
+        ],
+        "gate": "execution_evidence"
+      },
+      "assumption": "Find the laboratory record with the highest HGB, match it to an examination on the same date, calculate the patient's age from the examination date and birthday, and return the examination diagnosis.",
+      "elapsed_ms": 22696,
+      "cost_usd": 0.0053538,
+      "input_tokens": 15513,
+      "output_tokens": 1876,
+      "reasoning_tokens": 865,
+      "cached_input_tokens": 0,
+      "calls": 4,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 3773,
+          "output_tokens": 573,
+          "reasoning_tokens": 244,
+          "latency_ms": 7514,
+          "cost_usd": 0.0014422
+        },
+        "ambiguity_gate": {
+          "calls": 2,
+          "input_tokens": 8307,
+          "output_tokens": 634,
+          "reasoning_tokens": 155,
+          "latency_ms": 6376,
+          "cost_usd": 0.0024222
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 3433,
+          "output_tokens": 669,
+          "reasoning_tokens": 466,
+          "latency_ms": 8455,
+          "cost_usd": 0.0014894
+        }
+      }
+    },
+    {
+      "id": "thrombosis_prediction:e29060e5e08b",
+      "db_id": "thrombosis_prediction",
+      "question": "List the patient ID, sex and birthday of patient with LDH beyond normal range.",
+      "hardness": "simple",
+      "split": "",
+      "dataset": "bird",
+      "evidence": "LDH beyond normal range refers to LDH > '500';",
+      "gold_sql": "SELECT DISTINCT T1.ID, T1.SEX, T1.Birthday FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID WHERE T2.LDH > 500",
+      "generated_sql": "SELECT DISTINCT p.ID, p.SEX, p.Birthday\nFROM Patient AS p\nJOIN Laboratory AS l ON l.ID = p.ID\nWHERE l.LDH > 500;",
+      "result_match": true,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "laboratory",
+          "patient"
+        ],
+        "selected_tables": [
+          "examination",
+          "laboratory",
+          "patient"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "Examination",
+        "Laboratory",
+        "Patient"
+      ],
+      "gold_result": {
+        "columns": [
+          "ID",
+          "SEX",
+          "Birthday"
+        ],
+        "row_count": 103,
+        "rows": [
+          {
+            "ID": 27654,
+            "SEX": "F",
+            "Birthday": "1936-03-25"
+          },
+          {
+            "ID": 57266,
+            "SEX": "M",
+            "Birthday": "1923-07-25"
+          },
+          {
+            "ID": 81043,
+            "SEX": "M",
+            "Birthday": "1967-03-25"
+          },
+          {
+            "ID": 540520,
+            "SEX": "F",
+            "Birthday": "1941-11-21"
+          },
+          {
+            "ID": 912147,
+            "SEX": "F",
+            "Birthday": "1975-02-17"
+          },
+          {
+            "ID": 944797,
+            "SEX": "F",
+            "Birthday": "1975-01-31"
+          },
+          {
+            "ID": 1078741,
+            "SEX": "F",
+            "Birthday": "1937-12-18"
+          },
+          {
+            "ID": 1110526,
+            "SEX": "F",
+            "Birthday": "1966-01-01"
+          }
+        ],
+        "truncated": true
+      },
+      "generated_result": {
+        "columns": [
+          "ID",
+          "SEX",
+          "Birthday"
+        ],
+        "row_count": 103,
+        "rows": [
+          {
+            "ID": 27654,
+            "SEX": "F",
+            "Birthday": "1936-03-25"
+          },
+          {
+            "ID": 57266,
+            "SEX": "M",
+            "Birthday": "1923-07-25"
+          },
+          {
+            "ID": 81043,
+            "SEX": "M",
+            "Birthday": "1967-03-25"
+          },
+          {
+            "ID": 540520,
+            "SEX": "F",
+            "Birthday": "1941-11-21"
+          },
+          {
+            "ID": 912147,
+            "SEX": "F",
+            "Birthday": "1975-02-17"
+          },
+          {
+            "ID": 944797,
+            "SEX": "F",
+            "Birthday": "1975-01-31"
+          },
+          {
+            "ID": 1078741,
+            "SEX": "F",
+            "Birthday": "1937-12-18"
+          },
+          {
+            "ID": 1110526,
+            "SEX": "F",
+            "Birthday": "1966-01-01"
+          }
+        ],
+        "truncated": true
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "merged_generate",
+        "reason": "Deferred to schema-grounded / execution-evidence path",
+        "assumption": "List each patient's ID, sex, and birthday when the patient has a laboratory LDH value greater than 500.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": null,
+        "gate": "merged"
+      },
+      "assumption": "List each patient's ID, sex, and birthday when the patient has a laboratory LDH value greater than 500.",
+      "elapsed_ms": 6774,
+      "cost_usd": 0.0018954,
+      "input_tokens": 7113,
+      "output_tokens": 394,
+      "reasoning_tokens": 194,
+      "cached_input_tokens": 0,
+      "calls": 2,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 3738,
+          "output_tokens": 124,
+          "reasoning_tokens": 0,
+          "latency_ms": 1894,
+          "cost_usd": 0.0008964
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 3375,
+          "output_tokens": 270,
+          "reasoning_tokens": 194,
+          "latency_ms": 4626,
+          "cost_usd": 0.000999
+        }
+      }
+    },
+    {
+      "id": "debit_card_specializing:398a7b846ff7",
+      "db_id": "debit_card_specializing",
+      "question": "For the customer who paid 634.8 in 2012/8/25, what was the consumption decrease rate from Year 2012 to 2013?",
+      "hardness": "challenging",
+      "split": "",
+      "dataset": "bird",
+      "evidence": "'2012/8/24' can be represented by '2012-08-24'; Consumption decrease rate = (consumption_2012 - consumption_2013) / consumption_2012",
+      "gold_sql": "SELECT CAST(SUM(IIF(SUBSTRING(Date, 1, 4) = '2012', Consumption, 0)) - SUM(IIF(SUBSTRING(Date, 1, 4) = '2013', Consumption, 0)) AS FLOAT) / SUM(IIF(SUBSTRING(Date, 1, 4) = '2012', Consumption, 0)) FROM yearmonth WHERE CustomerID = ( SELECT T1.CustomerID FROM transactions_1k AS T1 INNER JOIN gasstations AS T2 ON T1.GasStationID = T2.GasStationID WHERE T1.Date = '2012-08-25' AND T1.Price  = 1513.12 )",
+      "generated_sql": "WITH matched_customers AS (\n    SELECT DISTINCT CustomerID\n    FROM transactions_1k\n    WHERE Date = '2012-08-25'\n      AND Price = 634.8\n), annual_consumption AS (\n    SELECT\n        ym.CustomerID,\n        SUM(CASE WHEN ym.Date LIKE '2012%' THEN ym.Consumption ELSE 0 END) AS consumption_2012,\n        SUM(CASE WHEN ym.Date LIKE '2013%' THEN ym.Consumption ELSE 0 END) AS consumption_2013\n    FROM yearmonth AS ym\n    JOIN matched_customers AS mc\n      ON mc.CustomerID = ym.CustomerID\n    GROUP BY ym.CustomerID\n)\nSELECT\n    (consumption_2012 - consumption_2013) / NULLIF(consumption_2012, 0) AS consumption_decrease_rate\nFROM annual_consumption;",
+      "result_match": false,
+      "result_match_values": false,
+      "result_match_lenient": false,
+      "failure_label": "wrong_table",
+      "sql_match": false,
+      "clarified": true,
+      "error": null,
+      "intent": "CLARIFICATION_NEEDED",
+      "trust_level": "clarifying",
+      "retries": 3,
+      "schema_linking": {
+        "gold_tables": [
+          "gasstations",
+          "transactions_1k",
+          "yearmonth"
+        ],
+        "selected_tables": [
+          "customers",
+          "gasstations",
+          "products",
+          "transactions_1k",
+          "yearmonth"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "customers",
+        "gasstations",
+        "products",
+        "transactions_1k",
+        "yearmonth"
+      ],
+      "gold_result": {
+        "columns": [
+          "CAST(SUM(IIF(SUBSTRING(Date, 1, 4) = '2012', Consumption, 0)) - SUM(IIF(SUBSTRING(Date, 1, 4) = '2013', Consumption, 0)) AS FLOAT) / SUM(IIF(SUBSTRING(Date, 1, 4) = '2012', Consumption, 0))"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "CAST(SUM(IIF(SUBSTRING(Date, 1, 4) = '2012', Consumption, 0)) - SUM(IIF(SUBSTRING(Date, 1, 4) = '2013', Consumption, 0)) AS FLOAT) / SUM(IIF(SUBSTRING(Date, 1, 4) = '2012', Consumption, 0))": null
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "consumption_decrease_rate"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "consumption_decrease_rate": -5.815242674672346
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": null,
+        "decision_why": null,
+        "reason": "Query filters yearmonth.date=2012-08-25 but that value is not in the question, history, or a business rule",
+        "assumption": null,
+        "should_clarify": true,
+        "proposal_status": null,
+        "options": [
+          "Give a value for yearmonth.date",
+          "List yearmonth so I can pick one",
+          "Run this for every yearmonth (no single-row filter)"
+        ],
+        "candidates": [],
+        "selected": null,
+        "clusters": null,
+        "gate": null
+      },
+      "assumption": null,
+      "elapsed_ms": 10453,
+      "cost_usd": 0.0016266,
+      "input_tokens": 2511,
+      "output_tokens": 937,
+      "reasoning_tokens": 396,
+      "cached_input_tokens": 0,
+      "calls": 2,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1870,
+          "output_tokens": 720,
+          "reasoning_tokens": 369,
+          "latency_ms": 6353,
+          "cost_usd": 0.001238
+        },
+        "direct_response": {
+          "calls": 1,
+          "input_tokens": 641,
+          "output_tokens": 217,
+          "reasoning_tokens": 27,
+          "latency_ms": 3705,
+          "cost_usd": 0.0003886
+        }
+      }
+    },
+    {
+      "id": "debit_card_specializing:95dedac7bdb1",
+      "db_id": "debit_card_specializing",
+      "question": "For all the people who paid more than 29.00 per unit of product id No.5. Give their consumption status in the August of 2012.",
+      "hardness": "moderate",
+      "split": "",
+      "dataset": "bird",
+      "evidence": "August of 2012 refers to the Date value = '201208' ; Price per unit of product = Price / Amount;",
+      "gold_sql": "SELECT T2.Consumption FROM transactions_1k AS T1 INNER JOIN yearmonth AS T2 ON T1.CustomerID = T2.CustomerID WHERE T1.Price / T1.Amount > 29.00 AND T1.ProductID = 5 AND T2.Date = '201208'",
+      "generated_sql": "WITH qualifying_customers AS (\n    SELECT DISTINCT CustomerID\n    FROM transactions_1k\n    WHERE ProductID = 5\n      AND Amount <> 0\n      AND Price / Amount > 29.00\n)\nSELECT q.CustomerID, y.Consumption\nFROM qualifying_customers AS q\nJOIN yearmonth AS y\n  ON y.CustomerID = q.CustomerID\n AND y.Date = '201208';",
+      "result_match": false,
+      "result_match_values": false,
+      "result_match_lenient": false,
+      "failure_label": "wrong_table",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "transactions_1k",
+          "yearmonth"
+        ],
+        "selected_tables": [
+          "customers",
+          "gasstations",
+          "products",
+          "transactions_1k",
+          "yearmonth"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "customers",
+        "gasstations",
+        "products",
+        "transactions_1k",
+        "yearmonth"
+      ],
+      "gold_result": {
+        "columns": [
+          "Consumption"
+        ],
+        "row_count": 10,
+        "rows": [
+          {
+            "Consumption": 1903.2
+          },
+          {
+            "Consumption": 88265.39
+          },
+          {
+            "Consumption": 1129.2
+          },
+          {
+            "Consumption": 126157.7
+          },
+          {
+            "Consumption": 126157.7
+          },
+          {
+            "Consumption": 58.19
+          },
+          {
+            "Consumption": 1142.95
+          },
+          {
+            "Consumption": 8878.07
+          }
+        ],
+        "truncated": true
+      },
+      "generated_result": {
+        "columns": [
+          "CustomerID",
+          "Consumption"
+        ],
+        "row_count": 9,
+        "rows": [
+          {
+            "CustomerID": 5443,
+            "Consumption": 88265.39
+          },
+          {
+            "CustomerID": 6768,
+            "Consumption": 126157.7
+          },
+          {
+            "CustomerID": 7626,
+            "Consumption": 45937.22
+          },
+          {
+            "CustomerID": 18831,
+            "Consumption": 1903.2
+          },
+          {
+            "CustomerID": 20447,
+            "Consumption": 58.19
+          },
+          {
+            "CustomerID": 23861,
+            "Consumption": 8878.07
+          },
+          {
+            "CustomerID": 24700,
+            "Consumption": 69331.72
+          },
+          {
+            "CustomerID": 45868,
+            "Consumption": 1142.95
+          }
+        ],
+        "truncated": true
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "merged_generate",
+        "reason": "Deferred to schema-grounded / execution-evidence path",
+        "assumption": "List each customer who made at least one product 5 transaction with a price per unit greater than 29.00, along with their August 2012 consumption.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": null,
+        "gate": "merged"
+      },
+      "assumption": "List each customer who made at least one product 5 transaction with a price per unit greater than 29.00, along with their August 2012 consumption.",
+      "elapsed_ms": 10712,
+      "cost_usd": 0.0015636,
+      "input_tokens": 3690,
+      "output_tokens": 688,
+      "reasoning_tokens": 303,
+      "cached_input_tokens": 0,
+      "calls": 2,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1822,
+          "output_tokens": 391,
+          "reasoning_tokens": 134,
+          "latency_ms": 6369,
+          "cost_usd": 0.0008336
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1868,
+          "output_tokens": 297,
+          "reasoning_tokens": 169,
+          "latency_ms": 4079,
+          "cost_usd": 0.00073
+        }
+      }
+    },
+    {
+      "id": "debit_card_specializing:decde0065517",
+      "db_id": "debit_card_specializing",
+      "question": "How much did customer 6 consume in total between August and November 2013?",
+      "hardness": "simple",
+      "split": "",
+      "dataset": "bird",
+      "evidence": "Between August And November 2013 refers to Between 201308 And 201311; The first 4 strings of the Date values in the yearmonth table can represent year; The 5th and 6th string of the date can refer to month.",
+      "gold_sql": "SELECT SUM(Consumption) FROM yearmonth WHERE CustomerID = 6 AND Date BETWEEN '201308' AND '201311'",
+      "generated_sql": "SELECT SUM(Consumption) AS total_consumption FROM yearmonth WHERE CustomerID = 6 AND Date BETWEEN '201308' AND '201311';",
+      "result_match": false,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": "scorer_only",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "yearmonth"
+        ],
+        "selected_tables": [
+          "customers",
+          "gasstations",
+          "products",
+          "transactions_1k",
+          "yearmonth"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "customers",
+        "gasstations",
+        "products",
+        "transactions_1k",
+        "yearmonth"
+      ],
+      "gold_result": {
+        "columns": [
+          "SUM(Consumption)"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "SUM(Consumption)": 1224.96
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "total_consumption"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "total_consumption": 1224.96
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "merged_generate",
+        "reason": "Deferred to schema-grounded / execution-evidence path",
+        "assumption": "Calculate customer 6's total consumption by summing monthly consumption from August through November 2013, inclusive.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": null,
+        "gate": "merged"
+      },
+      "assumption": "Calculate customer 6's total consumption by summing monthly consumption from August through November 2013, inclusive.",
+      "elapsed_ms": 3749,
+      "cost_usd": 0.0009302,
+      "input_tokens": 3613,
+      "output_tokens": 173,
+      "reasoning_tokens": 0,
+      "cached_input_tokens": 0,
+      "calls": 2,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1817,
+          "output_tokens": 109,
+          "reasoning_tokens": 0,
+          "latency_ms": 1965,
+          "cost_usd": 0.0004942
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1796,
+          "output_tokens": 64,
+          "reasoning_tokens": 0,
+          "latency_ms": 1494,
+          "cost_usd": 0.000436
+        }
+      }
+    },
+    {
+      "id": "student_club:fd57662d3f56",
+      "db_id": "student_club",
+      "question": "How many times was the budget in Advertisement for \"Yearly Kickoff\" meeting more than \"October Meeting\"?",
+      "hardness": "challenging",
+      "split": "",
+      "dataset": "bird",
+      "evidence": "budget in Advertisement refer to category = 'Advertisement' in the budget table; DIVIDE(SUM(amount when event_name = 'Yearly Kickoff'), SUM(amount when event_name = 'October Meeting'))",
+      "gold_sql": "SELECT CAST(SUM(CASE WHEN T2.event_name = 'Yearly Kickoff' THEN T1.amount ELSE 0 END) AS REAL) / SUM(CASE WHEN T2.event_name = 'October Meeting' THEN T1.amount ELSE 0 END) FROM budget AS T1 INNER JOIN event AS T2 ON T1.link_to_event = T2.event_id WHERE T1.category = 'Advertisement' AND T2.type = 'Meeting'",
+      "generated_sql": "WITH advertisement_budgets AS (SELECT e.event_name, SUM(b.amount) AS advertisement_amount FROM event AS e JOIN budget AS b ON b.link_to_event = e.event_id WHERE b.category = 'Advertisement' AND e.event_name IN ('Yearly Kickoff', 'October Meeting') GROUP BY e.event_name) SELECT (SELECT advertisement_amount FROM advertisement_budgets WHERE event_name = 'Yearly Kickoff') * 1.0 / NULLIF((SELECT advertisement_amount FROM advertisement_budgets WHERE event_name = 'October Meeting'), 0) AS times_more;",
+      "result_match": false,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": "scorer_only",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "budget",
+          "event"
+        ],
+        "selected_tables": [
+          "attendance",
+          "budget",
+          "event",
+          "expense",
+          "income",
+          "major",
+          "member",
+          "zip_code"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "attendance",
+        "budget",
+        "event",
+        "expense",
+        "income",
+        "major",
+        "member",
+        "zip_code"
+      ],
+      "gold_result": {
+        "columns": [
+          "CAST(SUM(CASE WHEN T2.event_name = 'Yearly Kickoff' THEN T1.amount ELSE 0 END) AS REAL) / SUM(CASE WHEN T2.event_name = 'October Meeting' THEN T1.amount ELSE 0 END)"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "CAST(SUM(CASE WHEN T2.event_name = 'Yearly Kickoff' THEN T1.amount ELSE 0 END) AS REAL) / SUM(CASE WHEN T2.event_name = 'October Meeting' THEN T1.amount ELSE 0 END)": 2.727272727272727
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "times_more"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "times_more": 2.727272727272727
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "merged_generate",
+        "reason": "Deferred to schema-grounded / execution-evidence path",
+        "assumption": "Calculate the ratio of the Advertisement budget amount for the Yearly Kickoff event to the Advertisement budget amount for the October Meeting event.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": null,
+        "gate": "merged"
+      },
+      "assumption": "Calculate the ratio of the Advertisement budget amount for the Yearly Kickoff event to the Advertisement budget amount for the October Meeting event.",
+      "elapsed_ms": 6791,
+      "cost_usd": 0.0045492,
+      "input_tokens": 20034,
+      "output_tokens": 452,
+      "reasoning_tokens": 81,
+      "cached_input_tokens": 0,
+      "calls": 2,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 10768,
+          "output_tokens": 216,
+          "reasoning_tokens": 0,
+          "latency_ms": 2512,
+          "cost_usd": 0.0024128
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 9266,
+          "output_tokens": 236,
+          "reasoning_tokens": 81,
+          "latency_ms": 4036,
+          "cost_usd": 0.0021364
+        }
+      }
+    },
+    {
+      "id": "student_club:d9da2ece44d9",
+      "db_id": "student_club",
+      "question": "Was each expense in October Meeting on October 8, 2019 approved?",
+      "hardness": "moderate",
+      "split": "",
+      "dataset": "bird",
+      "evidence": "event_name = 'October Meeting' where event_date = '2019-10-08'; approved = True means expenses was approved; approved = False means expenses was not approved",
+      "gold_sql": "SELECT T3.approved FROM event AS T1 INNER JOIN budget AS T2 ON T1.event_id = T2.link_to_event INNER JOIN expense AS T3 ON T2.budget_id = T3.link_to_budget WHERE T1.event_name = 'October Meeting' AND T1.event_date LIKE '2019-10-08%'",
+      "generated_sql": "SELECT e.expense_description, e.cost, e.approved FROM expense AS e JOIN budget AS b ON e.link_to_budget = b.budget_id JOIN event AS ev ON b.link_to_event = ev.event_id WHERE ev.event_name = 'October Meeting' AND date(ev.event_date) = '2019-10-08';",
+      "result_match": false,
+      "result_match_values": false,
+      "result_match_lenient": true,
+      "failure_label": "wrong_filter_or_value",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "budget",
+          "event",
+          "expense"
+        ],
+        "selected_tables": [
+          "attendance",
+          "budget",
+          "event",
+          "expense",
+          "income",
+          "major",
+          "member",
+          "zip_code"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "attendance",
+        "budget",
+        "event",
+        "expense",
+        "income",
+        "major",
+        "member",
+        "zip_code"
+      ],
+      "gold_result": {
+        "columns": [
+          "approved"
+        ],
+        "row_count": 3,
+        "rows": [
+          {
+            "approved": "true"
+          },
+          {
+            "approved": "true"
+          },
+          {
+            "approved": "true"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "expense_description",
+          "cost",
+          "approved"
+        ],
+        "row_count": 3,
+        "rows": [
+          {
+            "expense_description": "Posters",
+            "cost": 54.25,
+            "approved": "true"
+          },
+          {
+            "expense_description": "Water, chips, cookies",
+            "cost": 69.33,
+            "approved": "true"
+          },
+          {
+            "expense_description": "Pizza",
+            "cost": 51.81,
+            "approved": "true"
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "merged_generate",
+        "reason": "Deferred to schema-grounded / execution-evidence path",
+        "assumption": "List each expense associated with the October Meeting held on October 8, 2019 and indicate whether it was approved.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": null,
+        "gate": "merged"
+      },
+      "assumption": "List each expense associated with the October Meeting held on October 8, 2019 and indicate whether it was approved.",
+      "elapsed_ms": 4303,
+      "cost_usd": 0.0043172,
+      "input_tokens": 19948,
+      "output_tokens": 273,
+      "reasoning_tokens": 0,
+      "cached_input_tokens": 0,
+      "calls": 2,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 10744,
+          "output_tokens": 172,
+          "reasoning_tokens": 0,
+          "latency_ms": 2248,
+          "cost_usd": 0.0023552
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 9204,
+          "output_tokens": 101,
+          "reasoning_tokens": 0,
+          "latency_ms": 1820,
+          "cost_usd": 0.001962
+        }
+      }
+    },
+    {
+      "id": "student_club:7d54456eda4d",
+      "db_id": "student_club",
+      "question": "What was Brent Thomason's major?",
+      "hardness": "simple",
+      "split": "",
+      "dataset": "bird",
+      "evidence": "Brent Thomason is the full name; full name refers to first_name, last_name; major refers to major_name",
+      "gold_sql": "SELECT T2.major_name FROM member AS T1 INNER JOIN major AS T2 ON T1.link_to_major = T2.major_id WHERE T1.first_name = 'Brent' AND T1.last_name = 'Thomason'",
+      "generated_sql": "SELECT major.major_name FROM member JOIN major ON member.link_to_major = major.major_id WHERE member.first_name = 'Brent' AND member.last_name = 'Thomason';",
+      "result_match": true,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "major",
+          "member"
+        ],
+        "selected_tables": [
+          "attendance",
+          "budget",
+          "event",
+          "expense",
+          "income",
+          "major",
+          "member",
+          "zip_code"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "attendance",
+        "budget",
+        "event",
+        "expense",
+        "income",
+        "major",
+        "member",
+        "zip_code"
+      ],
+      "gold_result": {
+        "columns": [
+          "major_name"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "major_name": "Business Education"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "major_name"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "major_name": "Business Education"
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "merged_generate",
+        "reason": "Deferred to schema-grounded / execution-evidence path",
+        "assumption": "Find the major_name associated with the member whose first_name is Brent and last_name is Thomason.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": null,
+        "gate": "merged"
+      },
+      "assumption": "Find the major_name associated with the member whose first_name is Brent and last_name is Thomason.",
+      "elapsed_ms": 3524,
+      "cost_usd": 0.0041972,
+      "input_tokens": 19846,
+      "output_tokens": 190,
+      "reasoning_tokens": 0,
+      "cached_input_tokens": 0,
+      "calls": 2,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 10699,
+          "output_tokens": 120,
+          "reasoning_tokens": 0,
+          "latency_ms": 1777,
+          "cost_usd": 0.0022838
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 9147,
+          "output_tokens": 70,
+          "reasoning_tokens": 0,
+          "latency_ms": 1522,
+          "cost_usd": 0.0019134
+        }
+      }
+    },
+    {
+      "id": "superhero:e803fda95445",
+      "db_id": "superhero",
+      "question": "What is the percentage of blue female superheroes among all female superheroes?",
+      "hardness": "challenging",
+      "split": "",
+      "dataset": "bird",
+      "evidence": "percentage = MULTIPLY(DIVIDE(SUM(colour = 'Blue' WHERE gender = 'Female'), COUNT(gender = 'Female')), 100); blue refers to the color = 'Blue' WHERE skin_colour_id = colour.id; female refers to gender = 'Female';",
+      "gold_sql": "SELECT CAST(COUNT(CASE WHEN T3.colour = 'Blue' THEN T1.id ELSE NULL END) AS REAL) * 100 / COUNT(T1.id) FROM superhero AS T1 INNER JOIN gender AS T2 ON T1.gender_id = T2.id INNER JOIN colour AS T3 ON T1.skin_colour_id = T3.id WHERE T2.gender = 'Female'",
+      "generated_sql": "SELECT 100.0 * SUM(CASE WHEN c.colour = 'Blue' THEN 1 ELSE 0 END) / COUNT(*) AS percentage FROM superhero AS s JOIN gender AS g ON s.gender_id = g.id LEFT JOIN colour AS c ON s.skin_colour_id = c.id WHERE g.gender = 'Female';",
+      "result_match": false,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": "scorer_only",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "colour",
+          "gender",
+          "superhero"
+        ],
+        "selected_tables": [
+          "alignment",
+          "attribute",
+          "colour",
+          "gender",
+          "hero_attribute",
+          "hero_power",
+          "publisher",
+          "race",
+          "superhero",
+          "superpower"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "alignment",
+        "attribute",
+        "colour",
+        "gender",
+        "hero_attribute",
+        "hero_power",
+        "publisher",
+        "race",
+        "superhero",
+        "superpower"
+      ],
+      "gold_result": {
+        "columns": [
+          "CAST(COUNT(CASE WHEN T3.colour = 'Blue' THEN T1.id ELSE NULL END) AS REAL) * 100 / COUNT(T1.id)"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "CAST(COUNT(CASE WHEN T3.colour = 'Blue' THEN T1.id ELSE NULL END) AS REAL) * 100 / COUNT(T1.id)": 2.4630541871921183
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "percentage"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "percentage": 2.4630541871921183
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "merged_generate",
+        "reason": "Deferred to schema-grounded / execution-evidence path",
+        "assumption": "Calculate the percentage of female superheroes whose skin colour is Blue among all female superheroes.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": null,
+        "gate": "merged"
+      },
+      "assumption": "Calculate the percentage of female superheroes whose skin colour is Blue among all female superheroes.",
+      "elapsed_ms": 9566,
+      "cost_usd": 0.0019034,
+      "input_tokens": 5407,
+      "output_tokens": 685,
+      "reasoning_tokens": 430,
+      "cached_input_tokens": 0,
+      "calls": 2,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 2913,
+          "output_tokens": 150,
+          "reasoning_tokens": 0,
+          "latency_ms": 1799,
+          "cost_usd": 0.0007626
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 2494,
+          "output_tokens": 535,
+          "reasoning_tokens": 430,
+          "latency_ms": 7498,
+          "cost_usd": 0.0011408
+        }
+      }
+    },
+    {
+      "id": "superhero:8855285df05f",
+      "db_id": "superhero",
+      "question": "List the heroes' names whose eyes and hair colours are both black.",
+      "hardness": "moderate",
+      "split": "",
+      "dataset": "bird",
+      "evidence": "heroes' names refers to superhero_name; eyes and hair colours are both black refers to eye_colour_id AND hair_colour_id WHERE colour.colour = 'Black';",
+      "gold_sql": "SELECT T1.superhero_name FROM superhero AS T1 INNER JOIN colour AS T2 ON T1.eye_colour_id = T2.id AND T1.hair_colour_id = T2.id WHERE T2.colour = 'Black'",
+      "generated_sql": "SELECT s.superhero_name\nFROM superhero AS s\nJOIN colour AS eye ON s.eye_colour_id = eye.id\nJOIN colour AS hair ON s.hair_colour_id = hair.id\nWHERE eye.colour = 'Black'\n  AND hair.colour = 'Black';",
+      "result_match": true,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "colour",
+          "superhero"
+        ],
+        "selected_tables": [
+          "alignment",
+          "attribute",
+          "colour",
+          "gender",
+          "hero_attribute",
+          "hero_power",
+          "publisher",
+          "race",
+          "superhero",
+          "superpower"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "alignment",
+        "attribute",
+        "colour",
+        "gender",
+        "hero_attribute",
+        "hero_power",
+        "publisher",
+        "race",
+        "superhero",
+        "superpower"
+      ],
+      "gold_result": {
+        "columns": [
+          "superhero_name"
+        ],
+        "row_count": 11,
+        "rows": [
+          {
+            "superhero_name": "Armor"
+          },
+          {
+            "superhero_name": "Atom Girl"
+          },
+          {
+            "superhero_name": "Bizarro"
+          },
+          {
+            "superhero_name": "Galactus"
+          },
+          {
+            "superhero_name": "General Zod"
+          },
+          {
+            "superhero_name": "Match"
+          },
+          {
+            "superhero_name": "Negasonic Teenage Warhead"
+          },
+          {
+            "superhero_name": "Phantom Stranger"
+          }
+        ],
+        "truncated": true
+      },
+      "generated_result": {
+        "columns": [
+          "superhero_name"
+        ],
+        "row_count": 11,
+        "rows": [
+          {
+            "superhero_name": "Armor"
+          },
+          {
+            "superhero_name": "Atom Girl"
+          },
+          {
+            "superhero_name": "Bizarro"
+          },
+          {
+            "superhero_name": "Galactus"
+          },
+          {
+            "superhero_name": "General Zod"
+          },
+          {
+            "superhero_name": "Match"
+          },
+          {
+            "superhero_name": "Negasonic Teenage Warhead"
+          },
+          {
+            "superhero_name": "Phantom Stranger"
+          }
+        ],
+        "truncated": true
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "merged_generate",
+        "reason": "Deferred to schema-grounded / execution-evidence path",
+        "assumption": "List superhero names for heroes whose eye colour and hair colour are both Black.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": null,
+        "gate": "merged"
+      },
+      "assumption": "List superhero names for heroes whose eye colour and hair colour are both Black.",
+      "elapsed_ms": 5959,
+      "cost_usd": 0.0013414,
+      "input_tokens": 5375,
+      "output_tokens": 222,
+      "reasoning_tokens": 0,
+      "cached_input_tokens": 0,
+      "calls": 2,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 2890,
+          "output_tokens": 132,
+          "reasoning_tokens": 0,
+          "latency_ms": 4159,
+          "cost_usd": 0.0007364
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 2485,
+          "output_tokens": 90,
+          "reasoning_tokens": 0,
+          "latency_ms": 1564,
+          "cost_usd": 0.000605
+        }
+      }
+    },
+    {
+      "id": "superhero:3cf832a182e0",
+      "db_id": "superhero",
+      "question": "How many powers does Amazo hero have?",
+      "hardness": "simple",
+      "split": "",
+      "dataset": "bird",
+      "evidence": "Amazo hero refers to superhero_name = 'Amazo';",
+      "gold_sql": "SELECT COUNT(T1.power_id) FROM hero_power AS T1 INNER JOIN superhero AS T2 ON T1.hero_id = T2.id WHERE T2.superhero_name = 'Amazo'",
+      "generated_sql": "SELECT COUNT(*) AS power_count FROM hero_power hp JOIN superhero s ON s.id = hp.hero_id WHERE s.superhero_name = 'Amazo';",
+      "result_match": false,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": "scorer_only",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "hero_power",
+          "superhero"
+        ],
+        "selected_tables": [
+          "alignment",
+          "attribute",
+          "colour",
+          "gender",
+          "hero_attribute",
+          "hero_power",
+          "publisher",
+          "race",
+          "superhero",
+          "superpower"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "alignment",
+        "attribute",
+        "colour",
+        "gender",
+        "hero_attribute",
+        "hero_power",
+        "publisher",
+        "race",
+        "superhero",
+        "superpower"
+      ],
+      "gold_result": {
+        "columns": [
+          "COUNT(T1.power_id)"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "COUNT(T1.power_id)": 44
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "power_count"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "power_count": 44
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "merged_generate",
+        "reason": "Deferred to schema-grounded / execution-evidence path",
+        "assumption": "Count the power associations recorded for the superhero whose name is Amazo.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": null,
+        "gate": "merged"
+      },
+      "assumption": "Count the power associations recorded for the superhero whose name is Amazo.",
+      "elapsed_ms": 4164,
+      "cost_usd": 0.0012748,
+      "input_tokens": 5318,
+      "output_tokens": 176,
+      "reasoning_tokens": 0,
+      "cached_input_tokens": 0,
+      "calls": 2,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 2862,
+          "output_tokens": 111,
+          "reasoning_tokens": 0,
+          "latency_ms": 1791,
+          "cost_usd": 0.0007056
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 2456,
+          "output_tokens": 65,
+          "reasoning_tokens": 0,
+          "latency_ms": 2145,
+          "cost_usd": 0.0005692
+        }
+      }
+    },
+    {
+      "id": "thrombosis_prediction:c20143fa2f7c",
+      "db_id": "thrombosis_prediction",
+      "question": "Among the patients who has a normal anti-scl70, how many of them are female and does not have any symptom?",
+      "hardness": "challenging",
+      "split": "",
+      "dataset": "bird",
+      "evidence": "normal anti-scl70 refers to SC170 IN('negative', '0'); female refers to Sex = 'F'; does not have any symptom refers to symptoms IS NULL; Should consider DISTINCT in the final result;",
+      "gold_sql": "SELECT COUNT(DISTINCT T1.ID) FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID INNER JOIN Examination AS T3 ON T3.ID = T2.ID WHERE (T2.SC170 = 'negative' OR T2.SC170 = '0') AND T1.SEX = 'F' AND T3.Symptoms IS NULL",
+      "generated_sql": "SELECT COUNT(DISTINCT p.ID) AS patient_count\nFROM Patient AS p\nJOIN Laboratory AS l\n  ON l.ID = p.ID\nJOIN Examination AS e\n  ON e.ID = p.ID\nWHERE p.SEX = 'F'\n  AND l.\"SC170\" IN ('negative', '0')\n  AND NULLIF(TRIM(e.\"Symptoms\"), '') IS NULL;",
+      "result_match": false,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": "scorer_only",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "examination",
+          "laboratory",
+          "patient"
+        ],
+        "selected_tables": [
+          "examination",
+          "laboratory",
+          "patient"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "Examination",
+        "Laboratory",
+        "Patient"
+      ],
+      "gold_result": {
+        "columns": [
+          "COUNT(DISTINCT T1.ID)"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "COUNT(DISTINCT T1.ID)": 2
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "patient_count"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "patient_count": 2
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "merged_generate",
+        "reason": "Deferred to schema-grounded / execution-evidence path",
+        "assumption": "Count distinct female patients with a normal anti-Scl70 result and at least one examination record where symptoms are NULL.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": null,
+        "gate": "merged"
+      },
+      "assumption": "Count distinct female patients with a normal anti-Scl70 result and at least one examination record where symptoms are NULL.",
+      "elapsed_ms": 8211,
+      "cost_usd": 0.0021524,
+      "input_tokens": 7204,
+      "output_tokens": 593,
+      "reasoning_tokens": 190,
+      "cached_input_tokens": 0,
+      "calls": 2,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 3784,
+          "output_tokens": 234,
+          "reasoning_tokens": 0,
+          "latency_ms": 2771,
+          "cost_usd": 0.0010376
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 3420,
+          "output_tokens": 359,
+          "reasoning_tokens": 190,
+          "latency_ms": 5159,
+          "cost_usd": 0.0011148
+        }
+      }
+    },
+    {
+      "id": "thrombosis_prediction:fb0bb69d09ad",
+      "db_id": "thrombosis_prediction",
+      "question": "For the patients with an abnormal Ig M level, what is the most common disease they are diagnosed with?",
+      "hardness": "moderate",
+      "split": "",
+      "dataset": "bird",
+      "evidence": "abnormal Ig M level refers to IGM <=40 OR IGM >= 400; most common disease refers to MAX(COUNT(Diagnosis));",
+      "gold_sql": "SELECT T1.Diagnosis FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID WHERE T2.IGM NOT BETWEEN 40 AND 400 GROUP BY T1.Diagnosis ORDER BY COUNT(T1.Diagnosis) DESC LIMIT 1",
+      "generated_sql": "SELECT p.Diagnosis, COUNT(DISTINCT p.ID) AS patient_count\nFROM Patient AS p\nJOIN Laboratory AS l ON l.ID = p.ID\nWHERE l.IGM <= 40 OR l.IGM >= 400\nGROUP BY p.Diagnosis\nORDER BY patient_count DESC, p.Diagnosis\nLIMIT 1;",
+      "result_match": false,
+      "result_match_values": false,
+      "result_match_lenient": false,
+      "failure_label": "wrong_filter_or_value",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "laboratory",
+          "patient"
+        ],
+        "selected_tables": [
+          "examination",
+          "laboratory",
+          "patient"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "Examination",
+        "Laboratory",
+        "Patient"
+      ],
+      "gold_result": {
+        "columns": [
+          "Diagnosis"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "Diagnosis": "RA"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Diagnosis",
+          "patient_count"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "Diagnosis": "SLE",
+            "patient_count": 10
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "merged_generate",
+        "reason": "Deferred to schema-grounded / execution-evidence path",
+        "assumption": "Identify the primary diagnosis occurring most often among distinct patients whose laboratory IGM level is <= 40 or >= 400.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": null,
+        "gate": "merged"
+      },
+      "assumption": "Identify the primary diagnosis occurring most often among distinct patients whose laboratory IGM level is <= 40 or >= 400.",
+      "elapsed_ms": 7632,
+      "cost_usd": 0.0021914,
+      "input_tokens": 7177,
+      "output_tokens": 630,
+      "reasoning_tokens": 304,
+      "cached_input_tokens": 0,
+      "calls": 2,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 3763,
+          "output_tokens": 360,
+          "reasoning_tokens": 145,
+          "latency_ms": 4013,
+          "cost_usd": 0.0011846
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 3414,
+          "output_tokens": 270,
+          "reasoning_tokens": 159,
+          "latency_ms": 3366,
+          "cost_usd": 0.0010068
+        }
+      }
+    },
+    {
+      "id": "thrombosis_prediction:1283842141de",
+      "db_id": "thrombosis_prediction",
+      "question": "How many female patients were given an APS diagnosis?",
+      "hardness": "simple",
+      "split": "",
+      "dataset": "bird",
+      "evidence": "female refers to SEX = 'F'; APS diagnosis refers to Diagnosis='APS'",
+      "gold_sql": "SELECT COUNT(ID) FROM Patient WHERE SEX = 'F' AND Diagnosis = 'APS'",
+      "generated_sql": "SELECT COUNT(*) AS female_aps_patients FROM Patient WHERE SEX = 'F' AND Diagnosis = 'APS';",
+      "result_match": false,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": "scorer_only",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "patient"
+        ],
+        "selected_tables": [
+          "examination",
+          "laboratory",
+          "patient"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "Examination",
+        "Laboratory",
+        "Patient"
+      ],
+      "gold_result": {
+        "columns": [
+          "COUNT(ID)"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "COUNT(ID)": 16
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "female_aps_patients"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "female_aps_patients": 16
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "merged_generate",
+        "reason": "Deferred to schema-grounded / execution-evidence path",
+        "assumption": "Count distinct female patients whose recorded diagnosis is APS.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": null,
+        "gate": "merged"
+      },
+      "assumption": "Count distinct female patients whose recorded diagnosis is APS.",
+      "elapsed_ms": 3314,
+      "cost_usd": 0.0016022,
+      "input_tokens": 7081,
+      "output_tokens": 155,
+      "reasoning_tokens": 0,
+      "cached_input_tokens": 0,
+      "calls": 2,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 3727,
+          "output_tokens": 98,
+          "reasoning_tokens": 0,
+          "latency_ms": 1717,
+          "cost_usd": 0.000863
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 3354,
+          "output_tokens": 57,
+          "reasoning_tokens": 0,
+          "latency_ms": 1356,
+          "cost_usd": 0.0007392
+        }
+      }
+    }
+  ],
+  "accuracy": {
+    "overall": {
+      "n": 24,
+      "strict_correct": 8,
+      "values_correct": 15,
+      "lenient_correct": 16,
+      "strict_accuracy": 0.3333,
+      "values_accuracy": 0.625,
+      "lenient_accuracy": 0.6667
+    },
+    "by_hardness": {
+      "challenging": {
+        "n": 8,
+        "strict_correct": 0,
+        "values_correct": 3,
+        "lenient_correct": 3,
+        "strict_accuracy": 0.0,
+        "values_accuracy": 0.375,
+        "lenient_accuracy": 0.375
+      },
+      "moderate": {
+        "n": 8,
+        "strict_correct": 3,
+        "values_correct": 4,
+        "lenient_correct": 5,
+        "strict_accuracy": 0.375,
+        "values_accuracy": 0.5,
+        "lenient_accuracy": 0.625
+      },
+      "simple": {
+        "n": 8,
+        "strict_correct": 5,
+        "values_correct": 8,
+        "lenient_correct": 8,
+        "strict_accuracy": 0.625,
+        "values_accuracy": 1.0,
+        "lenient_accuracy": 1.0
+      }
+    },
+    "by_database": {
+      "debit_card_specializing": {
+        "n": 6,
+        "strict_correct": 2,
+        "values_correct": 3,
+        "lenient_correct": 3,
+        "strict_accuracy": 0.3333,
+        "values_accuracy": 0.5,
+        "lenient_accuracy": 0.5
+      },
+      "student_club": {
+        "n": 6,
+        "strict_correct": 2,
+        "values_correct": 4,
+        "lenient_correct": 5,
+        "strict_accuracy": 0.3333,
+        "values_accuracy": 0.6667,
+        "lenient_accuracy": 0.8333
+      },
+      "superhero": {
+        "n": 6,
+        "strict_correct": 3,
+        "values_correct": 5,
+        "lenient_correct": 5,
+        "strict_accuracy": 0.5,
+        "values_accuracy": 0.8333,
+        "lenient_accuracy": 0.8333
+      },
+      "thrombosis_prediction": {
+        "n": 6,
+        "strict_correct": 1,
+        "values_correct": 3,
+        "lenient_correct": 3,
+        "strict_accuracy": 0.1667,
+        "values_accuracy": 0.5,
+        "lenient_accuracy": 0.5
+      }
+    },
+    "failure_labels": {
+      "wrong_table": 4,
+      "missing_table": 1,
+      "wrong_filter_or_value": 4
+    },
+    "schema_linking_recall": {
+      "n": 24,
+      "full_hit": 24,
+      "rate": 1.0
+    },
+    "convention_adjusted": {
+      "n": 24,
+      "values_correct": 15,
+      "values_accuracy": 0.625,
+      "convention_adjusted_correct": 15,
+      "convention_adjusted_accuracy": 0.625
+    }
+  },
+  "totals": {
+    "cost_usd": 0.062721,
+    "elapsed_ms": 202242,
+    "latency_p50_ms": 6774.0,
+    "latency_p95_ms": 13471.0,
+    "latency_mean_ms": 8426.8,
+    "avg_cost_usd": 0.002613,
+    "input_tokens": 237725,
+    "output_tokens": 13743,
+    "reasoning_tokens": 4899,
+    "calls": 52,
+    "estimated_calls": 0,
+    "correct_strict": 8,
+    "correct_values": 15,
+    "n": 24
+  },
+  "by_stage": {
+    "query_generator": {
+      "calls": 26,
+      "input_tokens": 128677,
+      "output_tokens": 7510,
+      "reasoning_tokens": 2140,
+      "latency_ms": 101233,
+      "cost_usd": 0.03375902,
+      "latency_p50_ms": 2771.0,
+      "latency_p95_ms": 7514.0,
+      "latency_mean_ms": 3893.6
+    },
+    "query_validator": {
+      "calls": 23,
+      "input_tokens": 100100,
+      "output_tokens": 5382,
+      "reasoning_tokens": 2577,
+      "latency_ms": 81168,
+      "cost_usd": 0.02615116,
+      "latency_p50_ms": 2551.0,
+      "latency_p95_ms": 7498.0,
+      "latency_mean_ms": 3529.0
+    },
+    "ambiguity_gate": {
+      "calls": 2,
+      "input_tokens": 8307,
+      "output_tokens": 634,
+      "reasoning_tokens": 155,
+      "latency_ms": 6376,
+      "cost_usd": 0.0024222,
+      "latency_p50_ms": 2403.0,
+      "latency_p95_ms": 2403.0,
+      "latency_mean_ms": 3188.0
+    },
+    "direct_response": {
+      "calls": 1,
+      "input_tokens": 641,
+      "output_tokens": 217,
+      "reasoning_tokens": 27,
+      "latency_ms": 3705,
+      "cost_usd": 0.0003886,
+      "latency_p50_ms": 3705.0,
+      "latency_p95_ms": 3705.0,
+      "latency_mean_ms": 3705.0
+    }
+  },
+  "extrapolation": {
+    "spider_dev_1034": {
+      "n_questions": 1034,
+      "setup_cost_usd": 0.0,
+      "questions_cost_usd": 2.702229,
+      "total_cost_usd": 2.702229,
+      "avg_cost_per_question_usd": 0.002613,
+      "avg_latency_ms": 8426.8,
+      "estimated_total_latency_ms": 8713306.5
+    },
+    "bird_mini_dev_500": {
+      "n_questions": 500,
+      "setup_cost_usd": 0.0,
+      "questions_cost_usd": 1.306687,
+      "total_cost_usd": 1.306687,
+      "avg_cost_per_question_usd": 0.002613,
+      "avg_latency_ms": 8426.8,
+      "estimated_total_latency_ms": 4213422.0
+    }
+  },
+  "usage": {
+    "total_cost_usd": 0.06272098,
+    "total_calls": 52,
+    "estimated_calls": 0,
+    "by_stage": {
+      "query_generator": {
+        "calls": 26,
+        "input_tokens": 128677,
+        "output_tokens": 7510,
+        "reasoning_tokens": 2140,
+        "cached_input_tokens": 5491,
+        "latency_ms": 101233,
+        "cost_usd": 0.03375902,
+        "estimated_calls": 0,
+        "latency_p50_ms": 2771.0,
+        "latency_p95_ms": 7514.0,
+        "latency_mean_ms": 3893.6
+      },
+      "query_validator": {
+        "calls": 23,
+        "input_tokens": 100100,
+        "output_tokens": 5382,
+        "reasoning_tokens": 2577,
+        "cached_input_tokens": 1818,
+        "latency_ms": 81168,
+        "cost_usd": 0.02615116,
+        "estimated_calls": 0,
+        "latency_p50_ms": 2551.0,
+        "latency_p95_ms": 7498.0,
+        "latency_mean_ms": 3529.0
+      },
+      "ambiguity_gate": {
+        "calls": 2,
+        "input_tokens": 8307,
+        "output_tokens": 634,
+        "reasoning_tokens": 155,
+        "cached_input_tokens": 0,
+        "latency_ms": 6376,
+        "cost_usd": 0.0024222,
+        "estimated_calls": 0,
+        "latency_p50_ms": 2403.0,
+        "latency_p95_ms": 2403.0,
+        "latency_mean_ms": 3188.0
+      },
+      "direct_response": {
+        "calls": 1,
+        "input_tokens": 641,
+        "output_tokens": 217,
+        "reasoning_tokens": 27,
+        "cached_input_tokens": 0,
+        "latency_ms": 3705,
+        "cost_usd": 0.0003886,
+        "estimated_calls": 0,
+        "latency_p50_ms": 3705.0,
+        "latency_p95_ms": 3705.0,
+        "latency_mean_ms": 3705.0
+      }
+    },
+    "records": [
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "debit_card_specializing:cc86ad0a4d81",
+        "label": "",
+        "input_tokens": 1915,
+        "output_tokens": 1044,
+        "reasoning_tokens": 464,
+        "cached_input_tokens": 1912,
+        "latency_ms": 11763,
+        "cost_usd": 0.00129164,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "debit_card_specializing:cc86ad0a4d81",
+        "label": "",
+        "input_tokens": 2195,
+        "output_tokens": 763,
+        "reasoning_tokens": 301,
+        "cached_input_tokens": 0,
+        "latency_ms": 8087,
+        "cost_usd": 0.0013546,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "debit_card_specializing:986ce6c4a44c",
+        "label": "",
+        "input_tokens": 1793,
+        "output_tokens": 497,
+        "reasoning_tokens": 221,
+        "cached_input_tokens": 1790,
+        "latency_ms": 4751,
+        "cost_usd": 0.0006328,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "debit_card_specializing:986ce6c4a44c",
+        "label": "",
+        "input_tokens": 1899,
+        "output_tokens": 407,
+        "reasoning_tokens": 226,
+        "cached_input_tokens": 0,
+        "latency_ms": 7323,
+        "cost_usd": 0.0008682,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "debit_card_specializing:87a1c4076e3e",
+        "label": "",
+        "input_tokens": 1792,
+        "output_tokens": 310,
+        "reasoning_tokens": 127,
+        "cached_input_tokens": 1789,
+        "latency_ms": 4100,
+        "cost_usd": 0.00040838,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "debit_card_specializing:87a1c4076e3e",
+        "label": "",
+        "input_tokens": 1821,
+        "output_tokens": 86,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1818,
+        "latency_ms": 1415,
+        "cost_usd": 0.00014016,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "student_club:a93399d99ac6",
+        "label": "",
+        "input_tokens": 10031,
+        "output_tokens": 278,
+        "reasoning_tokens": 75,
+        "cached_input_tokens": 0,
+        "latency_ms": 4438,
+        "cost_usd": 0.0023398,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "student_club:a93399d99ac6",
+        "label": "",
+        "input_tokens": 10038,
+        "output_tokens": 164,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2450,
+        "cost_usd": 0.0022044,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "student_club:a93399d99ac6",
+        "label": "",
+        "input_tokens": 9178,
+        "output_tokens": 282,
+        "reasoning_tokens": 187,
+        "cached_input_tokens": 0,
+        "latency_ms": 4112,
+        "cost_usd": 0.002174,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "student_club:bcc1cc5329a9",
+        "label": "",
+        "input_tokens": 10758,
+        "output_tokens": 149,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2178,
+        "cost_usd": 0.0023304,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "student_club:bcc1cc5329a9",
+        "label": "",
+        "input_tokens": 9197,
+        "output_tokens": 139,
+        "reasoning_tokens": 51,
+        "cached_input_tokens": 0,
+        "latency_ms": 2551,
+        "cost_usd": 0.0020062,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "student_club:ab9c694f3149",
+        "label": "",
+        "input_tokens": 10706,
+        "output_tokens": 115,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1697,
+        "cost_usd": 0.0022792,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "student_club:ab9c694f3149",
+        "label": "",
+        "input_tokens": 9156,
+        "output_tokens": 68,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1874,
+        "cost_usd": 0.0019128,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "superhero:66b54793d540",
+        "label": "",
+        "input_tokens": 3450,
+        "output_tokens": 450,
+        "reasoning_tokens": 113,
+        "cached_input_tokens": 0,
+        "latency_ms": 4041,
+        "cost_usd": 0.00123,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "superhero:66b54793d540",
+        "label": "",
+        "input_tokens": 3457,
+        "output_tokens": 433,
+        "reasoning_tokens": 130,
+        "cached_input_tokens": 0,
+        "latency_ms": 5108,
+        "cost_usd": 0.001211,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "superhero:66b54793d540",
+        "label": "",
+        "input_tokens": 2557,
+        "output_tokens": 266,
+        "reasoning_tokens": 123,
+        "cached_input_tokens": 0,
+        "latency_ms": 4020,
+        "cost_usd": 0.0008306,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "superhero:a698b84453d2",
+        "label": "",
+        "input_tokens": 2889,
+        "output_tokens": 134,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2259,
+        "cost_usd": 0.0007386,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "superhero:a698b84453d2",
+        "label": "",
+        "input_tokens": 2480,
+        "output_tokens": 90,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1880,
+        "cost_usd": 0.000604,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "superhero:4b5f3fad5c35",
+        "label": "",
+        "input_tokens": 2879,
+        "output_tokens": 143,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 8008,
+        "cost_usd": 0.0007474,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "superhero:4b5f3fad5c35",
+        "label": "",
+        "input_tokens": 2483,
+        "output_tokens": 88,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1313,
+        "cost_usd": 0.0006022,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "thrombosis_prediction:b9d363403f2b",
+        "label": "",
+        "input_tokens": 3799,
+        "output_tokens": 283,
+        "reasoning_tokens": 118,
+        "cached_input_tokens": 0,
+        "latency_ms": 3558,
+        "cost_usd": 0.0010994,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "thrombosis_prediction:b9d363403f2b",
+        "label": "",
+        "input_tokens": 3422,
+        "output_tokens": 110,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1473,
+        "cost_usd": 0.0008164,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "thrombosis_prediction:059480ffe756",
+        "label": "",
+        "input_tokens": 3773,
+        "output_tokens": 573,
+        "reasoning_tokens": 244,
+        "cached_input_tokens": 0,
+        "latency_ms": 7514,
+        "cost_usd": 0.0014422,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "thrombosis_prediction:059480ffe756",
+        "label": "",
+        "input_tokens": 4150,
+        "output_tokens": 407,
+        "reasoning_tokens": 155,
+        "cached_input_tokens": 0,
+        "latency_ms": 3973,
+        "cost_usd": 0.0013184,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "thrombosis_prediction:059480ffe756",
+        "label": "",
+        "input_tokens": 4157,
+        "output_tokens": 227,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2403,
+        "cost_usd": 0.0011038,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "thrombosis_prediction:059480ffe756",
+        "label": "",
+        "input_tokens": 3433,
+        "output_tokens": 669,
+        "reasoning_tokens": 466,
+        "cached_input_tokens": 0,
+        "latency_ms": 8455,
+        "cost_usd": 0.0014894,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "thrombosis_prediction:e29060e5e08b",
+        "label": "",
+        "input_tokens": 3738,
+        "output_tokens": 124,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1894,
+        "cost_usd": 0.0008964,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "thrombosis_prediction:e29060e5e08b",
+        "label": "",
+        "input_tokens": 3375,
+        "output_tokens": 270,
+        "reasoning_tokens": 194,
+        "cached_input_tokens": 0,
+        "latency_ms": 4626,
+        "cost_usd": 0.000999,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "debit_card_specializing:398a7b846ff7",
+        "label": "",
+        "input_tokens": 1870,
+        "output_tokens": 720,
+        "reasoning_tokens": 369,
+        "cached_input_tokens": 0,
+        "latency_ms": 6353,
+        "cost_usd": 0.001238,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "direct_response",
+        "case_id": "debit_card_specializing:398a7b846ff7",
+        "label": "",
+        "input_tokens": 641,
+        "output_tokens": 217,
+        "reasoning_tokens": 27,
+        "cached_input_tokens": 0,
+        "latency_ms": 3705,
+        "cost_usd": 0.0003886,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "debit_card_specializing:95dedac7bdb1",
+        "label": "",
+        "input_tokens": 1822,
+        "output_tokens": 391,
+        "reasoning_tokens": 134,
+        "cached_input_tokens": 0,
+        "latency_ms": 6369,
+        "cost_usd": 0.0008336,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "debit_card_specializing:95dedac7bdb1",
+        "label": "",
+        "input_tokens": 1868,
+        "output_tokens": 297,
+        "reasoning_tokens": 169,
+        "cached_input_tokens": 0,
+        "latency_ms": 4079,
+        "cost_usd": 0.00073,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "debit_card_specializing:decde0065517",
+        "label": "",
+        "input_tokens": 1817,
+        "output_tokens": 109,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1965,
+        "cost_usd": 0.0004942,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "debit_card_specializing:decde0065517",
+        "label": "",
+        "input_tokens": 1796,
+        "output_tokens": 64,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1494,
+        "cost_usd": 0.000436,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "student_club:fd57662d3f56",
+        "label": "",
+        "input_tokens": 10768,
+        "output_tokens": 216,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2512,
+        "cost_usd": 0.0024128,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "student_club:fd57662d3f56",
+        "label": "",
+        "input_tokens": 9266,
+        "output_tokens": 236,
+        "reasoning_tokens": 81,
+        "cached_input_tokens": 0,
+        "latency_ms": 4036,
+        "cost_usd": 0.0021364,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "student_club:d9da2ece44d9",
+        "label": "",
+        "input_tokens": 10744,
+        "output_tokens": 172,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2248,
+        "cost_usd": 0.0023552,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "student_club:d9da2ece44d9",
+        "label": "",
+        "input_tokens": 9204,
+        "output_tokens": 101,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1820,
+        "cost_usd": 0.001962,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "student_club:7d54456eda4d",
+        "label": "",
+        "input_tokens": 10699,
+        "output_tokens": 120,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1777,
+        "cost_usd": 0.0022838,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "student_club:7d54456eda4d",
+        "label": "",
+        "input_tokens": 9147,
+        "output_tokens": 70,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1522,
+        "cost_usd": 0.0019134,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "superhero:e803fda95445",
+        "label": "",
+        "input_tokens": 2913,
+        "output_tokens": 150,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1799,
+        "cost_usd": 0.0007626,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "superhero:e803fda95445",
+        "label": "",
+        "input_tokens": 2494,
+        "output_tokens": 535,
+        "reasoning_tokens": 430,
+        "cached_input_tokens": 0,
+        "latency_ms": 7498,
+        "cost_usd": 0.0011408,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "superhero:8855285df05f",
+        "label": "",
+        "input_tokens": 2890,
+        "output_tokens": 132,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 4159,
+        "cost_usd": 0.0007364,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "superhero:8855285df05f",
+        "label": "",
+        "input_tokens": 2485,
+        "output_tokens": 90,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1564,
+        "cost_usd": 0.000605,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "superhero:3cf832a182e0",
+        "label": "",
+        "input_tokens": 2862,
+        "output_tokens": 111,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1791,
+        "cost_usd": 0.0007056,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "superhero:3cf832a182e0",
+        "label": "",
+        "input_tokens": 2456,
+        "output_tokens": 65,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2145,
+        "cost_usd": 0.0005692,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "thrombosis_prediction:c20143fa2f7c",
+        "label": "",
+        "input_tokens": 3784,
+        "output_tokens": 234,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2771,
+        "cost_usd": 0.0010376,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "thrombosis_prediction:c20143fa2f7c",
+        "label": "",
+        "input_tokens": 3420,
+        "output_tokens": 359,
+        "reasoning_tokens": 190,
+        "cached_input_tokens": 0,
+        "latency_ms": 5159,
+        "cost_usd": 0.0011148,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "thrombosis_prediction:fb0bb69d09ad",
+        "label": "",
+        "input_tokens": 3763,
+        "output_tokens": 360,
+        "reasoning_tokens": 145,
+        "cached_input_tokens": 0,
+        "latency_ms": 4013,
+        "cost_usd": 0.0011846,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "thrombosis_prediction:fb0bb69d09ad",
+        "label": "",
+        "input_tokens": 3414,
+        "output_tokens": 270,
+        "reasoning_tokens": 159,
+        "cached_input_tokens": 0,
+        "latency_ms": 3366,
+        "cost_usd": 0.0010068,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "thrombosis_prediction:1283842141de",
+        "label": "",
+        "input_tokens": 3727,
+        "output_tokens": 98,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1717,
+        "cost_usd": 0.000863,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "thrombosis_prediction:1283842141de",
+        "label": "",
+        "input_tokens": 3354,
+        "output_tokens": 57,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1356,
+        "cost_usd": 0.0007392,
+        "estimated": false
+      }
+    ]
+  }
+}

@@ -91,9 +91,11 @@ class Settings(BaseSettings):
     #   off = skip resolver; merged generate-with-interpretation when merge_interpret_generate
     #   assume_only = never ask
     execution_evidence_gate: bool = True
-    # Merge interpretation into the generator (skip separate resolver LLM call).
-    merge_interpret_generate: bool = False
+    # Merge interpretation into the generator (skip intent + resolver LLM calls).
+    # Measured: same/better values accuracy, lower p50/cost on held-out Spider.
+    merge_interpret_generate: bool = True
     # Candidates to sample when decision_points are flagged (or gate always samples).
+    # Adaptive gate starts at min(2, this) and escalates only on disagreement.
     ambiguity_sample_count: int = Field(default=3, ge=1, le=5)
     # Fraction of successful executes that must share one denotation to answer.
     # Below this (and ≥2 clusters) → ask. Casual connections can raise this.

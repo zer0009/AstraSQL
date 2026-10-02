@@ -50,6 +50,22 @@ def _sql_has_filter_predicate(sql: str, dialect: str = "postgres") -> bool:
         return bool(_WHERE_OR_JOIN_FILTER.search(text))
 
 
+def _all_null_rows(rows: list[Any], columns: list[str]) -> bool:
+    if not rows or not columns:
+        return False
+    for row in rows:
+        if isinstance(row, dict):
+            keyed = {str(k).lower(): v for k, v in row.items()}
+            vals = [keyed.get(str(c).lower()) for c in columns]
+        elif isinstance(row, (list, tuple)):
+            vals = list(row)
+        else:
+            vals = [row]
+        if any(v is not None for v in vals):
+            return False
+    return True
+
+
 def analyze_result_shape(
     *,
     sql: str,
@@ -58,11 +74,12 @@ def analyze_result_shape(
     dialect: str = "postgres",
     retries: int = 0,
 ) -> dict[str, Any]:
-    """Compute shape warnings and whether to soft-retry on empty results.
+    """Compute shape warnings and whether to soft-retry on empty/suspicious results.
 
     Returns:
         warnings: list[str]
         should_retry_empty: bool — True only for first empty attempt (retries < 1)
+        should_retry_suspicious: bool — all-NULL / implausible once (retries < 1)
         row_count: int
         duplicate_fraction: float
     """
@@ -92,12 +109,25 @@ def analyze_result_shape(
         if duplicate_fraction > _DUPLICATE_FRACTION:
             warnings.append("duplicate_rows")
 
+    if row_count > 0 and _all_null_rows(rows, columns):
+        warnings.append("all_null")
+
     # Soft empty retry once only — see module docstring.
     should_retry_empty = row_count == 0 and int(retries or 0) < 1
+    # Execution-feedback revision for suspicious non-empty results (once).
+    should_retry_suspicious = (
+        int(retries or 0) < 1
+        and row_count > 0
+        and (
+            "all_null" in warnings
+            or "possible_cartesian" in warnings
+        )
+    )
 
     return {
         "warnings": warnings,
         "should_retry_empty": should_retry_empty,
+        "should_retry_suspicious": should_retry_suspicious,
         "row_count": row_count,
         "duplicate_fraction": duplicate_fraction,
     }
@@ -107,4 +137,13 @@ def empty_result_message(sql: str) -> str:
     return (
         "Query returned 0 rows. Re-check filters, joins, and literal values "
         f"against the schema. Previous SQL: {sql[:200]}"
+    )
+
+
+def suspicious_result_message(sql: str, warnings: list[str]) -> str:
+    joined = ", ".join(warnings) if warnings else "suspicious_shape"
+    return (
+        f"Query result looks suspicious ({joined}). "
+        "Revise filters, joins, aggregates, or selected columns. "
+        f"Previous SQL: {sql[:200]}"
     )

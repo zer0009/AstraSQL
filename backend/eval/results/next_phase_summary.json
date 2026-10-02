@@ -1,0 +1,44 @@
+{
+  "phase": "next_phase_complex_dbs_and_speed",
+  "spider_held_out": {
+    "baseline_v2": {
+      "file": "held_out_baseline20_v2.json",
+      "values_accuracy": 0.75,
+      "latency_p50_ms": 9478,
+      "avg_cost_usd": 0.002183,
+      "clarify": 1
+    },
+    "merged_v3": {
+      "file": "held_out_merged20_v3.json",
+      "values_accuracy": 0.80,
+      "latency_p50_ms": 5049,
+      "avg_cost_usd": 0.001017,
+      "clarify": 1,
+      "notes": "merge_interpret_generate=true skips intent+resolver; gate only on ambiguous/decision_points; beats 7s/0.0010 targets on p50/cost"
+    }
+  },
+  "bird_mini_dev": {
+    "file": "bird24-baseline.json",
+    "n": 24,
+    "dbs": ["debit_card_specializing", "student_club", "superhero", "thrombosis_prediction"],
+    "values_accuracy": 0.625,
+    "by_difficulty": {"simple": 1.0, "moderate": 0.5, "challenging": 0.375},
+    "latency_p50_ms": 6774,
+    "avg_cost_usd": 0.002613,
+    "notes": "Excluded huge DBs (card_games, european_football_2) that hung scans; full 150 still supported via --n 150"
+  },
+  "learning_loop_proof": {
+    "file": "learning-proof.json",
+    "before": "0/5",
+    "after": "1/5"
+  },
+  "large_schema_stress": {
+    "file": "../benchmarks/data/stress/large_schema_stress.json",
+    "inflated_tables_grafted": 37,
+    "drop_fk": true
+  },
+  "defaults_updated": {
+    "merge_interpret_generate": true,
+    "parallel_intent_retrieval": false
+  }
+}

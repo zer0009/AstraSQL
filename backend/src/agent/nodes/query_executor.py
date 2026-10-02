@@ -1,18 +1,16 @@
 from __future__ import annotations
 
-
-
 from typing import Any
-
-
 
 from langchain_core.runnables import RunnableConfig
 
-
-
 from src.agent.provenance import clarify_or_none, clarify_unbound
 
-from src.agent.result_shape import analyze_result_shape, empty_result_message
+from src.agent.result_shape import (
+    analyze_result_shape,
+    empty_result_message,
+    suspicious_result_message,
+)
 
 from src.agent.sql_guards import find_bind_placeholders
 
@@ -34,10 +32,6 @@ from src.agent.utils import (
 
 from src.config.settings import get_settings
 
-
-
-
-
 async def query_executor(
 
     state: AgentState, config: RunnableConfig
@@ -45,8 +39,6 @@ async def query_executor(
 ) -> dict[str, Any]:
 
     """EXPLAIN then execute read-only SQL; inject DB errors for retries.
-
-
 
     After a successful execute, run light result-shape checks. Empty results
 
@@ -65,8 +57,6 @@ async def query_executor(
     sql = (state.get("corrected_sql") or state.get("sql") or "").strip()
 
     retries = int(state.get("retries") or 0)
-
-
 
     if db_provider is None:
 
@@ -88,8 +78,6 @@ async def query_executor(
 
         }
 
-
-
     dialect = (
 
         db_provider.sqlglot_dialect()
@@ -109,8 +97,6 @@ async def query_executor(
     if clarify is not None:
 
         return clarify
-
-
 
     explain_text = ""
 
@@ -172,8 +158,6 @@ async def query_executor(
 
         }
 
-
-
     # Optional EXPLAIN cost gate (settings.explain_cost_limit > 0).
     cost_limit = float(getattr(settings, "explain_cost_limit", 0) or 0)
     if cost_limit > 0 and hasattr(db_provider, "estimate_cost"):
@@ -188,8 +172,6 @@ async def query_executor(
             return _execution_failure(
                 state, sql=sql, message=message, retries=retries
             )
-
-
 
     try:
 
@@ -216,8 +198,6 @@ async def query_executor(
         )
 
         warnings = list(shape.get("warnings") or [])
-
-
 
         # Soft EMPTY_RESULT retry once (retries < 1). Clears results and sets
 
@@ -267,7 +247,29 @@ async def query_executor(
 
             }
 
-
+        
+        if shape.get("should_retry_suspicious"):
+            message = suspicious_result_message(sql, warnings)
+            return {
+                "results": {},
+                "error": None,
+                "shape_retry": True,
+                "retry_context": build_retry_context(
+                    previous_sql=sql,
+                    error=message,
+                    prior_context=state.get("retry_context") or "",
+                    retry_type="SUSPICIOUS_RESULT",
+                ),
+                "steps": append_step(
+                    state,
+                    "shape_retry_suspicious",
+                    message,
+                    sql=sql,
+                    row_count=row_count,
+                    warnings=warnings,
+                    retry_type="SUSPICIOUS_RESULT",
+                ),
+            }
 
         return {
 
@@ -321,10 +323,6 @@ async def query_executor(
 
         )
 
-
-
-
-
 def _tables_columns_for_explore(state: AgentState) -> list[tuple[str, str]]:
     """Pick a few table.column pairs from context for repair exploration."""
     context = state.get("context") or {}
@@ -348,7 +346,6 @@ def _tables_columns_for_explore(state: AgentState) -> list[tuple[str, str]]:
             break
     return pairs
 
-
 async def _exploration_block(
     state: AgentState, db_provider: Any, settings: Any
 ) -> str:
@@ -362,7 +359,6 @@ async def _exploration_block(
         )
     except Exception:
         return ""
-
 
 def _execution_failure(
 
@@ -429,5 +425,4 @@ def _execution_failure(
         "steps": steps,
 
     }
-
 

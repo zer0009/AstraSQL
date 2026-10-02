@@ -84,12 +84,18 @@ def route_after_interpretation(
 
 def route_after_generate(
     state: AgentState,
-) -> Literal["gate", "validate"]:
+) -> Literal["gate", "validate", "direct", "clarify"]:
     """Run execution-evidence gate when flagged; else go straight to validate."""
+    ambiguity = state.get("ambiguity") or {}
+    if isinstance(ambiguity, dict):
+        status = str(ambiguity.get("status") or "").lower()
+        if status == "not_a_data_question":
+            return "direct"
+        if ambiguity.get("should_clarify") or status == "unanswerable":
+            return "clarify"
     settings = get_settings()
     if not bool(getattr(settings, "execution_evidence_gate", True)):
         return "validate"
-    ambiguity = state.get("ambiguity") or {}
     if not isinstance(ambiguity, dict):
         return "validate"
     if ambiguity.get("needs_execution_gate") or ambiguity.get("decision_points"):
@@ -162,23 +168,13 @@ def build_graph():
     )
     g.add_node("direct_response", _with_stage("direct_response", direct_response))
 
+    # Parallel intent+retrieval fan-out is disabled: LangGraph LastValue keys
+    # (error/steps) need Annotated reducers first. Prefer merge_interpret_generate
+    # which skips both intent and the separate resolver (single schema-aware call).
     settings = get_settings()
-    if bool(getattr(settings, "parallel_intent_retrieval", True)):
-        # Fan-out: intent and retrieval run concurrently, then join.
-        g.add_edge(START, "intent_classifier")
+    if bool(getattr(settings, "merge_interpret_generate", False)):
+        # Merged path: retrieval -> generate (intent folded into generator).
         g.add_edge(START, "context_retriever")
-        g.add_edge("intent_classifier", "parallel_join")
-        g.add_edge("context_retriever", "parallel_join")
-        g.add_conditional_edges(
-            "parallel_join",
-            route_after_parallel_join,
-            {
-                "resolve": "interpretation_resolver",
-                "generate": "query_generator",
-                "clarify": "direct_response",
-                "direct": "direct_response",
-            },
-        )
     else:
         g.add_edge(START, "intent_classifier")
         g.add_conditional_edges(
@@ -186,15 +182,15 @@ def build_graph():
             route_intent,
             {"sql": "context_retriever", "direct": "direct_response"},
         )
-        g.add_conditional_edges(
-            "context_retriever",
-            route_after_context,
-            {
-                "resolve": "interpretation_resolver",
-                "generate": "query_generator",
-                "clarify": "direct_response",
-            },
-        )
+    g.add_conditional_edges(
+        "context_retriever",
+        route_after_context,
+        {
+            "resolve": "interpretation_resolver",
+            "generate": "query_generator",
+            "clarify": "direct_response",
+        },
+    )
     g.add_conditional_edges(
         "interpretation_resolver",
         route_after_interpretation,
@@ -203,7 +199,12 @@ def build_graph():
     g.add_conditional_edges(
         "query_generator",
         route_after_generate,
-        {"gate": "ambiguity_gate", "validate": "query_validator"},
+        {
+            "gate": "ambiguity_gate",
+            "validate": "query_validator",
+            "direct": "direct_response",
+            "clarify": "direct_response",
+        },
     )
     g.add_conditional_edges(
         "ambiguity_gate",

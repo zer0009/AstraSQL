@@ -89,8 +89,10 @@ async def ambiguity_gate(
         }
 
     question = state.get("question") or ""
-    sample_count = int(getattr(settings, "ambiguity_sample_count", 3) or 3)
-    sample_count = max(1, min(sample_count, 5))
+    # Adaptive K: sample 2 first; escalate to configured max only if they disagree.
+    configured = int(getattr(settings, "ambiguity_sample_count", 3) or 3)
+    configured = max(1, min(configured, 5))
+    initial_k = min(2, configured) if configured >= 2 else configured
 
     dialect = ""
     try:
@@ -98,18 +100,25 @@ async def ambiguity_gate(
     except Exception:
         dialect = ""
 
-    # Reuse multi-candidate generation (variants) then cluster ourselves so we
-    # keep all cluster metadata for ask/assume decisions.
-    try:
+    async def _sample(count: int) -> list[str]:
         _sql, meta = await generate_and_select_candidates(
             state=state,
             config=config,
             db_provider=db_provider,
             settings=settings,
-            candidate_count=sample_count,
+            candidate_count=count,
             question=question,
             retry_context=state.get("retry_context") or "",
         )
+        sqls = list(meta.get("candidates") or [])
+        if not sqls and state.get("sql"):
+            sqls = [str(state.get("sql"))]
+        return sqls
+
+    # Reuse multi-candidate generation (variants) then cluster ourselves so we
+    # keep all cluster metadata for ask/assume decisions.
+    try:
+        candidate_sqls = await _sample(initial_k)
     except Exception as exc:
         logger.warning("ambiguity_gate sample failed open: %s", exc)
         return {
@@ -126,10 +135,6 @@ async def ambiguity_gate(
             ),
         }
 
-    candidate_sqls = list(meta.get("candidates") or [])
-    if not candidate_sqls and state.get("sql"):
-        candidate_sqls = [str(state.get("sql"))]
-
     executed: list[dict[str, Any]] = []
     for sql in candidate_sqls:
         try:
@@ -141,6 +146,30 @@ async def ambiguity_gate(
             executed.append({"sql": sql, "results": None})
 
     clusters = cluster_by_results(executed)
+    # Escalate only when the first two disagree and a higher K is configured.
+    if (
+        configured > initial_k
+        and len(clusters) > 1
+        and len(candidate_sqls) < configured
+    ):
+        try:
+            extra = await _sample(configured)
+            seen = {c.get("sql") for c in executed}
+            for sql in extra:
+                if sql in seen:
+                    continue
+                try:
+                    results = await db_provider.execute_readonly(
+                        sql, max_rows=settings.max_result_rows
+                    )
+                    executed.append({"sql": sql, "results": results})
+                except Exception:
+                    executed.append({"sql": sql, "results": None})
+                seen.add(sql)
+            candidate_sqls = [str(c.get("sql") or "") for c in executed]
+            clusters = cluster_by_results(executed)
+        except Exception as exc:
+            logger.warning("ambiguity_gate escalate sample failed open: %s", exc)
     threshold = effective_dominance_threshold(
         base=float(getattr(settings, "ambiguity_dominance_threshold", 0.67)),
         policy=_connection_policy(connection, settings),

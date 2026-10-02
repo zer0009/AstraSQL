@@ -21,10 +21,15 @@ from src.providers.llm import get_llm_provider
 
 
 def _effective_candidate_count(settings: Any, retry_context: str) -> int:
-    """Base setting, boosted to ≥2 on EMPTY_RESULT / SYNTAX retries."""
+    """Base setting, boosted to ≥2 on EMPTY_RESULT / SYNTAX / suspicious retries."""
     count = int(getattr(settings, "sql_candidate_count", 1) or 1)
     blob = (retry_context or "").upper()
-    if "EMPTY_RESULT" in blob or "SYNTAX_ERROR" in blob or "[SYNTAX" in blob:
+    if (
+        "EMPTY_RESULT" in blob
+        or "SUSPICIOUS_RESULT" in blob
+        or "SYNTAX_ERROR" in blob
+        or "[SYNTAX" in blob
+    ):
         count = max(count, 2)
     return max(1, min(count, 5))
 
@@ -79,8 +84,20 @@ async def query_generator(
 
     candidate_count = _effective_candidate_count(settings, retry_context)
     merge = bool(getattr(settings, "merge_interpret_generate", False))
-    # Merged path only on first attempt (no retry_context) when enabled.
-    use_merged = merge and not retry_context.strip()
+    # Difficulty router: escalate candidate count / disable merge on hard Qs.
+    from src.agent.difficulty_router import route_generation_plan
+
+    table_count = len(list((context.get("selected_tables") or [])))
+    plan = route_generation_plan(
+        question,
+        table_count=table_count,
+        prior_failure=bool(retry_context.strip()),
+        merge_interpret_generate=merge,
+    )
+    if int(plan.get("candidate_count") or 1) > candidate_count:
+        candidate_count = int(plan["candidate_count"])
+    # Merged path only on first attempt (no retry_context) when enabled/plan allows.
+    use_merged = bool(plan.get("use_merge")) and not retry_context.strip()
 
     try:
         if use_merged:
@@ -112,7 +129,38 @@ async def query_generator(
                 config=config,
             )
             parsed = extract_json(message_text(response))
+            status = str(parsed.get("status") or "assumed").strip().lower()
             sql = str(parsed.get("sql") or "").strip()
+
+            if status == "not_a_data_question" or (
+                not sql and status in {"not_a_data_question", "unanswerable"}
+            ):
+                if status == "not_a_data_question":
+                    updates["intent"] = "CHIT_CHAT"
+                elif status == "unanswerable":
+                    updates["intent"] = "CLARIFICATION_NEEDED"
+                updates["error"] = None
+                updates["ambiguity"] = {
+                    **(
+                        state.get("ambiguity")
+                        if isinstance(state.get("ambiguity"), dict)
+                        else {}
+                    ),
+                    "should_clarify": status == "unanswerable",
+                    "status": status,
+                    "needs_execution_gate": False,
+                    "decision_why": "merged_generate;not_sql",
+                    "gate": "merged",
+                    "reason": str(parsed.get("interpretation") or status),
+                }
+                updates["steps"] = append_step(
+                    state,
+                    "merged_non_sql",
+                    f"Merged generator status={status}",
+                    status=status,
+                )
+                return updates
+
             if not sql:
                 raise ValueError("Merged generator returned empty SQL")
 
@@ -127,9 +175,9 @@ async def query_generator(
             assumption_text = interpretation or (
                 "; ".join(str(a) for a in assumptions if str(a).strip())
             )
-            needs_gate = bool(dpoints) or str(
-                parsed.get("status") or ""
-            ).lower() in {"ambiguous", "assumed"}
+            # Gate only when the model flags underspecification — not on every
+            # assumed/clear answer (that made merge slower than the resolver path).
+            needs_gate = bool(dpoints) or status == "ambiguous"
 
             updates["sql"] = sql
             updates["corrected_sql"] = sql
@@ -143,11 +191,10 @@ async def query_generator(
                     else {}
                 ),
                 "should_clarify": False,
-                "status": str(parsed.get("status") or "assumed").lower(),
+                "status": status,
                 "assumption": assumption_text,
                 "decision_points": dpoints,
-                "needs_execution_gate": needs_gate
-                or bool(getattr(settings, "execution_evidence_gate", True)),
+                "needs_execution_gate": needs_gate,
                 "decision_why": "merged_generate",
                 "gate": "merged",
             }

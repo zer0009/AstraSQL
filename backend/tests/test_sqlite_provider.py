@@ -40,7 +40,9 @@ def sqlite_file(tmp_path: Path) -> Path:
 
 def test_quote_ident_spaces():
     assert _quote_ident("singer info") == '"singer info"'
-    assert _quote_ident("album") == "album"
+    # Always quote — reserved words like order/group break unquoted PRAGMA.
+    assert _quote_ident("album") == '"album"'
+    assert _quote_ident("order") == '"order"'
 
 
 def test_list_and_schema(sqlite_file: Path):

@@ -38,14 +38,17 @@ from src.eval.spider_data import (
     default_pilot_db,
     ensure_spider_data,
     load_dev,
+    pick_held_out,
     pick_multi_db,
     pick_stratified,
+    pick_tuning_split,
     question_stable_id,
 )
 from src.eval.usage import (
     RateCard,
     UsageTracker,
     extrapolate,
+    latency_percentiles,
     track_usage,
     usage_case,
     usage_stage,
@@ -138,8 +141,9 @@ async def _get_or_create_sqlite_connection(
     *,
     db_id: str,
     sqlite_path: Path,
+    name_prefix: str = "spider",
 ) -> Connection:
-    name = f"spider-{db_id}"
+    name = f"{name_prefix}-{db_id}"
     result = await session.execute(
         select(Connection).where(Connection.name == name)
     )
@@ -265,13 +269,17 @@ async def _score_one(
     *,
     hardness: str,
     db_id: str,
+    evidence: str = "",
+    dialect: str = "sqlite",
 ) -> tuple[CaseResult, dict[str, Any], int, dict[str, Any]]:
     from src.agent.runner import run_query
     from src.eval.run import _generated_sql, _is_clarified
 
     started = time.perf_counter()
     with usage_case(item.id):
-        state = await run_query(session, connection, item.question)
+        state = await run_query(
+            session, connection, item.question, evidence=evidence
+        )
     elapsed_ms = int((time.perf_counter() - started) * 1000)
 
     sql = _generated_sql(state)
@@ -290,7 +298,7 @@ async def _score_one(
     exec_error: Optional[str] = None
 
     if item.expect == "answer" and item.gold_sql:
-        sql_match = sql_equal(sql, item.gold_sql, dialect="sqlite")
+        sql_match = sql_equal(sql, item.gold_sql, dialect=dialect)
         if provider is not None:
             gold_result, gen_result, exec_error = await _execute_pair(
                 provider, generated_sql=sql, gold_sql=item.gold_sql
@@ -323,7 +331,7 @@ async def _score_one(
             generated_result=gen_result,
             clarified=clarified,
             error=error,
-            dialect="sqlite",
+            dialect=dialect,
         )
 
     ambiguity = state.get("ambiguity") if isinstance(state.get("ambiguity"), dict) else {}
@@ -462,6 +470,20 @@ def _print_report(report: dict[str, Any]) -> None:
         f"strict {overall.get('strict_correct', 0)}/{overall.get('n', 0)} "
         f"({100 * float(overall.get('strict_accuracy') or 0):.1f}%)"
     )
+    conv = acc.get("convention_adjusted") or {}
+    if conv:
+        print(
+            f"Convention-adjusted: {conv.get('convention_adjusted_correct', 0)}/"
+            f"{conv.get('n', 0)} "
+            f"({100 * float(conv.get('convention_adjusted_accuracy') or 0):.1f}%)"
+        )
+    totals = report.get("totals") or {}
+    if totals.get("latency_p50_ms") is not None:
+        print(
+            f"Latency p50/p95: {totals.get('latency_p50_ms')}ms / "
+            f"{totals.get('latency_p95_ms')}ms  |  "
+            f"avg cost ${float(totals.get('avg_cost_usd') or 0):.6f}"
+        )
     if acc.get("by_hardness"):
         print("By hardness (values-only):")
         for hard, stats in acc["by_hardness"].items():
@@ -682,6 +704,38 @@ def _select_questions(args: argparse.Namespace, items: list[dict], root: Path) -
     if args.from_report:
         return _load_questions_from_report(_resolve_path(args.from_report))
 
+    dataset = str(getattr(args, "dataset", "spider") or "spider").strip().lower()
+    if dataset == "bird":
+        from src.eval.bird_data import pick_bird_stratified
+
+        n = int(args.n or 150)
+        if getattr(args, "dbs", 0) and args.per_db:
+            n = int(args.dbs) * int(args.per_db)
+        db_ids = None
+        if getattr(args, "db_ids", ""):
+            db_ids = [x.strip() for x in str(args.db_ids).split(",") if x.strip()]
+        return pick_bird_stratified(
+            items, n=n, seed=args.seed, db_ids=db_ids
+        )
+
+    split = str(getattr(args, "split", "") or "").strip().lower()
+    if split == "held_out":
+        return pick_held_out(
+            items,
+            n_dbs=int(getattr(args, "dbs", 0) or 5),
+            per_db=int(args.per_db or 12),
+            seed=int(getattr(args, "seed", 99) or 99),
+            root=root,
+        )
+    if split == "tune":
+        return pick_tuning_split(
+            items,
+            n_dbs=int(getattr(args, "dbs", 0) or 10),
+            per_db=int(args.per_db or 6),
+            seed=int(getattr(args, "seed", 42) or 42),
+            root=root,
+        )
+
     if args.db_ids:
         db_ids = [x.strip() for x in args.db_ids.split(",") if x.strip()]
         return pick_multi_db(
@@ -697,8 +751,59 @@ def _select_questions(args: argparse.Namespace, items: list[dict], root: Path) -
     return pick_stratified(items, db_id=db_id, n=args.n, seed=args.seed)
 
 
+def _convention_adjusted(question_rows: list[dict[str, Any]]) -> dict[str, Any]:
+    """Values accuracy treating join-type / direction convention misses as OK.
+
+    These are product-correct under a connection convention; Spider gold may
+    disagree. Reported separately so they are not hidden as silent wins.
+    """
+    convention_labels = {
+        "join_type",
+        "left_vs_inner",
+        "min_vs_max",
+        "direction",
+        "convention",
+    }
+    n = len(question_rows)
+    values_ok = 0
+    convention_ok = 0
+    for r in question_rows:
+        if r.get("result_match_values") is True:
+            values_ok += 1
+            convention_ok += 1
+            continue
+        label = str(r.get("failure_label") or "").lower()
+        why = str(((r.get("ambiguity") or {}).get("decision_why") or "")).lower()
+        assumption = str(r.get("assumption") or "").lower()
+        if any(x in label for x in convention_labels) or any(
+            x in why or x in assumption
+            for x in ("join type", "left join", "inner join", "min vs", "max vs")
+        ):
+            convention_ok += 1
+    return {
+        "n": n,
+        "values_correct": values_ok,
+        "values_accuracy": round(values_ok / n, 4) if n else 0.0,
+        "convention_adjusted_correct": convention_ok,
+        "convention_adjusted_accuracy": round(convention_ok / n, 4) if n else 0.0,
+    }
+
+
 async def _run(args: argparse.Namespace) -> dict[str, Any]:
+    dataset = str(getattr(args, "dataset", "spider") or "spider").strip().lower()
     if args.download_only:
+        if dataset == "bird":
+            import importlib.util
+
+            fetch_path = _BACKEND / "scripts" / "fetch_benchmarks.py"
+            spec = importlib.util.spec_from_file_location(
+                "fetch_benchmarks", fetch_path
+            )
+            mod = importlib.util.module_from_spec(spec)
+            assert spec and spec.loader
+            spec.loader.exec_module(mod)
+            mod.fetch_bird(force=args.force_download)
+            return {"root": str(_BACKEND / "eval" / "benchmarks" / "data" / "bird")}
         root = ensure_spider_data(force=args.force_download)
         print(root)
         return {"root": str(root)}
@@ -718,8 +823,25 @@ async def _run(args: argparse.Namespace) -> dict[str, Any]:
     if not (settings.openai_api_key or "").strip():
         raise SystemExit("OPENAI_API_KEY is not set")
 
-    root = ensure_spider_data(force=args.force_download)
-    items = load_dev(root)
+    include_evidence = True
+    if str(getattr(args, "evidence", "true") or "true").lower() in {
+        "false",
+        "0",
+        "no",
+    }:
+        include_evidence = False
+
+    if dataset == "bird":
+        from src.eval.bird_data import bird_db_path, bird_root, load_bird_mini_dev
+
+        root = bird_root()
+        items = load_bird_mini_dev(root)
+        conn_prefix = "bird"
+    else:
+        root = ensure_spider_data(force=args.force_download)
+        items = load_dev(root)
+        conn_prefix = "spider"
+
     picked = _select_questions(args, items, root)
     if not picked:
         raise SystemExit("No questions selected")
@@ -731,6 +853,7 @@ async def _run(args: argparse.Namespace) -> dict[str, Any]:
     cases: list[CaseResult] = []
     setup_by_db: dict[str, dict[str, Any]] = {}
     connections: dict[str, Connection] = {}
+    db_paths: dict[str, Path] = {}
 
     # Group by db for scan-once
     by_db: dict[str, list[tuple[int, dict]]] = defaultdict(list)
@@ -744,57 +867,113 @@ async def _run(args: argparse.Namespace) -> dict[str, Any]:
             running_cost = 0.0
             # Scan each DB once
             for db_id in by_db:
-                sqlite_path = db_sqlite_path(db_id, root)
+                if dataset == "bird":
+                    sqlite_path = bird_db_path(db_id, root)
+                else:
+                    sqlite_path = db_sqlite_path(db_id, root)
+                db_paths[db_id] = sqlite_path
                 conn = await _get_or_create_sqlite_connection(
-                    session, db_id=db_id, sqlite_path=sqlite_path
+                    session,
+                    db_id=db_id,
+                    sqlite_path=sqlite_path,
+                    name_prefix=conn_prefix,
                 )
                 connections[db_id] = conn
                 setup_info = await _ensure_scanned(session, conn, tracker)
+                if dataset == "bird" and bool(
+                    getattr(args, "import_dictionary", True)
+                ):
+                    try:
+                        from src.context.dictionary_import import (
+                            import_bird_descriptions_for_db,
+                        )
+
+                        n_desc = await import_bird_descriptions_for_db(
+                            session, conn.id, db_id, root=root
+                        )
+                        setup_info["dictionary_rows"] = n_desc
+                    except Exception as exc:
+                        setup_info["dictionary_error"] = str(exc)
                 setup_by_db[db_id] = setup_info
                 running_cost += float(setup_info.get("cost_usd") or 0.0)
 
-            # Score in original pick order
-            for raw in picked:
+            concurrency = max(1, int(getattr(args, "concurrency", 1) or 1))
+            sem = asyncio.Semaphore(concurrency)
+            cost_lock = asyncio.Lock()
+            stop_flag = {"stop": False}
+
+            async def _score_raw(raw: dict[str, Any]) -> dict[str, Any] | None:
+                nonlocal running_cost
+                async with cost_lock:
+                    if stop_flag["stop"] or running_cost >= args.max_cost:
+                        stop_flag["stop"] = True
+                        return None
                 db_id = str(raw.get("db_id") or "")
-                if running_cost >= args.max_cost:
-                    print(
-                        f"Stopping: running cost ${running_cost:.4f} "
-                        f">= max-cost ${args.max_cost}"
-                    )
-                    break
                 stable = str(raw.get("_stable_id") or question_stable_id(raw))
                 hardness = str(raw.get("_hardness") or "unknown")
+                gold_sql = str(
+                    raw.get("query")
+                    or raw.get("SQL")
+                    or raw.get("gold_sql")
+                    or raw.get("sol_sql")
+                    or ""
+                )
                 gold = GoldItem(
                     id=stable,
                     question=str(raw.get("question") or ""),
-                    gold_sql=str(raw.get("query") or ""),
+                    gold_sql=gold_sql,
                     expect="answer",
                     tags=[hardness, db_id],
                 )
+                evidence = ""
+                if include_evidence:
+                    evidence = str(
+                        raw.get("_evidence") or raw.get("evidence") or ""
+                    )
                 connection = connections[db_id]
                 provider = provider_from_connection(connection)
-                try:
-                    case, usage, elapsed_ms, detail = await _score_one(
-                        session,
-                        connection,
-                        gold,
-                        provider,
-                        tracker,
-                        hardness=hardness,
-                        db_id=db_id,
-                    )
-                finally:
-                    await provider.close()
+                async with sem:
+                    async with cost_lock:
+                        if stop_flag["stop"] or running_cost >= args.max_cost:
+                            stop_flag["stop"] = True
+                            await provider.close()
+                            return None
+                    # Fresh session per task — shared AsyncSession is not concurrent-safe.
+                    async with factory() as task_session:
+                        task_conn = await task_session.merge(connection)
+                        try:
+                            case, usage, elapsed_ms, detail = await _score_one(
+                                task_session,
+                                task_conn,
+                                gold,
+                                provider,
+                                tracker,
+                                hardness=hardness,
+                                db_id=db_id,
+                                evidence=evidence,
+                            )
+                        finally:
+                            await provider.close()
 
-                cases.append(case)
                 cost = float(usage.get("cost_usd") or 0.0)
-                running_cost += cost
-                question_rows.append(
-                    {
+                async with cost_lock:
+                    running_cost += cost
+                    if running_cost >= args.max_cost:
+                        stop_flag["stop"] = True
+                        print(
+                            f"Stopping: running cost ${running_cost:.4f} "
+                            f">= max-cost ${args.max_cost}"
+                        )
+                return {
+                    "case": case,
+                    "row": {
                         "id": gold.id,
                         "db_id": db_id,
                         "question": gold.question,
                         "hardness": hardness,
+                        "split": raw.get("_split") or getattr(args, "split", "") or "",
+                        "dataset": dataset,
+                        "evidence": evidence,
                         "gold_sql": gold.gold_sql,
                         "generated_sql": case.generated_sql,
                         "result_match": case.result_match,
@@ -822,8 +1001,23 @@ async def _run(args: argparse.Namespace) -> dict[str, Any]:
                         "calls": usage.get("calls", 0),
                         "estimated_calls": usage.get("estimated_calls", 0),
                         "by_stage": usage.get("by_stage") or {},
-                    }
-                )
+                    },
+                }
+
+            if concurrency <= 1:
+                results = []
+                for raw in picked:
+                    item = await _score_raw(raw)
+                    results.append(item)
+                    if stop_flag["stop"]:
+                        break
+            else:
+                results = await asyncio.gather(*[_score_raw(raw) for raw in picked])
+            for item in results:
+                if item is None:
+                    continue
+                cases.append(item["case"])
+                question_rows.append(item["row"])
 
     q_costs = [r["cost_usd"] for r in question_rows]
     q_times = [r["elapsed_ms"] for r in question_rows]
@@ -835,6 +1029,7 @@ async def _run(args: argparse.Namespace) -> dict[str, Any]:
     question_ids = {r["id"] for r in question_rows}
     q_records = [r for r in tracker.records if r.case_id in question_ids]
     by_stage: dict[str, dict[str, Any]] = {}
+    stage_lats: dict[str, list[int]] = {}
     for rec in q_records:
         key = rec.stage or "(unset)"
         bucket = by_stage.setdefault(
@@ -854,12 +1049,24 @@ async def _run(args: argparse.Namespace) -> dict[str, Any]:
         bucket["reasoning_tokens"] += rec.reasoning_tokens
         bucket["latency_ms"] += rec.latency_ms
         bucket["cost_usd"] = round(bucket["cost_usd"] + rec.cost_usd, 8)
+        stage_lats.setdefault(key, []).append(int(rec.latency_ms))
+    for key, bucket in by_stage.items():
+        stats = latency_percentiles(stage_lats.get(key) or [])
+        bucket["latency_p50_ms"] = stats["p50"]
+        bucket["latency_p95_ms"] = stats["p95"]
+        bucket["latency_mean_ms"] = stats["mean"]
 
+    q_lat_stats = latency_percentiles(q_times)
     accuracy = _accuracy_breakdown(question_rows)
+    accuracy["convention_adjusted"] = _convention_adjusted(question_rows)
     ov = accuracy["overall"]
     totals = {
         "cost_usd": round(sum(q_costs), 6),
         "elapsed_ms": sum(q_times),
+        "latency_p50_ms": q_lat_stats["p50"],
+        "latency_p95_ms": q_lat_stats["p95"],
+        "latency_mean_ms": q_lat_stats["mean"],
+        "avg_cost_usd": round(avg_cost, 6),
         "input_tokens": sum(r["input_tokens"] for r in question_rows),
         "output_tokens": sum(r["output_tokens"] for r in question_rows),
         "reasoning_tokens": sum(r["reasoning_tokens"] for r in question_rows),
@@ -872,7 +1079,9 @@ async def _run(args: argparse.Namespace) -> dict[str, Any]:
 
     db_ids = sorted({r["db_id"] for r in question_rows})
     report: dict[str, Any] = {
-        "kind": "spider-pilot",
+        "kind": f"{dataset}-pilot",
+        "dataset": dataset,
+        "include_evidence": include_evidence if dataset == "bird" else None,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "models": model_info,
         "rate_card": {
@@ -884,6 +1093,9 @@ async def _run(args: argparse.Namespace) -> dict[str, Any]:
         "question_ids": [r["id"] for r in question_rows],
         "n": len(question_rows),
         "seed": args.seed,
+        "split": str(getattr(args, "split", "") or ""),
+        "concurrency": int(getattr(args, "concurrency", 1) or 1),
+        "max_cost": float(args.max_cost),
         "setup": {"by_db": setup_by_db, "cost_usd": setup_cost, "elapsed_ms": setup_time},
         "questions": question_rows,
         "accuracy": accuracy,
@@ -976,7 +1188,25 @@ def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
         ns.command = "compare"
         return ns
 
-    p = argparse.ArgumentParser(description="AstraSQL Spider accuracy pilot")
+    p = argparse.ArgumentParser(description="AstraSQL accuracy pilot (Spider / BIRD)")
+    p.add_argument(
+        "--dataset",
+        choices=["spider", "bird"],
+        default="spider",
+        help="Benchmark dataset (default spider)",
+    )
+    p.add_argument(
+        "--evidence",
+        choices=["true", "false", ""],
+        default="true",
+        help="BIRD: inject evidence into business rules (default true)",
+    )
+    p.add_argument(
+        "--import-dictionary",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="BIRD: import database_description CSVs when present",
+    )
     p.add_argument("--n", type=int, default=5, help="Questions when using single --db")
     p.add_argument("--db", default="", help="Single Spider db_id")
     p.add_argument(
@@ -1047,6 +1277,18 @@ def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
         help="Ablation: merge interpretation into generator",
     )
     p.add_argument("--seed", type=int, default=42, help="Question selection seed")
+    p.add_argument(
+        "--split",
+        choices=["", "tune", "held_out"],
+        default="",
+        help="tune=historical small DBs; held_out=disjoint DBs/seed for reporting",
+    )
+    p.add_argument(
+        "--concurrency",
+        type=int,
+        default=1,
+        help="Score up to N questions in parallel (latency stats use concurrency=1)",
+    )
     p.add_argument("--max-cost", type=float, default=1.0, help="Stop if cost exceeds this USD")
     p.add_argument("--out", default="", help="Output JSON path")
     p.add_argument("--download-only", action="store_true", help="Only download Spider data")

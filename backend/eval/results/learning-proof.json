@@ -1,0 +1,1204 @@
+{
+  "kind": "spider-pilot",
+  "dataset": "spider",
+  "include_evidence": null,
+  "created_at": "2026-10-01T18:16:57.086419+00:00",
+  "models": {
+    "openai_model": "gpt-5.6-luna",
+    "enrichment_model": "gpt-5.6-luna",
+    "interpretation_model": "gpt-5.6-luna",
+    "llm_reasoning_effort": "low",
+    "embedding_model": "text-embedding-3-small",
+    "interpretation_mode": "on",
+    "validator_mode": "full",
+    "schema_link_mode": "auto",
+    "format_response": false,
+    "sql_candidate_count": 1,
+    "execution_evidence_gate": true,
+    "merge_interpret_generate": true
+  },
+  "rate_card": {
+    "gpt-5.6-luna": {
+      "input": 0.2,
+      "output": 1.2,
+      "cached_input": 0.02
+    },
+    "embedding": 0.02
+  },
+  "db_id": null,
+  "db_ids": [
+    "course_teach",
+    "real_estate_properties",
+    "voter_1",
+    "world_1"
+  ],
+  "question_ids": [
+    "voter_1:cd5dfe31c8c7",
+    "world_1:fe63888e6d15",
+    "world_1:07be62d2462c",
+    "real_estate_properties:9c13804a70d0",
+    "course_teach:a498dc046efd"
+  ],
+  "n": 5,
+  "seed": 42,
+  "split": "",
+  "concurrency": 1,
+  "max_cost": 0.15,
+  "setup": {
+    "by_db": {
+      "voter_1": {
+        "tables": 3,
+        "enriched": 0,
+        "elapsed_ms": 30,
+        "cost_usd": 0,
+        "usage": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "latency_ms": 0,
+          "cost_usd": 0,
+          "estimated_calls": 0,
+          "by_stage": {}
+        }
+      },
+      "world_1": {
+        "tables": 3,
+        "enriched": 0,
+        "elapsed_ms": 12,
+        "cost_usd": 0,
+        "usage": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "latency_ms": 0,
+          "cost_usd": 0,
+          "estimated_calls": 0,
+          "by_stage": {}
+        }
+      },
+      "real_estate_properties": {
+        "tables": 5,
+        "enriched": 0,
+        "elapsed_ms": 11,
+        "cost_usd": 0,
+        "usage": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "latency_ms": 0,
+          "cost_usd": 0,
+          "estimated_calls": 0,
+          "by_stage": {}
+        }
+      },
+      "course_teach": {
+        "tables": 3,
+        "enriched": 0,
+        "elapsed_ms": 10,
+        "cost_usd": 0,
+        "usage": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "latency_ms": 0,
+          "cost_usd": 0,
+          "estimated_calls": 0,
+          "by_stage": {}
+        }
+      }
+    },
+    "cost_usd": 0.0,
+    "elapsed_ms": 63
+  },
+  "questions": [
+    {
+      "id": "voter_1:cd5dfe31c8c7",
+      "db_id": "voter_1",
+      "question": "List the area codes in which voters voted both for the contestant 'Tabatha Gehling' and the contestant 'Kelly Clauss'.",
+      "hardness": "extra",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT T3.area_code FROM contestants AS T1 JOIN votes AS T2 ON T1.contestant_number  =  T2.contestant_number JOIN area_code_state AS T3 ON T2.state  =  T3.state WHERE T1.contestant_name  =  'Tabatha Gehling' INTERSECT SELECT T3.area_code FROM contestants AS T1 JOIN votes AS T2 ON T1.contestant_number  =  T2.contestant_number JOIN area_code_state AS T3 ON T2.state  =  T3.state WHERE T1.contestant_name  =  'Kelly Clauss'",
+      "generated_sql": "SELECT T3.area_code\nFROM CONTESTANTS AS T1\nJOIN VOTES AS T2\n  ON T1.contestant_number = T2.contestant_number\nJOIN AREA_CODE_STATE AS T3\n  ON T3.area_code = CAST(substr(CAST(T2.phone_number AS TEXT), 1, 3) AS INTEGER)\nWHERE T1.contestant_name = 'Tabatha Gehling'\nINTERSECT\nSELECT T3.area_code\nFROM CONTESTANTS AS T1\nJOIN VOTES AS T2\n  ON T1.contestant_number = T2.contestant_number\nJOIN AREA_CODE_STATE AS T3\n  ON T3.area_code = CAST(substr(CAST(T2.phone_number AS TEXT), 1, 3) AS INTEGER)\nWHERE T1.contestant_name = 'Kelly Clauss';",
+      "result_match": false,
+      "result_match_values": false,
+      "result_match_lenient": false,
+      "failure_label": "wrong_filter_or_value",
+      "sql_match": false,
+      "clarified": true,
+      "error": null,
+      "intent": "CLARIFICATION_NEEDED",
+      "trust_level": "clarifying",
+      "retries": 3,
+      "schema_linking": {
+        "gold_tables": [
+          "area_code_state",
+          "contestants",
+          "votes"
+        ],
+        "selected_tables": [
+          "area_code_state",
+          "contestants",
+          "votes"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "AREA_CODE_STATE",
+        "CONTESTANTS",
+        "VOTES"
+      ],
+      "gold_result": {
+        "columns": [
+          "area_code"
+        ],
+        "row_count": 14,
+        "rows": [
+          {
+            "area_code": 212
+          },
+          {
+            "area_code": 315
+          },
+          {
+            "area_code": 347
+          },
+          {
+            "area_code": 516
+          },
+          {
+            "area_code": 518
+          },
+          {
+            "area_code": 585
+          },
+          {
+            "area_code": 607
+          },
+          {
+            "area_code": 631
+          }
+        ],
+        "truncated": true
+      },
+      "generated_result": {
+        "columns": [
+          "area_code"
+        ],
+        "row_count": 0,
+        "rows": [],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": null,
+        "decision_why": null,
+        "reason": "Query filters area_code_state.area_code=CAST(SUBSTRING(CAST(T2.phone_number AS TEXT), 1, 3) AS INTEGER) but that value is not in the question, history, or a business rule",
+        "assumption": null,
+        "should_clarify": true,
+        "proposal_status": null,
+        "options": [
+          "Give a value for area_code_state.area_code",
+          "List area_code_state so I can pick one",
+          "Run this for every area_code_state (no single-row filter)"
+        ],
+        "candidates": [],
+        "selected": null,
+        "clusters": null,
+        "gate": null
+      },
+      "assumption": null,
+      "elapsed_ms": 19885,
+      "cost_usd": 0.0018464,
+      "input_tokens": 3658,
+      "output_tokens": 929,
+      "reasoning_tokens": 295,
+      "cached_input_tokens": 0,
+      "calls": 3,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1570,
+          "output_tokens": 222,
+          "reasoning_tokens": 0,
+          "latency_ms": 6568,
+          "cost_usd": 0.0005804
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1509,
+          "output_tokens": 560,
+          "reasoning_tokens": 295,
+          "latency_ms": 8730,
+          "cost_usd": 0.0009738
+        },
+        "direct_response": {
+          "calls": 1,
+          "input_tokens": 579,
+          "output_tokens": 147,
+          "reasoning_tokens": 0,
+          "latency_ms": 2664,
+          "cost_usd": 0.0002922
+        }
+      }
+    },
+    {
+      "id": "world_1:fe63888e6d15",
+      "db_id": "world_1",
+      "question": "What are the African countries that have a  population less than any country in Asia?",
+      "hardness": "hard",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT Name FROM country WHERE Continent  =  \"Africa\"  AND population  <  (SELECT max(population) FROM country WHERE Continent  =  \"Asia\")",
+      "generated_sql": "SELECT Name FROM country WHERE Continent = 'Africa' AND Population < (SELECT MIN(Population) FROM country WHERE Continent = 'Asia');",
+      "result_match": false,
+      "result_match_values": false,
+      "result_match_lenient": false,
+      "failure_label": "wrong_filter_or_value",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "country"
+        ],
+        "selected_tables": [
+          "city",
+          "country",
+          "countrylanguage"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "city",
+        "country",
+        "countrylanguage"
+      ],
+      "gold_result": {
+        "columns": [
+          "Name"
+        ],
+        "row_count": 58,
+        "rows": [
+          {
+            "Name": "Angola"
+          },
+          {
+            "Name": "Burundi"
+          },
+          {
+            "Name": "Benin"
+          },
+          {
+            "Name": "Burkina Faso"
+          },
+          {
+            "Name": "Botswana"
+          },
+          {
+            "Name": "Central African Republic"
+          },
+          {
+            "Name": "C\u00f4te d\u2019Ivoire"
+          },
+          {
+            "Name": "Cameroon"
+          }
+        ],
+        "truncated": true
+      },
+      "generated_result": {
+        "columns": [
+          "Name"
+        ],
+        "row_count": 5,
+        "rows": [
+          {
+            "Name": "British Indian Ocean Territory"
+          },
+          {
+            "Name": "Mayotte"
+          },
+          {
+            "Name": "Saint Helena"
+          },
+          {
+            "Name": "Sao Tome and Principe"
+          },
+          {
+            "Name": "Seychelles"
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "merged_generate",
+        "reason": "Deferred to schema-grounded / execution-evidence path",
+        "assumption": "List the names of African countries whose population is less than the population of every country in Asia.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": null,
+        "gate": "merged"
+      },
+      "assumption": "List the names of African countries whose population is less than the population of every country in Asia.",
+      "elapsed_ms": 5561,
+      "cost_usd": 0.0014548,
+      "input_tokens": 5414,
+      "output_tokens": 310,
+      "reasoning_tokens": 130,
+      "cached_input_tokens": 0,
+      "calls": 2,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 2868,
+          "output_tokens": 110,
+          "reasoning_tokens": 0,
+          "latency_ms": 1807,
+          "cost_usd": 0.0007056
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 2546,
+          "output_tokens": 200,
+          "reasoning_tokens": 130,
+          "latency_ms": 3530,
+          "cost_usd": 0.0007492
+        }
+      }
+    },
+    {
+      "id": "world_1:07be62d2462c",
+      "db_id": "world_1",
+      "question": "What are the names of cities in Europe for which English is not the official language?",
+      "hardness": "extra",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT DISTINCT T2.Name FROM country AS T1 JOIN city AS T2 ON T2.CountryCode  =  T1.Code WHERE T1.Continent  =  'Europe' AND T1.Name NOT IN (SELECT T3.Name FROM country AS T3 JOIN countrylanguage AS T4 ON T3.Code  =  T4.CountryCode WHERE T4.IsOfficial  =  'T' AND T4.Language  =  'English')",
+      "generated_sql": "SELECT DISTINCT c.Name\nFROM city AS c\nJOIN country AS co ON c.CountryCode = co.Code\nWHERE co.Continent = 'Europe'\n  AND NOT EXISTS (\n    SELECT 1\n    FROM countrylanguage AS cl\n    WHERE cl.CountryCode = c.CountryCode\n      AND cl.Language = 'English'\n      AND cl.IsOfficial = 'T'\n  );",
+      "result_match": true,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "city",
+          "country",
+          "countrylanguage"
+        ],
+        "selected_tables": [
+          "city",
+          "country",
+          "countrylanguage"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "city",
+        "country",
+        "countrylanguage"
+      ],
+      "gold_result": {
+        "columns": [
+          "Name"
+        ],
+        "row_count": 500,
+        "rows": [
+          {
+            "Name": "Tirana"
+          },
+          {
+            "Name": "Andorra la Vella"
+          },
+          {
+            "Name": "Wien"
+          },
+          {
+            "Name": "Graz"
+          },
+          {
+            "Name": "Linz"
+          },
+          {
+            "Name": "Salzburg"
+          },
+          {
+            "Name": "Innsbruck"
+          },
+          {
+            "Name": "Klagenfurt"
+          }
+        ],
+        "truncated": true
+      },
+      "generated_result": {
+        "columns": [
+          "Name"
+        ],
+        "row_count": 500,
+        "rows": [
+          {
+            "Name": "Tirana"
+          },
+          {
+            "Name": "Andorra la Vella"
+          },
+          {
+            "Name": "Wien"
+          },
+          {
+            "Name": "Graz"
+          },
+          {
+            "Name": "Linz"
+          },
+          {
+            "Name": "Salzburg"
+          },
+          {
+            "Name": "Innsbruck"
+          },
+          {
+            "Name": "Klagenfurt"
+          }
+        ],
+        "truncated": true
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "merged_generate",
+        "reason": "Deferred to schema-grounded / execution-evidence path",
+        "assumption": "List the distinct names of cities located in European countries where English is not an official language.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": null,
+        "gate": "merged"
+      },
+      "assumption": "List the distinct names of cities located in European countries where English is not an official language.",
+      "elapsed_ms": 7772,
+      "cost_usd": 0.0016928,
+      "input_tokens": 5434,
+      "output_tokens": 505,
+      "reasoning_tokens": 225,
+      "cached_input_tokens": 0,
+      "calls": 2,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 2868,
+          "output_tokens": 132,
+          "reasoning_tokens": 0,
+          "latency_ms": 2442,
+          "cost_usd": 0.000732
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 2566,
+          "output_tokens": 373,
+          "reasoning_tokens": 225,
+          "latency_ms": 5070,
+          "cost_usd": 0.0009608
+        }
+      }
+    },
+    {
+      "id": "real_estate_properties:9c13804a70d0",
+      "db_id": "real_estate_properties",
+      "question": "What are the names of properties that are either houses or apartments with more than 1 room?",
+      "hardness": "hard",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT property_name FROM Properties WHERE property_type_code  =  \"House\" UNION SELECT property_name FROM Properties WHERE property_type_code  =  \"Apartment\" AND room_count  >  1",
+      "generated_sql": "SELECT property_name FROM Properties WHERE property_type_code IN ('House', 'Apartment') AND room_count > 1;",
+      "result_match": false,
+      "result_match_values": false,
+      "result_match_lenient": false,
+      "failure_label": "wrong_filter_or_value",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "properties"
+        ],
+        "selected_tables": [
+          "other_available_features",
+          "other_property_features",
+          "properties",
+          "ref_feature_types",
+          "ref_property_types"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "Other_Available_Features",
+        "Other_Property_Features",
+        "Properties",
+        "Ref_Feature_Types",
+        "Ref_Property_Types"
+      ],
+      "gold_result": {
+        "columns": [
+          "property_name"
+        ],
+        "row_count": 8,
+        "rows": [
+          {
+            "property_name": "longacre"
+          },
+          {
+            "property_name": "parc coliseum"
+          },
+          {
+            "property_name": "parc east"
+          },
+          {
+            "property_name": "park"
+          },
+          {
+            "property_name": "renoir"
+          },
+          {
+            "property_name": "ten tower"
+          },
+          {
+            "property_name": "the cole"
+          },
+          {
+            "property_name": "vogue"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "property_name"
+        ],
+        "row_count": 7,
+        "rows": [
+          {
+            "property_name": "park"
+          },
+          {
+            "property_name": "parc east"
+          },
+          {
+            "property_name": "vogue"
+          },
+          {
+            "property_name": "longacre"
+          },
+          {
+            "property_name": "renoir"
+          },
+          {
+            "property_name": "ten tower"
+          },
+          {
+            "property_name": "parc coliseum"
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "merged_generate",
+        "reason": "Deferred to schema-grounded / execution-evidence path",
+        "assumption": "List the names of properties classified as houses or apartments that have more than 1 room.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": null,
+        "gate": "merged"
+      },
+      "assumption": "List the names of properties classified as houses or apartments that have more than 1 room.",
+      "elapsed_ms": 7313,
+      "cost_usd": 0.001607,
+      "input_tokens": 7123,
+      "output_tokens": 152,
+      "reasoning_tokens": 0,
+      "cached_input_tokens": 0,
+      "calls": 2,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 3924,
+          "output_tokens": 96,
+          "reasoning_tokens": 0,
+          "latency_ms": 5529,
+          "cost_usd": 0.0009
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 3199,
+          "output_tokens": 56,
+          "reasoning_tokens": 0,
+          "latency_ms": 1524,
+          "cost_usd": 0.000707
+        }
+      }
+    },
+    {
+      "id": "course_teach:a498dc046efd",
+      "db_id": "course_teach",
+      "question": "What are the names of the teachers and how many courses do they teach?",
+      "hardness": "medium",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT T2.Name ,  COUNT(*) FROM course_arrange AS T1 JOIN teacher AS T2 ON T1.Teacher_ID  =  T2.Teacher_ID GROUP BY T2.Name",
+      "generated_sql": "SELECT T2.Teacher_ID, T2.Name, COUNT(DISTINCT T1.Course_ID) AS course_count\nFROM teacher AS T2\nLEFT JOIN course_arrange AS T1\n  ON T1.Teacher_ID = T2.Teacher_ID\nGROUP BY T2.Teacher_ID, T2.Name;",
+      "result_match": false,
+      "result_match_values": false,
+      "result_match_lenient": false,
+      "failure_label": "join_type",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "course_arrange",
+          "teacher"
+        ],
+        "selected_tables": [
+          "course",
+          "course_arrange",
+          "teacher"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "course",
+        "course_arrange",
+        "teacher"
+      ],
+      "gold_result": {
+        "columns": [
+          "Name",
+          "COUNT(*)"
+        ],
+        "row_count": 5,
+        "rows": [
+          {
+            "Name": "Anne Walker",
+            "COUNT(*)": 2
+          },
+          {
+            "Name": "Gustaaf Deloor",
+            "COUNT(*)": 1
+          },
+          {
+            "Name": "Kearsley Brown",
+            "COUNT(*)": 1
+          },
+          {
+            "Name": "Lucy Wong",
+            "COUNT(*)": 1
+          },
+          {
+            "Name": "Vicente Carretero",
+            "COUNT(*)": 1
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Teacher_ID",
+          "Name",
+          "course_count"
+        ],
+        "row_count": 7,
+        "rows": [
+          {
+            "Teacher_ID": 1,
+            "Name": "Joseph Huts",
+            "course_count": 0
+          },
+          {
+            "Teacher_ID": 2,
+            "Name": "Gustaaf Deloor",
+            "course_count": 1
+          },
+          {
+            "Teacher_ID": 3,
+            "Name": "Vicente Carretero",
+            "course_count": 1
+          },
+          {
+            "Teacher_ID": 4,
+            "Name": "John Deloor",
+            "course_count": 0
+          },
+          {
+            "Teacher_ID": 5,
+            "Name": "Kearsley Brown",
+            "course_count": 1
+          },
+          {
+            "Teacher_ID": 6,
+            "Name": "Anne Walker",
+            "course_count": 2
+          },
+          {
+            "Teacher_ID": 7,
+            "Name": "Lucy Wong",
+            "course_count": 1
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "merged_generate",
+        "reason": "Deferred to schema-grounded / execution-evidence path",
+        "assumption": "List each teacher's name and count the course arrangements associated with that teacher.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": null,
+        "gate": "merged"
+      },
+      "assumption": "List each teacher's name and count the course arrangements associated with that teacher.",
+      "elapsed_ms": 8270,
+      "cost_usd": 0.0011318,
+      "input_tokens": 2467,
+      "output_tokens": 532,
+      "reasoning_tokens": 224,
+      "cached_input_tokens": 0,
+      "calls": 2,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1199,
+          "output_tokens": 120,
+          "reasoning_tokens": 0,
+          "latency_ms": 1745,
+          "cost_usd": 0.0003838
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1268,
+          "output_tokens": 412,
+          "reasoning_tokens": 224,
+          "latency_ms": 6258,
+          "cost_usd": 0.000748
+        }
+      }
+    }
+  ],
+  "accuracy": {
+    "overall": {
+      "n": 5,
+      "strict_correct": 1,
+      "values_correct": 1,
+      "lenient_correct": 1,
+      "strict_accuracy": 0.2,
+      "values_accuracy": 0.2,
+      "lenient_accuracy": 0.2
+    },
+    "by_hardness": {
+      "extra": {
+        "n": 2,
+        "strict_correct": 1,
+        "values_correct": 1,
+        "lenient_correct": 1,
+        "strict_accuracy": 0.5,
+        "values_accuracy": 0.5,
+        "lenient_accuracy": 0.5
+      },
+      "hard": {
+        "n": 2,
+        "strict_correct": 0,
+        "values_correct": 0,
+        "lenient_correct": 0,
+        "strict_accuracy": 0.0,
+        "values_accuracy": 0.0,
+        "lenient_accuracy": 0.0
+      },
+      "medium": {
+        "n": 1,
+        "strict_correct": 0,
+        "values_correct": 0,
+        "lenient_correct": 0,
+        "strict_accuracy": 0.0,
+        "values_accuracy": 0.0,
+        "lenient_accuracy": 0.0
+      }
+    },
+    "by_database": {
+      "course_teach": {
+        "n": 1,
+        "strict_correct": 0,
+        "values_correct": 0,
+        "lenient_correct": 0,
+        "strict_accuracy": 0.0,
+        "values_accuracy": 0.0,
+        "lenient_accuracy": 0.0
+      },
+      "real_estate_properties": {
+        "n": 1,
+        "strict_correct": 0,
+        "values_correct": 0,
+        "lenient_correct": 0,
+        "strict_accuracy": 0.0,
+        "values_accuracy": 0.0,
+        "lenient_accuracy": 0.0
+      },
+      "voter_1": {
+        "n": 1,
+        "strict_correct": 0,
+        "values_correct": 0,
+        "lenient_correct": 0,
+        "strict_accuracy": 0.0,
+        "values_accuracy": 0.0,
+        "lenient_accuracy": 0.0
+      },
+      "world_1": {
+        "n": 2,
+        "strict_correct": 1,
+        "values_correct": 1,
+        "lenient_correct": 1,
+        "strict_accuracy": 0.5,
+        "values_accuracy": 0.5,
+        "lenient_accuracy": 0.5
+      }
+    },
+    "failure_labels": {
+      "wrong_filter_or_value": 3,
+      "join_type": 1
+    },
+    "schema_linking_recall": {
+      "n": 5,
+      "full_hit": 5,
+      "rate": 1.0
+    },
+    "convention_adjusted": {
+      "n": 5,
+      "values_correct": 1,
+      "values_accuracy": 0.2,
+      "convention_adjusted_correct": 2,
+      "convention_adjusted_accuracy": 0.4
+    }
+  },
+  "totals": {
+    "cost_usd": 0.007733,
+    "elapsed_ms": 48801,
+    "latency_p50_ms": 7772.0,
+    "latency_p95_ms": 8270.0,
+    "latency_mean_ms": 9760.2,
+    "avg_cost_usd": 0.001547,
+    "input_tokens": 24096,
+    "output_tokens": 2428,
+    "reasoning_tokens": 874,
+    "calls": 11,
+    "estimated_calls": 0,
+    "correct_strict": 1,
+    "correct_values": 1,
+    "n": 5
+  },
+  "by_stage": {
+    "query_generator": {
+      "calls": 5,
+      "input_tokens": 12429,
+      "output_tokens": 680,
+      "reasoning_tokens": 0,
+      "latency_ms": 18091,
+      "cost_usd": 0.0033018,
+      "latency_p50_ms": 2442.0,
+      "latency_p95_ms": 5529.0,
+      "latency_mean_ms": 3618.2
+    },
+    "query_validator": {
+      "calls": 5,
+      "input_tokens": 11088,
+      "output_tokens": 1601,
+      "reasoning_tokens": 874,
+      "latency_ms": 25112,
+      "cost_usd": 0.0041388,
+      "latency_p50_ms": 5070.0,
+      "latency_p95_ms": 6258.0,
+      "latency_mean_ms": 5022.4
+    },
+    "direct_response": {
+      "calls": 1,
+      "input_tokens": 579,
+      "output_tokens": 147,
+      "reasoning_tokens": 0,
+      "latency_ms": 2664,
+      "cost_usd": 0.0002922,
+      "latency_p50_ms": 2664.0,
+      "latency_p95_ms": 2664.0,
+      "latency_mean_ms": 2664.0
+    }
+  },
+  "extrapolation": {
+    "spider_dev_1034": {
+      "n_questions": 1034,
+      "setup_cost_usd": 0.0,
+      "questions_cost_usd": 1.599143,
+      "total_cost_usd": 1.599143,
+      "avg_cost_per_question_usd": 0.001547,
+      "avg_latency_ms": 9760.2,
+      "estimated_total_latency_ms": 10092109.8
+    },
+    "bird_mini_dev_500": {
+      "n_questions": 500,
+      "setup_cost_usd": 0.0,
+      "questions_cost_usd": 0.77328,
+      "total_cost_usd": 0.77328,
+      "avg_cost_per_question_usd": 0.001547,
+      "avg_latency_ms": 9760.2,
+      "estimated_total_latency_ms": 4880163.0
+    }
+  },
+  "usage": {
+    "total_cost_usd": 0.0077328,
+    "total_calls": 11,
+    "estimated_calls": 0,
+    "by_stage": {
+      "query_generator": {
+        "calls": 5,
+        "input_tokens": 12429,
+        "output_tokens": 680,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 18091,
+        "cost_usd": 0.0033018,
+        "estimated_calls": 0,
+        "latency_p50_ms": 2442.0,
+        "latency_p95_ms": 5529.0,
+        "latency_mean_ms": 3618.2
+      },
+      "query_validator": {
+        "calls": 5,
+        "input_tokens": 11088,
+        "output_tokens": 1601,
+        "reasoning_tokens": 874,
+        "cached_input_tokens": 0,
+        "latency_ms": 25112,
+        "cost_usd": 0.0041388,
+        "estimated_calls": 0,
+        "latency_p50_ms": 5070.0,
+        "latency_p95_ms": 6258.0,
+        "latency_mean_ms": 5022.4
+      },
+      "direct_response": {
+        "calls": 1,
+        "input_tokens": 579,
+        "output_tokens": 147,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2664,
+        "cost_usd": 0.0002922,
+        "estimated_calls": 0,
+        "latency_p50_ms": 2664.0,
+        "latency_p95_ms": 2664.0,
+        "latency_mean_ms": 2664.0
+      }
+    },
+    "records": [
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "voter_1:cd5dfe31c8c7",
+        "label": "",
+        "input_tokens": 1570,
+        "output_tokens": 222,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 6568,
+        "cost_usd": 0.0005804,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "voter_1:cd5dfe31c8c7",
+        "label": "",
+        "input_tokens": 1509,
+        "output_tokens": 560,
+        "reasoning_tokens": 295,
+        "cached_input_tokens": 0,
+        "latency_ms": 8730,
+        "cost_usd": 0.0009738,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "direct_response",
+        "case_id": "voter_1:cd5dfe31c8c7",
+        "label": "",
+        "input_tokens": 579,
+        "output_tokens": 147,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2664,
+        "cost_usd": 0.0002922,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "world_1:fe63888e6d15",
+        "label": "",
+        "input_tokens": 2868,
+        "output_tokens": 110,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1807,
+        "cost_usd": 0.0007056,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "world_1:fe63888e6d15",
+        "label": "",
+        "input_tokens": 2546,
+        "output_tokens": 200,
+        "reasoning_tokens": 130,
+        "cached_input_tokens": 0,
+        "latency_ms": 3530,
+        "cost_usd": 0.0007492,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "world_1:07be62d2462c",
+        "label": "",
+        "input_tokens": 2868,
+        "output_tokens": 132,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2442,
+        "cost_usd": 0.000732,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "world_1:07be62d2462c",
+        "label": "",
+        "input_tokens": 2566,
+        "output_tokens": 373,
+        "reasoning_tokens": 225,
+        "cached_input_tokens": 0,
+        "latency_ms": 5070,
+        "cost_usd": 0.0009608,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "real_estate_properties:9c13804a70d0",
+        "label": "",
+        "input_tokens": 3924,
+        "output_tokens": 96,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 5529,
+        "cost_usd": 0.0009,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "real_estate_properties:9c13804a70d0",
+        "label": "",
+        "input_tokens": 3199,
+        "output_tokens": 56,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1524,
+        "cost_usd": 0.000707,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "course_teach:a498dc046efd",
+        "label": "",
+        "input_tokens": 1199,
+        "output_tokens": 120,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1745,
+        "cost_usd": 0.0003838,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "course_teach:a498dc046efd",
+        "label": "",
+        "input_tokens": 1268,
+        "output_tokens": 412,
+        "reasoning_tokens": 224,
+        "cached_input_tokens": 0,
+        "latency_ms": 6258,
+        "cost_usd": 0.000748,
+        "estimated": false
+      }
+    ]
+  }
+}

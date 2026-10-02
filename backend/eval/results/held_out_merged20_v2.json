@@ -1,0 +1,4327 @@
+{
+  "kind": "spider-pilot",
+  "dataset": "spider",
+  "include_evidence": null,
+  "created_at": "2026-10-01T16:57:33.510419+00:00",
+  "models": {
+    "openai_model": "gpt-5.6-luna",
+    "enrichment_model": "gpt-5.6-luna",
+    "interpretation_model": "gpt-5.6-luna",
+    "llm_reasoning_effort": "low",
+    "embedding_model": "text-embedding-3-small",
+    "interpretation_mode": "on",
+    "validator_mode": "full",
+    "schema_link_mode": "auto",
+    "format_response": false,
+    "sql_candidate_count": 1,
+    "execution_evidence_gate": true,
+    "merge_interpret_generate": true
+  },
+  "rate_card": {
+    "gpt-5.6-luna": {
+      "input": 0.2,
+      "output": 1.2,
+      "cached_input": 0.02
+    },
+    "embedding": 0.02
+  },
+  "db_id": null,
+  "db_ids": [
+    "course_teach",
+    "poker_player",
+    "real_estate_properties",
+    "voter_1",
+    "world_1"
+  ],
+  "question_ids": [
+    "voter_1:a57cad1941ba",
+    "voter_1:7ac1539e491d",
+    "voter_1:358c15e1209e",
+    "voter_1:cd5dfe31c8c7",
+    "world_1:0265b93a3c45",
+    "world_1:80b2aff9218f",
+    "world_1:fe63888e6d15",
+    "world_1:07be62d2462c",
+    "poker_player:3a98018d39a5",
+    "poker_player:7ffc9e879076",
+    "poker_player:5bc4bf0f23fa",
+    "poker_player:baf9c7fec8bd",
+    "real_estate_properties:adb7d15a1edf",
+    "real_estate_properties:9c13804a70d0",
+    "real_estate_properties:60f63962a931",
+    "real_estate_properties:206c581552eb",
+    "course_teach:365531823c43",
+    "course_teach:28ffb4c9eadb",
+    "course_teach:47c5aec60877",
+    "course_teach:a498dc046efd"
+  ],
+  "n": 20,
+  "seed": 42,
+  "split": "",
+  "concurrency": 1,
+  "max_cost": 0.25,
+  "setup": {
+    "by_db": {
+      "voter_1": {
+        "tables": 3,
+        "enriched": 0,
+        "elapsed_ms": 12,
+        "cost_usd": 0,
+        "usage": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "latency_ms": 0,
+          "cost_usd": 0,
+          "estimated_calls": 0,
+          "by_stage": {}
+        }
+      },
+      "world_1": {
+        "tables": 3,
+        "enriched": 0,
+        "elapsed_ms": 6,
+        "cost_usd": 0,
+        "usage": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "latency_ms": 0,
+          "cost_usd": 0,
+          "estimated_calls": 0,
+          "by_stage": {}
+        }
+      },
+      "poker_player": {
+        "tables": 2,
+        "enriched": 0,
+        "elapsed_ms": 6,
+        "cost_usd": 0,
+        "usage": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "latency_ms": 0,
+          "cost_usd": 0,
+          "estimated_calls": 0,
+          "by_stage": {}
+        }
+      },
+      "real_estate_properties": {
+        "tables": 5,
+        "enriched": 0,
+        "elapsed_ms": 6,
+        "cost_usd": 0,
+        "usage": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "latency_ms": 0,
+          "cost_usd": 0,
+          "estimated_calls": 0,
+          "by_stage": {}
+        }
+      },
+      "course_teach": {
+        "tables": 3,
+        "enriched": 0,
+        "elapsed_ms": 6,
+        "cost_usd": 0,
+        "usage": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "latency_ms": 0,
+          "cost_usd": 0,
+          "estimated_calls": 0,
+          "by_stage": {}
+        }
+      }
+    },
+    "cost_usd": 0.0,
+    "elapsed_ms": 36
+  },
+  "questions": [
+    {
+      "id": "voter_1:a57cad1941ba",
+      "db_id": "voter_1",
+      "question": "List the vote ids, phone numbers and states of all votes.",
+      "hardness": "easy",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT vote_id ,  phone_number ,  state FROM votes",
+      "generated_sql": "SELECT vote_id, phone_number, state\nFROM VOTES;",
+      "result_match": true,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "votes"
+        ],
+        "selected_tables": [
+          "area_code_state",
+          "contestants",
+          "votes"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "AREA_CODE_STATE",
+        "CONTESTANTS",
+        "VOTES"
+      ],
+      "gold_result": {
+        "columns": [
+          "vote_id",
+          "phone_number",
+          "state"
+        ],
+        "row_count": 4,
+        "rows": [
+          {
+            "vote_id": 1,
+            "phone_number": 7182887233,
+            "state": "NY"
+          },
+          {
+            "vote_id": 2,
+            "phone_number": 7148407040,
+            "state": "NY"
+          },
+          {
+            "vote_id": 3,
+            "phone_number": 6209222712,
+            "state": "CA"
+          },
+          {
+            "vote_id": 5,
+            "phone_number": 5112677315,
+            "state": "NJ\n"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "vote_id",
+          "phone_number",
+          "state"
+        ],
+        "row_count": 4,
+        "rows": [
+          {
+            "vote_id": 1,
+            "phone_number": 7182887233,
+            "state": "NY"
+          },
+          {
+            "vote_id": 2,
+            "phone_number": 7148407040,
+            "state": "NY"
+          },
+          {
+            "vote_id": 3,
+            "phone_number": 6209222712,
+            "state": "CA"
+          },
+          {
+            "vote_id": 5,
+            "phone_number": 5112677315,
+            "state": "NJ\n"
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "execution_gate;single_cluster;n=2",
+        "reason": "All executable candidates agree on results",
+        "assumption": "List the vote ID, phone number, and state for every row in VOTES.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": [
+          {
+            "size": 2,
+            "sql": "SELECT vote_id, phone_number, state\nFROM VOTES;",
+            "row_count": 4
+          }
+        ],
+        "gate": "execution_evidence"
+      },
+      "assumption": "List the vote ID, phone number, and state for every row in VOTES.",
+      "elapsed_ms": 8557,
+      "cost_usd": 0.00075064,
+      "input_tokens": 6872,
+      "output_tokens": 307,
+      "reasoning_tokens": 0,
+      "cached_input_tokens": 5512,
+      "calls": 4,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1322,
+          "output_tokens": 96,
+          "reasoning_tokens": 0,
+          "latency_ms": 2256,
+          "cost_usd": 0.00014218
+        },
+        "ambiguity_gate": {
+          "calls": 2,
+          "input_tokens": 4199,
+          "output_tokens": 165,
+          "reasoning_tokens": 0,
+          "latency_ms": 3061,
+          "cost_usd": 0.00028306
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1351,
+          "output_tokens": 46,
+          "reasoning_tokens": 0,
+          "latency_ms": 1439,
+          "cost_usd": 0.0003254
+        }
+      }
+    },
+    {
+      "id": "voter_1:7ac1539e491d",
+      "db_id": "voter_1",
+      "question": "Of all the contestants who got voted, what is the contestant number and name of the contestant who got least votes?",
+      "hardness": "medium",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT T1.contestant_number , T1.contestant_name FROM contestants AS T1 JOIN votes AS T2 ON T1.contestant_number  =  T2.contestant_number GROUP BY T1.contestant_number ORDER BY count(*) ASC LIMIT 1",
+      "generated_sql": "SELECT c.contestant_number, c.contestant_name\nFROM VOTES AS v\nJOIN CONTESTANTS AS c\n  ON v.contestant_number = c.contestant_number\nGROUP BY c.contestant_number, c.contestant_name\nORDER BY COUNT(v.vote_id) ASC\nLIMIT 1;",
+      "result_match": true,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "contestants",
+          "votes"
+        ],
+        "selected_tables": [
+          "area_code_state",
+          "contestants",
+          "votes"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "AREA_CODE_STATE",
+        "CONTESTANTS",
+        "VOTES"
+      ],
+      "gold_result": {
+        "columns": [
+          "contestant_number",
+          "contestant_name"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "contestant_number": 2,
+            "contestant_name": "Tabatha Gehling"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "contestant_number",
+          "contestant_name"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "contestant_number": 2,
+            "contestant_name": "Tabatha Gehling"
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "execution_gate;single_cluster;n=2",
+        "reason": "All executable candidates agree on results",
+        "assumption": "Find the contestant among those with at least one vote who received the fewest votes, and return their contestant number and name.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": [
+          {
+            "size": 2,
+            "sql": "SELECT c.contestant_number, c.contestant_name\nFROM VOTES AS v\nJOIN CONTESTANTS AS c\n  ON v.contestant_number = c.contestant_number\nGROUP BY c.contestant_number, c.contestant_name\nORDER BY COUNT(v.vote_id) ASC\nLIMIT 1;",
+            "row_count": 1
+          }
+        ],
+        "gate": "execution_evidence"
+      },
+      "assumption": "Find the contestant among those with at least one vote who received the fewest votes, and return their contestant number and name.",
+      "elapsed_ms": 10167,
+      "cost_usd": 0.00178322,
+      "input_tokens": 7012,
+      "output_tokens": 730,
+      "reasoning_tokens": 63,
+      "cached_input_tokens": 2751,
+      "calls": 4,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1342,
+          "output_tokens": 177,
+          "reasoning_tokens": 0,
+          "latency_ms": 2903,
+          "cost_usd": 0.00023978
+        },
+        "ambiguity_gate": {
+          "calls": 2,
+          "input_tokens": 4255,
+          "output_tokens": 453,
+          "reasoning_tokens": 63,
+          "latency_ms": 5448,
+          "cost_usd": 0.0013946
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1415,
+          "output_tokens": 100,
+          "reasoning_tokens": 0,
+          "latency_ms": 1600,
+          "cost_usd": 0.00014884
+        }
+      }
+    },
+    {
+      "id": "voter_1:358c15e1209e",
+      "db_id": "voter_1",
+      "question": "How many contestants did not get voted?",
+      "hardness": "hard",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT count(*) FROM contestants WHERE contestant_number NOT IN ( SELECT contestant_number FROM votes )",
+      "generated_sql": "SELECT COUNT(*) AS contestants_without_votes\nFROM CONTESTANTS AS c\nLEFT JOIN VOTES AS v\n  ON c.contestant_number = v.contestant_number\nWHERE v.contestant_number IS NULL;",
+      "result_match": false,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": "scorer_only",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "contestants",
+          "votes"
+        ],
+        "selected_tables": [
+          "area_code_state",
+          "contestants",
+          "votes"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "AREA_CODE_STATE",
+        "CONTESTANTS",
+        "VOTES"
+      ],
+      "gold_result": {
+        "columns": [
+          "count(*)"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "count(*)": 8
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "contestants_without_votes"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "contestants_without_votes": 8
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "execution_gate;single_cluster;n=1",
+        "reason": "All executable candidates agree on results",
+        "assumption": "Count the contestants who have no corresponding votes in the VOTES table.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": [
+          {
+            "size": 1,
+            "sql": "SELECT COUNT(*) AS contestants_without_votes\nFROM CONTESTANTS AS c\nLEFT JOIN VOTES AS v\n  ON c.contestant_number = v.contestant_number\nWHERE v.contestant_number IS NULL;",
+            "row_count": 1
+          }
+        ],
+        "gate": "execution_evidence"
+      },
+      "assumption": "Count the contestants who have no corresponding votes in the VOTES table.",
+      "elapsed_ms": 12659,
+      "cost_usd": 0.00155188,
+      "input_tokens": 6863,
+      "output_tokens": 552,
+      "reasoning_tokens": 42,
+      "cached_input_tokens": 2684,
+      "calls": 4,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1312,
+          "output_tokens": 172,
+          "reasoning_tokens": 42,
+          "latency_ms": 2587,
+          "cost_usd": 0.00023318
+        },
+        "ambiguity_gate": {
+          "calls": 2,
+          "input_tokens": 4173,
+          "output_tokens": 302,
+          "reasoning_tokens": 0,
+          "latency_ms": 5549,
+          "cost_usd": 0.001197
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1378,
+          "output_tokens": 78,
+          "reasoning_tokens": 0,
+          "latency_ms": 1406,
+          "cost_usd": 0.0001217
+        }
+      }
+    },
+    {
+      "id": "voter_1:cd5dfe31c8c7",
+      "db_id": "voter_1",
+      "question": "List the area codes in which voters voted both for the contestant 'Tabatha Gehling' and the contestant 'Kelly Clauss'.",
+      "hardness": "extra",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT T3.area_code FROM contestants AS T1 JOIN votes AS T2 ON T1.contestant_number  =  T2.contestant_number JOIN area_code_state AS T3 ON T2.state  =  T3.state WHERE T1.contestant_name  =  'Tabatha Gehling' INTERSECT SELECT T3.area_code FROM contestants AS T1 JOIN votes AS T2 ON T1.contestant_number  =  T2.contestant_number JOIN area_code_state AS T3 ON T2.state  =  T3.state WHERE T1.contestant_name  =  'Kelly Clauss'",
+      "generated_sql": "WITH contestant_votes AS (\n  SELECT\n    CAST(SUBSTR(CAST(v.phone_number AS TEXT), 1, 3) AS INTEGER) AS area_code,\n    LOWER(TRIM(c.contestant_name)) AS contestant_name\n  FROM VOTES AS v\n  JOIN CONTESTANTS AS c\n    ON v.contestant_number = c.contestant_number\n  WHERE LOWER(TRIM(c.contestant_name)) IN ('tabatha gehling', 'kelly clauss')\n)\nSELECT area_code\nFROM contestant_votes\nGROUP BY area_code\nHAVING COUNT(DISTINCT contestant_name) = 2;",
+      "result_match": false,
+      "result_match_values": false,
+      "result_match_lenient": false,
+      "failure_label": "wrong_table",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 1,
+      "schema_linking": {
+        "gold_tables": [
+          "area_code_state",
+          "contestants",
+          "votes"
+        ],
+        "selected_tables": [
+          "area_code_state",
+          "contestants",
+          "votes"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "AREA_CODE_STATE",
+        "CONTESTANTS",
+        "VOTES"
+      ],
+      "gold_result": {
+        "columns": [
+          "area_code"
+        ],
+        "row_count": 14,
+        "rows": [
+          {
+            "area_code": 212
+          },
+          {
+            "area_code": 315
+          },
+          {
+            "area_code": 347
+          },
+          {
+            "area_code": 516
+          },
+          {
+            "area_code": 518
+          },
+          {
+            "area_code": 585
+          },
+          {
+            "area_code": 607
+          },
+          {
+            "area_code": 631
+          }
+        ],
+        "truncated": true
+      },
+      "generated_result": {
+        "columns": [
+          "area_code"
+        ],
+        "row_count": 0,
+        "rows": [],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "assumed",
+        "decision_why": "execution_gate;dominant;mass=0.80;threshold=0.67;clusters=2",
+        "reason": "Dominant result cluster (4/5); answering with assumption",
+        "assumption": "List area codes associated with at least one vote for both Tabatha Gehling and Kelly Clauss.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [
+          "Use reading where: Different SQL implementations"
+        ],
+        "candidates": [],
+        "selected": null,
+        "clusters": [
+          {
+            "size": 4,
+            "sql": "SELECT DISTINCT CAST(SUBSTR(CAST(v.phone_number AS TEXT), 1, 3) AS INTEGER) AS area_code\nFROM VOTES AS v\nJOIN CONTESTANTS AS c\n  ON v.contestant_number = c.contestant_number\nWHERE c.contestant_name IN ('Tabatha Gehling', 'Kelly Clauss')\nGROUP BY CAST(SUBSTR(CAST(v.phone_number AS TEXT), 1, 3) AS INTEGER)\nHAVING COUNT(DISTINCT c.contestant_name) = 2;",
+            "row_count": 0
+          },
+          {
+            "size": 1,
+            "sql": "SELECT acs.area_code\nFROM VOTES AS v\nJOIN CONTESTANTS AS c\n  ON v.contestant_number = c.contestant_number\nJOIN AREA_CODE_STATE AS acs\n  ON v.state = acs.state\nWHERE c.contestant_name IN ('Tabatha Gehling', 'Kelly Clauss')\nGROUP BY acs.area_code\nHAVING COUNT(DISTINCT c.contestant_name) = 2;",
+            "row_count": 14
+          }
+        ],
+        "gate": "execution_evidence"
+      },
+      "assumption": "List area codes associated with at least one vote for both Tabatha Gehling and Kelly Clauss.",
+      "elapsed_ms": 40783,
+      "cost_usd": 0.00740968,
+      "input_tokens": 20027,
+      "output_tokens": 4015,
+      "reasoning_tokens": 1058,
+      "cached_input_tokens": 7854,
+      "calls": 10,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 3,
+          "input_tokens": 6209,
+          "output_tokens": 1545,
+          "reasoning_tokens": 654,
+          "latency_ms": 15628,
+          "cost_usd": 0.00284758
+        },
+        "ambiguity_gate": {
+          "calls": 5,
+          "input_tokens": 10809,
+          "output_tokens": 1943,
+          "reasoning_tokens": 202,
+          "latency_ms": 18506,
+          "cost_usd": 0.0033279
+        },
+        "query_validator": {
+          "calls": 2,
+          "input_tokens": 3009,
+          "output_tokens": 527,
+          "reasoning_tokens": 202,
+          "latency_ms": 6196,
+          "cost_usd": 0.0012342
+        }
+      }
+    },
+    {
+      "id": "world_1:0265b93a3c45",
+      "db_id": "world_1",
+      "question": "What are the region and population of Angola?",
+      "hardness": "easy",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT Population ,  Region FROM country WHERE Name  =  \"Angola\"",
+      "generated_sql": "SELECT country.Region, country.Population FROM country WHERE country.Name = 'Angola';",
+      "result_match": true,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "country"
+        ],
+        "selected_tables": [
+          "city",
+          "country",
+          "countrylanguage"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "city",
+        "country",
+        "countrylanguage"
+      ],
+      "gold_result": {
+        "columns": [
+          "Population",
+          "Region"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "Population": 12878000,
+            "Region": "Central Africa"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Region",
+          "Population"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "Region": "Central Africa",
+            "Population": 12878000
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "execution_gate;single_cluster;n=2",
+        "reason": "All executable candidates agree on results",
+        "assumption": "Retrieve the region and population for the country named Angola.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": [
+          {
+            "size": 2,
+            "sql": "SELECT country.Region, country.Population FROM country WHERE country.Name = 'Angola';",
+            "row_count": 1
+          }
+        ],
+        "gate": "execution_evidence"
+      },
+      "assumption": "Retrieve the region and population for the country named Angola.",
+      "elapsed_ms": 7362,
+      "cost_usd": 0.00064216,
+      "input_tokens": 11660,
+      "output_tokens": 339,
+      "reasoning_tokens": 0,
+      "cached_input_tokens": 11648,
+      "calls": 4,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 2652,
+          "output_tokens": 84,
+          "reasoning_tokens": 0,
+          "latency_ms": 1517,
+          "cost_usd": 0.00015438
+        },
+        "ambiguity_gate": {
+          "calls": 2,
+          "input_tokens": 6483,
+          "output_tokens": 204,
+          "reasoning_tokens": 0,
+          "latency_ms": 4455,
+          "cost_usd": 0.00037554
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 2525,
+          "output_tokens": 51,
+          "reasoning_tokens": 0,
+          "latency_ms": 987,
+          "cost_usd": 0.00011224
+        }
+      }
+    },
+    {
+      "id": "world_1:80b2aff9218f",
+      "db_id": "world_1",
+      "question": "What is the total number of unique official languages spoken in the countries that are founded before 1930?",
+      "hardness": "medium",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT count(DISTINCT T2.Language) FROM country AS T1 JOIN countrylanguage AS T2 ON T1.Code  =  T2.CountryCode WHERE  IndepYear  <  1930 AND T2.IsOfficial  =  \"T\"",
+      "generated_sql": "SELECT COUNT(DISTINCT cl.Language) AS total_unique_official_languages\nFROM country AS c\nJOIN countrylanguage AS cl\n  ON cl.CountryCode = c.Code\nWHERE c.IndepYear < 1930\n  AND cl.IsOfficial = 'T';",
+      "result_match": false,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": "scorer_only",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "country",
+          "countrylanguage"
+        ],
+        "selected_tables": [
+          "city",
+          "country",
+          "countrylanguage"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "city",
+        "country",
+        "countrylanguage"
+      ],
+      "gold_result": {
+        "columns": [
+          "count(DISTINCT T2.Language)"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "count(DISTINCT T2.Language)": 40
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "total_unique_official_languages"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "total_unique_official_languages": 40
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "execution_gate;single_cluster;n=2",
+        "reason": "All executable candidates agree on results",
+        "assumption": "Count the distinct languages marked official in countries whose independence year is before 1930.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": [
+          {
+            "size": 2,
+            "sql": "SELECT COUNT(DISTINCT cl.Language) AS total_unique_official_languages\nFROM country AS c\nJOIN countrylanguage AS cl\n  ON cl.CountryCode = c.Code\nWHERE c.IndepYear < 1930\n  AND cl.IsOfficial = 'T';",
+            "row_count": 1
+          }
+        ],
+        "gate": "execution_evidence"
+      },
+      "assumption": "Count the distinct languages marked official in countries whose independence year is before 1930.",
+      "elapsed_ms": 8462,
+      "cost_usd": 0.00096764,
+      "input_tokens": 11794,
+      "output_tokens": 608,
+      "reasoning_tokens": 54,
+      "cached_input_tokens": 11782,
+      "calls": 4,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 2676,
+          "output_tokens": 217,
+          "reasoning_tokens": 54,
+          "latency_ms": 2467,
+          "cost_usd": 0.00031446
+        },
+        "ambiguity_gate": {
+          "calls": 2,
+          "input_tokens": 6543,
+          "output_tokens": 302,
+          "reasoning_tokens": 0,
+          "latency_ms": 4215,
+          "cost_usd": 0.00049434
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 2575,
+          "output_tokens": 89,
+          "reasoning_tokens": 0,
+          "latency_ms": 1532,
+          "cost_usd": 0.00015884
+        }
+      }
+    },
+    {
+      "id": "world_1:fe63888e6d15",
+      "db_id": "world_1",
+      "question": "What are the African countries that have a  population less than any country in Asia?",
+      "hardness": "hard",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT Name FROM country WHERE Continent  =  \"Africa\"  AND population  <  (SELECT max(population) FROM country WHERE Continent  =  \"Asia\")",
+      "generated_sql": "SELECT c.Name\nFROM country AS c\nWHERE c.Continent = 'Africa'\n  AND c.Population < (\n    SELECT MIN(a.Population)\n    FROM country AS a\n    WHERE a.Continent = 'Asia'\n  );",
+      "result_match": false,
+      "result_match_values": false,
+      "result_match_lenient": false,
+      "failure_label": "wrong_filter_or_value",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "country"
+        ],
+        "selected_tables": [
+          "city",
+          "country",
+          "countrylanguage"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "city",
+        "country",
+        "countrylanguage"
+      ],
+      "gold_result": {
+        "columns": [
+          "Name"
+        ],
+        "row_count": 58,
+        "rows": [
+          {
+            "Name": "Angola"
+          },
+          {
+            "Name": "Burundi"
+          },
+          {
+            "Name": "Benin"
+          },
+          {
+            "Name": "Burkina Faso"
+          },
+          {
+            "Name": "Botswana"
+          },
+          {
+            "Name": "Central African Republic"
+          },
+          {
+            "Name": "C\u00f4te d\u2019Ivoire"
+          },
+          {
+            "Name": "Cameroon"
+          }
+        ],
+        "truncated": true
+      },
+      "generated_result": {
+        "columns": [
+          "Name"
+        ],
+        "row_count": 5,
+        "rows": [
+          {
+            "Name": "British Indian Ocean Territory"
+          },
+          {
+            "Name": "Mayotte"
+          },
+          {
+            "Name": "Saint Helena"
+          },
+          {
+            "Name": "Sao Tome and Principe"
+          },
+          {
+            "Name": "Seychelles"
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "execution_gate;single_cluster;n=1",
+        "reason": "All executable candidates agree on results",
+        "assumption": "List African countries whose population is smaller than the population of every country in Asia.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": [
+          {
+            "size": 1,
+            "sql": "SELECT c.Name\nFROM country AS c\nWHERE c.Continent = 'Africa'\n  AND c.Population < (\n    SELECT MIN(a.Population)\n    FROM country AS a\n    WHERE a.Continent = 'Asia'\n  );",
+            "row_count": 5
+          }
+        ],
+        "gate": "execution_evidence"
+      },
+      "assumption": "List African countries whose population is smaller than the population of every country in Asia.",
+      "elapsed_ms": 16407,
+      "cost_usd": 0.00159454,
+      "input_tokens": 11759,
+      "output_tokens": 1131,
+      "reasoning_tokens": 498,
+      "cached_input_tokens": 11747,
+      "calls": 4,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 2668,
+          "output_tokens": 524,
+          "reasoning_tokens": 328,
+          "latency_ms": 5636,
+          "cost_usd": 0.0006827
+        },
+        "ambiguity_gate": {
+          "calls": 2,
+          "input_tokens": 6525,
+          "output_tokens": 412,
+          "reasoning_tokens": 69,
+          "latency_ms": 7887,
+          "cost_usd": 0.00062598
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 2566,
+          "output_tokens": 195,
+          "reasoning_tokens": 101,
+          "latency_ms": 2686,
+          "cost_usd": 0.00028586
+        }
+      }
+    },
+    {
+      "id": "world_1:07be62d2462c",
+      "db_id": "world_1",
+      "question": "What are the names of cities in Europe for which English is not the official language?",
+      "hardness": "extra",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT DISTINCT T2.Name FROM country AS T1 JOIN city AS T2 ON T2.CountryCode  =  T1.Code WHERE T1.Continent  =  'Europe' AND T1.Name NOT IN (SELECT T3.Name FROM country AS T3 JOIN countrylanguage AS T4 ON T3.Code  =  T4.CountryCode WHERE T4.IsOfficial  =  'T' AND T4.Language  =  'English')",
+      "generated_sql": "SELECT DISTINCT ci.Name\nFROM city AS ci\nJOIN country AS co ON ci.CountryCode = co.Code\nWHERE co.Continent = 'Europe'\n  AND NOT EXISTS (\n    SELECT 1\n    FROM countrylanguage AS cl\n    WHERE cl.CountryCode = co.Code\n      AND cl.Language = 'English'\n      AND cl.IsOfficial = 'T'\n  );",
+      "result_match": true,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "city",
+          "country",
+          "countrylanguage"
+        ],
+        "selected_tables": [
+          "city",
+          "country",
+          "countrylanguage"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "city",
+        "country",
+        "countrylanguage"
+      ],
+      "gold_result": {
+        "columns": [
+          "Name"
+        ],
+        "row_count": 500,
+        "rows": [
+          {
+            "Name": "Tirana"
+          },
+          {
+            "Name": "Andorra la Vella"
+          },
+          {
+            "Name": "Wien"
+          },
+          {
+            "Name": "Graz"
+          },
+          {
+            "Name": "Linz"
+          },
+          {
+            "Name": "Salzburg"
+          },
+          {
+            "Name": "Innsbruck"
+          },
+          {
+            "Name": "Klagenfurt"
+          }
+        ],
+        "truncated": true
+      },
+      "generated_result": {
+        "columns": [
+          "Name"
+        ],
+        "row_count": 500,
+        "rows": [
+          {
+            "Name": "Tirana"
+          },
+          {
+            "Name": "Andorra la Vella"
+          },
+          {
+            "Name": "Wien"
+          },
+          {
+            "Name": "Graz"
+          },
+          {
+            "Name": "Linz"
+          },
+          {
+            "Name": "Salzburg"
+          },
+          {
+            "Name": "Innsbruck"
+          },
+          {
+            "Name": "Klagenfurt"
+          }
+        ],
+        "truncated": true
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "execution_gate;single_cluster;n=1",
+        "reason": "All executable candidates agree on results",
+        "assumption": "List the names of cities in European countries where English is not an official language.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": [
+          {
+            "size": 1,
+            "sql": "SELECT DISTINCT ci.Name\nFROM city AS ci\nJOIN country AS co ON ci.CountryCode = co.Code\nWHERE co.Continent = 'Europe'\n  AND NOT EXISTS (\n    SELECT 1\n    FROM countrylanguage AS cl\n    WHERE cl.CountryCode = co.Code\n      AND cl.Language = 'English'\n      AND cl.IsOfficial = 'T'\n  );",
+            "row_count": 500
+          }
+        ],
+        "gate": "execution_evidence"
+      },
+      "assumption": "List the names of cities in European countries where English is not an official language.",
+      "elapsed_ms": 9275,
+      "cost_usd": 0.0027617,
+      "input_tokens": 11785,
+      "output_tokens": 737,
+      "reasoning_tokens": 0,
+      "cached_input_tokens": 2665,
+      "calls": 4,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 2668,
+          "output_tokens": 159,
+          "reasoning_tokens": 0,
+          "latency_ms": 2379,
+          "cost_usd": 0.0002447
+        },
+        "ambiguity_gate": {
+          "calls": 2,
+          "input_tokens": 6525,
+          "output_tokens": 464,
+          "reasoning_tokens": 0,
+          "latency_ms": 4749,
+          "cost_usd": 0.0018618
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 2592,
+          "output_tokens": 114,
+          "reasoning_tokens": 0,
+          "latency_ms": 1917,
+          "cost_usd": 0.0006552
+        }
+      }
+    },
+    {
+      "id": "poker_player:3a98018d39a5",
+      "db_id": "poker_player",
+      "question": "List the names and birth dates of people in ascending alphabetical order of name.",
+      "hardness": "easy",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT Name ,  Birth_Date FROM people ORDER BY Name ASC",
+      "generated_sql": "SELECT Name, Birth_Date FROM people ORDER BY Name ASC;",
+      "result_match": true,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": null,
+      "sql_match": true,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "people"
+        ],
+        "selected_tables": [
+          "people",
+          "poker_player"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "people",
+        "poker_player"
+      ],
+      "gold_result": {
+        "columns": [
+          "Name",
+          "Birth_Date"
+        ],
+        "row_count": 7,
+        "rows": [
+          {
+            "Name": "Aleksey Ostapenko",
+            "Birth_Date": "May 26, 1986"
+          },
+          {
+            "Name": "Maksim Botin",
+            "Birth_Date": "July 14, 1983"
+          },
+          {
+            "Name": "Roman Bragin",
+            "Birth_Date": "April 17, 1987"
+          },
+          {
+            "Name": "Semen Poltavskiy",
+            "Birth_Date": "February 8, 1981"
+          },
+          {
+            "Name": "Sergey Grankin",
+            "Birth_Date": "January 22, 1987"
+          },
+          {
+            "Name": "Teodor Salparov",
+            "Birth_Date": "August 16, 1982"
+          },
+          {
+            "Name": "Yevgeni Sivozhelez",
+            "Birth_Date": "August 8, 1986"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Name",
+          "Birth_Date"
+        ],
+        "row_count": 7,
+        "rows": [
+          {
+            "Name": "Aleksey Ostapenko",
+            "Birth_Date": "May 26, 1986"
+          },
+          {
+            "Name": "Maksim Botin",
+            "Birth_Date": "July 14, 1983"
+          },
+          {
+            "Name": "Roman Bragin",
+            "Birth_Date": "April 17, 1987"
+          },
+          {
+            "Name": "Semen Poltavskiy",
+            "Birth_Date": "February 8, 1981"
+          },
+          {
+            "Name": "Sergey Grankin",
+            "Birth_Date": "January 22, 1987"
+          },
+          {
+            "Name": "Teodor Salparov",
+            "Birth_Date": "August 16, 1982"
+          },
+          {
+            "Name": "Yevgeni Sivozhelez",
+            "Birth_Date": "August 8, 1986"
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "execution_gate;single_cluster;n=1",
+        "reason": "All executable candidates agree on results",
+        "assumption": "List every person's name and birth date, sorted alphabetically by name in ascending order.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": [
+          {
+            "size": 1,
+            "sql": "SELECT Name, Birth_Date FROM people ORDER BY Name ASC;",
+            "row_count": 7
+          }
+        ],
+        "gate": "execution_evidence"
+      },
+      "assumption": "List every person's name and birth date, sorted alphabetically by name in ascending order.",
+      "elapsed_ms": 6731,
+      "cost_usd": 0.00126838,
+      "input_tokens": 7088,
+      "output_tokens": 297,
+      "reasoning_tokens": 0,
+      "cached_input_tokens": 2809,
+      "calls": 4,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1400,
+          "output_tokens": 88,
+          "reasoning_tokens": 0,
+          "latency_ms": 2462,
+          "cost_usd": 0.00013414
+        },
+        "ambiguity_gate": {
+          "calls": 2,
+          "input_tokens": 4273,
+          "output_tokens": 164,
+          "reasoning_tokens": 0,
+          "latency_ms": 3185,
+          "cost_usd": 0.0010514
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1415,
+          "output_tokens": 45,
+          "reasoning_tokens": 0,
+          "latency_ms": 935,
+          "cost_usd": 8.284e-05
+        }
+      }
+    },
+    {
+      "id": "poker_player:7ffc9e879076",
+      "db_id": "poker_player",
+      "question": "Count the number of poker players.",
+      "hardness": "medium",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT count(*) FROM poker_player",
+      "generated_sql": "SELECT COUNT(*) AS poker_player_count FROM poker_player;",
+      "result_match": false,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": "scorer_only",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "poker_player"
+        ],
+        "selected_tables": [
+          "people",
+          "poker_player"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "people",
+        "poker_player"
+      ],
+      "gold_result": {
+        "columns": [
+          "count(*)"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "count(*)": 5
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "poker_player_count"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "poker_player_count": 5
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "execution_gate;single_cluster;n=1",
+        "reason": "All executable candidates agree on results",
+        "assumption": "Count the number of records in the poker_player table.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": [
+          {
+            "size": 1,
+            "sql": "SELECT COUNT(*) AS poker_player_count FROM poker_player;",
+            "row_count": 1
+          }
+        ],
+        "gate": "execution_evidence"
+      },
+      "assumption": "Count the number of records in the poker_player table.",
+      "elapsed_ms": 6249,
+      "cost_usd": 0.00048814,
+      "input_tokens": 7019,
+      "output_tokens": 288,
+      "reasoning_tokens": 0,
+      "cached_input_tokens": 7007,
+      "calls": 4,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1384,
+          "output_tokens": 81,
+          "reasoning_tokens": 0,
+          "latency_ms": 1280,
+          "cost_usd": 0.00012542
+        },
+        "ambiguity_gate": {
+          "calls": 2,
+          "input_tokens": 4229,
+          "output_tokens": 163,
+          "reasoning_tokens": 0,
+          "latency_ms": 3571,
+          "cost_usd": 0.00028126
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1406,
+          "output_tokens": 44,
+          "reasoning_tokens": 0,
+          "latency_ms": 1256,
+          "cost_usd": 8.146e-05
+        }
+      }
+    },
+    {
+      "id": "poker_player:5bc4bf0f23fa",
+      "db_id": "poker_player",
+      "question": "List the names of people that are not poker players.",
+      "hardness": "hard",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT Name FROM people WHERE People_ID NOT IN (SELECT People_ID FROM poker_player)",
+      "generated_sql": "SELECT p.Name\nFROM people AS p\nLEFT JOIN poker_player AS pp\n  ON p.People_ID = pp.People_ID\nWHERE pp.People_ID IS NULL;",
+      "result_match": true,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "people",
+          "poker_player"
+        ],
+        "selected_tables": [
+          "people",
+          "poker_player"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "people",
+        "poker_player"
+      ],
+      "gold_result": {
+        "columns": [
+          "Name"
+        ],
+        "row_count": 2,
+        "rows": [
+          {
+            "Name": "Roman Bragin"
+          },
+          {
+            "Name": "Sergey Grankin"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Name"
+        ],
+        "row_count": 2,
+        "rows": [
+          {
+            "Name": "Roman Bragin"
+          },
+          {
+            "Name": "Sergey Grankin"
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "execution_gate;single_cluster;n=2",
+        "reason": "All executable candidates agree on results",
+        "assumption": "List the names of people who do not have a corresponding record in the poker_player table.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": [
+          {
+            "size": 2,
+            "sql": "SELECT p.Name\nFROM people AS p\nLEFT JOIN poker_player AS pp\n  ON p.People_ID = pp.People_ID\nWHERE pp.People_ID IS NULL;",
+            "row_count": 2
+          }
+        ],
+        "gate": "execution_evidence"
+      },
+      "assumption": "List the names of people who do not have a corresponding record in the poker_player table.",
+      "elapsed_ms": 7193,
+      "cost_usd": 0.00068508,
+      "input_tokens": 7086,
+      "output_tokens": 451,
+      "reasoning_tokens": 0,
+      "cached_input_tokens": 7074,
+      "calls": 4,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1392,
+          "output_tokens": 119,
+          "reasoning_tokens": 0,
+          "latency_ms": 1844,
+          "cost_usd": 0.00017118
+        },
+        "ambiguity_gate": {
+          "calls": 2,
+          "input_tokens": 4259,
+          "output_tokens": 263,
+          "reasoning_tokens": 0,
+          "latency_ms": 3623,
+          "cost_usd": 0.00040186
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1435,
+          "output_tokens": 69,
+          "reasoning_tokens": 0,
+          "latency_ms": 1358,
+          "cost_usd": 0.00011204
+        }
+      }
+    },
+    {
+      "id": "poker_player:baf9c7fec8bd",
+      "db_id": "poker_player",
+      "question": "What is the maximum number of final tables made among poker players with earnings less than 200000?",
+      "hardness": "medium",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT max(Final_Table_Made) FROM poker_player WHERE Earnings  <  200000",
+      "generated_sql": "SELECT MAX(pp.Final_Table_Made) AS max_final_tables_made\nFROM poker_player AS pp\nWHERE pp.Earnings < 200000;",
+      "result_match": false,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": "scorer_only",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "poker_player"
+        ],
+        "selected_tables": [
+          "people",
+          "poker_player"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "people",
+        "poker_player"
+      ],
+      "gold_result": {
+        "columns": [
+          "max(Final_Table_Made)"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "max(Final_Table_Made)": 26.0
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "max_final_tables_made"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "max_final_tables_made": 26.0
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "execution_gate;single_cluster;n=2",
+        "reason": "All executable candidates agree on results",
+        "assumption": "Find the maximum Final_Table_Made value among poker players whose Earnings are less than 200000.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": [
+          {
+            "size": 2,
+            "sql": "SELECT MAX(pp.Final_Table_Made) AS max_final_tables_made\nFROM poker_player AS pp\nWHERE pp.Earnings < 200000;",
+            "row_count": 1
+          }
+        ],
+        "gate": "execution_evidence"
+      },
+      "assumption": "Find the maximum Final_Table_Made value among poker players whose Earnings are less than 200000.",
+      "elapsed_ms": 8071,
+      "cost_usd": 0.0008702,
+      "input_tokens": 7147,
+      "output_tokens": 389,
+      "reasoning_tokens": 0,
+      "cached_input_tokens": 5700,
+      "calls": 4,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1410,
+          "output_tokens": 105,
+          "reasoning_tokens": 0,
+          "latency_ms": 1844,
+          "cost_usd": 0.00015474
+        },
+        "ambiguity_gate": {
+          "calls": 2,
+          "input_tokens": 4299,
+          "output_tokens": 221,
+          "reasoning_tokens": 0,
+          "latency_ms": 3310,
+          "cost_usd": 0.00035226
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1438,
+          "output_tokens": 63,
+          "reasoning_tokens": 0,
+          "latency_ms": 1452,
+          "cost_usd": 0.0003632
+        }
+      }
+    },
+    {
+      "id": "real_estate_properties:adb7d15a1edf",
+      "db_id": "real_estate_properties",
+      "question": "Show the property type descriptions of properties belonging to that code.",
+      "hardness": "medium",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT T2.property_type_description FROM Properties AS T1 JOIN Ref_Property_Types AS T2 ON T1.property_type_code  =  T2.property_type_code GROUP BY T1.property_type_code",
+      "generated_sql": "SELECT DISTINCT rpt.property_type_description\nFROM Properties AS p\nJOIN Ref_Property_Types AS rpt\n  ON p.property_type_code = rpt.property_type_code;",
+      "result_match": true,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "properties",
+          "ref_property_types"
+        ],
+        "selected_tables": [
+          "other_available_features",
+          "other_property_features",
+          "properties",
+          "ref_feature_types",
+          "ref_property_types"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "Other_Available_Features",
+        "Other_Property_Features",
+        "Properties",
+        "Ref_Feature_Types",
+        "Ref_Property_Types"
+      ],
+      "gold_result": {
+        "columns": [
+          "property_type_description"
+        ],
+        "row_count": 5,
+        "rows": [
+          {
+            "property_type_description": "Apartment, Flat, Condo, etc."
+          },
+          {
+            "property_type_description": "Field, Meadow."
+          },
+          {
+            "property_type_description": "House, Bungalow, etc."
+          },
+          {
+            "property_type_description": "Other, to be determined."
+          },
+          {
+            "property_type_description": "Shop, Retail Outlet."
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "property_type_description"
+        ],
+        "row_count": 5,
+        "rows": [
+          {
+            "property_type_description": "House, Bungalow, etc."
+          },
+          {
+            "property_type_description": "Other, to be determined."
+          },
+          {
+            "property_type_description": "Field, Meadow."
+          },
+          {
+            "property_type_description": "Apartment, Flat, Condo, etc."
+          },
+          {
+            "property_type_description": "Shop, Retail Outlet."
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "execution_gate;single_cluster;n=1",
+        "reason": "All executable candidates agree on results",
+        "assumption": "Show the property type descriptions associated with properties whose property type code is a specified value.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": [
+          {
+            "size": 1,
+            "sql": "SELECT DISTINCT rpt.property_type_description\nFROM Properties AS p\nJOIN Ref_Property_Types AS rpt\n  ON p.property_type_code = rpt.property_type_code;",
+            "row_count": 5
+          }
+        ],
+        "gate": "execution_evidence"
+      },
+      "assumption": "Show the property type descriptions associated with properties whose property type code is a specified value.",
+      "elapsed_ms": 11286,
+      "cost_usd": 0.00274694,
+      "input_tokens": 15058,
+      "output_tokens": 835,
+      "reasoning_tokens": 321,
+      "cached_input_tokens": 7037,
+      "calls": 4,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 3842,
+          "output_tokens": 310,
+          "reasoning_tokens": 154,
+          "latency_ms": 3556,
+          "cost_usd": 0.00044938
+        },
+        "ambiguity_gate": {
+          "calls": 2,
+          "input_tokens": 8015,
+          "output_tokens": 460,
+          "reasoning_tokens": 167,
+          "latency_ms": 5875,
+          "cost_usd": 0.002155
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 3201,
+          "output_tokens": 65,
+          "reasoning_tokens": 0,
+          "latency_ms": 1493,
+          "cost_usd": 0.00014256
+        }
+      }
+    },
+    {
+      "id": "real_estate_properties:9c13804a70d0",
+      "db_id": "real_estate_properties",
+      "question": "What are the names of properties that are either houses or apartments with more than 1 room?",
+      "hardness": "hard",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT property_name FROM Properties WHERE property_type_code  =  \"House\" UNION SELECT property_name FROM Properties WHERE property_type_code  =  \"Apartment\" AND room_count  >  1",
+      "generated_sql": "SELECT p.property_name\nFROM Properties AS p\nJOIN Ref_Property_Types AS rpt\n  ON p.property_type_code = rpt.property_type_code\nWHERE p.property_type_code IN ('House', 'Apartment')\n  AND p.room_count > 1;",
+      "result_match": false,
+      "result_match_values": false,
+      "result_match_lenient": false,
+      "failure_label": "wrong_table",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "properties"
+        ],
+        "selected_tables": [
+          "other_available_features",
+          "other_property_features",
+          "properties",
+          "ref_feature_types",
+          "ref_property_types"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "Other_Available_Features",
+        "Other_Property_Features",
+        "Properties",
+        "Ref_Feature_Types",
+        "Ref_Property_Types"
+      ],
+      "gold_result": {
+        "columns": [
+          "property_name"
+        ],
+        "row_count": 8,
+        "rows": [
+          {
+            "property_name": "longacre"
+          },
+          {
+            "property_name": "parc coliseum"
+          },
+          {
+            "property_name": "parc east"
+          },
+          {
+            "property_name": "park"
+          },
+          {
+            "property_name": "renoir"
+          },
+          {
+            "property_name": "ten tower"
+          },
+          {
+            "property_name": "the cole"
+          },
+          {
+            "property_name": "vogue"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "property_name"
+        ],
+        "row_count": 7,
+        "rows": [
+          {
+            "property_name": "parc east"
+          },
+          {
+            "property_name": "vogue"
+          },
+          {
+            "property_name": "longacre"
+          },
+          {
+            "property_name": "renoir"
+          },
+          {
+            "property_name": "ten tower"
+          },
+          {
+            "property_name": "parc coliseum"
+          },
+          {
+            "property_name": "park"
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "execution_gate;single_cluster;n=1",
+        "reason": "All executable candidates agree on results",
+        "assumption": "List the names of properties classified as House or Apartment that have more than 1 room.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": [
+          {
+            "size": 1,
+            "sql": "SELECT p.property_name\nFROM Properties AS p\nJOIN Ref_Property_Types AS rpt\n  ON p.property_type_code = rpt.property_type_code\nWHERE p.property_type_code IN ('House', 'Apartment')\n  AND p.room_count > 1;",
+            "row_count": 7
+          }
+        ],
+        "gate": "execution_evidence"
+      },
+      "assumption": "List the names of properties classified as House or Apartment that have more than 1 room.",
+      "elapsed_ms": 7795,
+      "cost_usd": 0.00239254,
+      "input_tokens": 15128,
+      "output_tokens": 534,
+      "reasoning_tokens": 0,
+      "cached_input_tokens": 7077,
+      "calls": 4,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 3856,
+          "output_tokens": 101,
+          "reasoning_tokens": 0,
+          "latency_ms": 1742,
+          "cost_usd": 0.00019886
+        },
+        "ambiguity_gate": {
+          "calls": 2,
+          "input_tokens": 8045,
+          "output_tokens": 347,
+          "reasoning_tokens": 0,
+          "latency_ms": 4595,
+          "cost_usd": 0.0020254
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 3227,
+          "output_tokens": 86,
+          "reasoning_tokens": 0,
+          "latency_ms": 1281,
+          "cost_usd": 0.00016828
+        }
+      }
+    },
+    {
+      "id": "real_estate_properties:60f63962a931",
+      "db_id": "real_estate_properties",
+      "question": "What is the feature type name of feature AirCon?",
+      "hardness": "medium",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT T2.feature_type_name FROM Other_Available_Features AS T1 JOIN Ref_Feature_Types AS T2 ON T1.feature_type_code  =  T2.feature_type_code WHERE T1.feature_name  =  \"AirCon\"",
+      "generated_sql": "SELECT rft.feature_type_name\nFROM Other_Available_Features AS oaf\nJOIN Ref_Feature_Types AS rft\n  ON oaf.feature_type_code = rft.feature_type_code\nWHERE oaf.feature_name = 'AirCon';",
+      "result_match": true,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "other_available_features",
+          "ref_feature_types"
+        ],
+        "selected_tables": [
+          "other_available_features",
+          "other_property_features",
+          "properties",
+          "ref_feature_types",
+          "ref_property_types"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "Other_Available_Features",
+        "Other_Property_Features",
+        "Properties",
+        "Ref_Feature_Types",
+        "Ref_Property_Types"
+      ],
+      "gold_result": {
+        "columns": [
+          "feature_type_name"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "feature_type_name": "Amenity, eg Pool."
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "feature_type_name"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "feature_type_name": "Amenity, eg Pool."
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "execution_gate;single_cluster;n=2",
+        "reason": "All executable candidates agree on results",
+        "assumption": "Find the feature type name associated with the feature named AirCon.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": [
+          {
+            "size": 2,
+            "sql": "SELECT rft.feature_type_name\nFROM Other_Available_Features AS oaf\nJOIN Ref_Feature_Types AS rft\n  ON oaf.feature_type_code = rft.feature_type_code\nWHERE oaf.feature_name = 'AirCon';",
+            "row_count": 1
+          }
+        ],
+        "gate": "execution_evidence"
+      },
+      "assumption": "Find the feature type name associated with the feature named AirCon.",
+      "elapsed_ms": 8934,
+      "cost_usd": 0.00248568,
+      "input_tokens": 15063,
+      "output_tokens": 619,
+      "reasoning_tokens": 0,
+      "cached_input_tokens": 7054,
+      "calls": 4,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 3840,
+          "output_tokens": 142,
+          "reasoning_tokens": 0,
+          "latency_ms": 2031,
+          "cost_usd": 0.00024774
+        },
+        "ambiguity_gate": {
+          "calls": 2,
+          "input_tokens": 8003,
+          "output_tokens": 391,
+          "reasoning_tokens": 0,
+          "latency_ms": 5359,
+          "cost_usd": 0.0020698
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 3220,
+          "output_tokens": 86,
+          "reasoning_tokens": 0,
+          "latency_ms": 1325,
+          "cost_usd": 0.00016814
+        }
+      }
+    },
+    {
+      "id": "real_estate_properties:206c581552eb",
+      "db_id": "real_estate_properties",
+      "question": "How many available features are there in total?",
+      "hardness": "medium",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT count(*) FROM Other_Available_Features",
+      "generated_sql": "SELECT COUNT(*) AS total_available_features FROM Other_Available_Features;",
+      "result_match": false,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": "scorer_only",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "other_available_features"
+        ],
+        "selected_tables": [
+          "other_available_features",
+          "other_property_features",
+          "properties",
+          "ref_feature_types",
+          "ref_property_types"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "Other_Available_Features",
+        "Other_Property_Features",
+        "Properties",
+        "Ref_Feature_Types",
+        "Ref_Property_Types"
+      ],
+      "gold_result": {
+        "columns": [
+          "count(*)"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "count(*)": 3
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "total_available_features"
+        ],
+        "row_count": 1,
+        "rows": [
+          {
+            "total_available_features": 3
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "execution_gate;single_cluster;n=1",
+        "reason": "All executable candidates agree on results",
+        "assumption": "Count the total number of available feature records in the catalog.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": [
+          {
+            "size": 1,
+            "sql": "SELECT COUNT(*) AS total_available_features FROM Other_Available_Features;",
+            "row_count": 1
+          }
+        ],
+        "gate": "execution_evidence"
+      },
+      "assumption": "Count the total number of available feature records in the catalog.",
+      "elapsed_ms": 6362,
+      "cost_usd": 0.00211562,
+      "input_tokens": 15010,
+      "output_tokens": 313,
+      "reasoning_tokens": 0,
+      "cached_input_tokens": 7011,
+      "calls": 4,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 3836,
+          "output_tokens": 90,
+          "reasoning_tokens": 0,
+          "latency_ms": 1634,
+          "cost_usd": 0.00018526
+        },
+        "ambiguity_gate": {
+          "calls": 2,
+          "input_tokens": 7993,
+          "output_tokens": 175,
+          "reasoning_tokens": 0,
+          "latency_ms": 3205,
+          "cost_usd": 0.0018086
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 3181,
+          "output_tokens": 48,
+          "reasoning_tokens": 0,
+          "latency_ms": 1282,
+          "cost_usd": 0.00012176
+        }
+      }
+    },
+    {
+      "id": "course_teach:365531823c43",
+      "db_id": "course_teach",
+      "question": "Show the name of teachers aged either 32 or 33?",
+      "hardness": "easy",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT Name FROM teacher WHERE Age  =  32 OR Age  =  33",
+      "generated_sql": "SELECT Name FROM teacher WHERE Age IN ('32', '33');",
+      "result_match": true,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "teacher"
+        ],
+        "selected_tables": [
+          "course",
+          "course_arrange",
+          "teacher"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "course",
+        "course_arrange",
+        "teacher"
+      ],
+      "gold_result": {
+        "columns": [
+          "Name"
+        ],
+        "row_count": 2,
+        "rows": [
+          {
+            "Name": "Joseph Huts"
+          },
+          {
+            "Name": "John Deloor"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Name"
+        ],
+        "row_count": 2,
+        "rows": [
+          {
+            "Name": "Joseph Huts"
+          },
+          {
+            "Name": "John Deloor"
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "execution_gate;single_cluster;n=1",
+        "reason": "All executable candidates agree on results",
+        "assumption": "List the names of teachers whose age is 32 or 33.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": [
+          {
+            "size": 1,
+            "sql": "SELECT Name FROM teacher WHERE Age IN ('32', '33');",
+            "row_count": 2
+          }
+        ],
+        "gate": "execution_evidence"
+      },
+      "assumption": "List the names of teachers whose age is 32 or 33.",
+      "elapsed_ms": 5729,
+      "cost_usd": 0.00051916,
+      "input_tokens": 6170,
+      "output_tokens": 328,
+      "reasoning_tokens": 0,
+      "cached_input_tokens": 6158,
+      "calls": 4,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1100,
+          "output_tokens": 83,
+          "reasoning_tokens": 0,
+          "latency_ms": 1371,
+          "cost_usd": 0.00012214
+        },
+        "ambiguity_gate": {
+          "calls": 2,
+          "input_tokens": 3831,
+          "output_tokens": 198,
+          "reasoning_tokens": 0,
+          "latency_ms": 3051,
+          "cost_usd": 0.0003153
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1239,
+          "output_tokens": 47,
+          "reasoning_tokens": 0,
+          "latency_ms": 1121,
+          "cost_usd": 8.172e-05
+        }
+      }
+    },
+    {
+      "id": "course_teach:28ffb4c9eadb",
+      "db_id": "course_teach",
+      "question": "Show the hometowns shared by at least two teachers.",
+      "hardness": "medium",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT Hometown FROM teacher GROUP BY Hometown HAVING COUNT(*)  >=  2",
+      "generated_sql": "SELECT t.Hometown\nFROM teacher AS t\nGROUP BY t.Hometown\nHAVING COUNT(*) >= 2;",
+      "result_match": true,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 1,
+      "schema_linking": {
+        "gold_tables": [
+          "teacher"
+        ],
+        "selected_tables": [
+          "course",
+          "course_arrange",
+          "teacher"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "course",
+        "course_arrange",
+        "teacher"
+      ],
+      "gold_result": {
+        "columns": [
+          "Hometown"
+        ],
+        "row_count": 0,
+        "rows": [],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Hometown"
+        ],
+        "row_count": 0,
+        "rows": [],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "execution_gate;single_cluster;n=2",
+        "reason": "All executable candidates agree on results",
+        "assumption": "List each hometown that is associated with at least two teachers.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": [
+          {
+            "size": 2,
+            "sql": "SELECT t.Hometown\nFROM teacher AS t\nGROUP BY t.Hometown\nHAVING COUNT(*) >= 2;",
+            "row_count": 0
+          }
+        ],
+        "gate": "execution_evidence"
+      },
+      "assumption": "List each hometown that is associated with at least two teachers.",
+      "elapsed_ms": 10818,
+      "cost_usd": 0.00175992,
+      "input_tokens": 11484,
+      "output_tokens": 662,
+      "reasoning_tokens": 0,
+      "cached_input_tokens": 7396,
+      "calls": 7,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 3,
+          "input_tokens": 5169,
+          "output_tokens": 325,
+          "reasoning_tokens": 0,
+          "latency_ms": 4870,
+          "cost_usd": 0.00122706
+        },
+        "ambiguity_gate": {
+          "calls": 2,
+          "input_tokens": 3819,
+          "output_tokens": 223,
+          "reasoning_tokens": 0,
+          "latency_ms": 3709,
+          "cost_usd": 0.00034506
+        },
+        "query_validator": {
+          "calls": 2,
+          "input_tokens": 2496,
+          "output_tokens": 114,
+          "reasoning_tokens": 0,
+          "latency_ms": 1986,
+          "cost_usd": 0.0001878
+        }
+      }
+    },
+    {
+      "id": "course_teach:47c5aec60877",
+      "db_id": "course_teach",
+      "question": "Show names of teachers and the courses they are arranged to teach.",
+      "hardness": "hard",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT T3.Name ,  T2.Course FROM course_arrange AS T1 JOIN course AS T2 ON T1.Course_ID  =  T2.Course_ID JOIN teacher AS T3 ON T1.Teacher_ID  =  T3.Teacher_ID",
+      "generated_sql": "SELECT t.Name, c.Course\nFROM teacher AS t\nJOIN course_arrange AS ca ON t.Teacher_ID = ca.Teacher_ID\nJOIN course AS c ON ca.Course_ID = c.Course_ID;",
+      "result_match": true,
+      "result_match_values": true,
+      "result_match_lenient": true,
+      "failure_label": null,
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "course",
+          "course_arrange",
+          "teacher"
+        ],
+        "selected_tables": [
+          "course",
+          "course_arrange",
+          "teacher"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "course",
+        "course_arrange",
+        "teacher"
+      ],
+      "gold_result": {
+        "columns": [
+          "Name",
+          "Course"
+        ],
+        "row_count": 6,
+        "rows": [
+          {
+            "Name": "Kearsley Brown",
+            "Course": "Math"
+          },
+          {
+            "Name": "Vicente Carretero",
+            "Course": "Math"
+          },
+          {
+            "Name": "Gustaaf Deloor",
+            "Course": "Science"
+          },
+          {
+            "Name": "Anne Walker",
+            "Course": "History"
+          },
+          {
+            "Name": "Anne Walker",
+            "Course": "Bible"
+          },
+          {
+            "Name": "Lucy Wong",
+            "Course": "Music"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Name",
+          "Course"
+        ],
+        "row_count": 6,
+        "rows": [
+          {
+            "Name": "Kearsley Brown",
+            "Course": "Math"
+          },
+          {
+            "Name": "Vicente Carretero",
+            "Course": "Math"
+          },
+          {
+            "Name": "Gustaaf Deloor",
+            "Course": "Science"
+          },
+          {
+            "Name": "Anne Walker",
+            "Course": "History"
+          },
+          {
+            "Name": "Anne Walker",
+            "Course": "Bible"
+          },
+          {
+            "Name": "Lucy Wong",
+            "Course": "Music"
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "execution_gate;single_cluster;n=1",
+        "reason": "All executable candidates agree on results",
+        "assumption": "List each teacher's name along with the course they are arranged to teach.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": [
+          {
+            "size": 1,
+            "sql": "SELECT t.Name, c.Course\nFROM teacher AS t\nJOIN course_arrange AS ca ON t.Teacher_ID = ca.Teacher_ID\nJOIN course AS c ON ca.Course_ID = c.Course_ID;",
+            "row_count": 6
+          }
+        ],
+        "gate": "execution_evidence"
+      },
+      "assumption": "List each teacher's name along with the course they are arranged to teach.",
+      "elapsed_ms": 6812,
+      "cost_usd": 0.00143664,
+      "input_tokens": 6201,
+      "output_tokens": 518,
+      "reasoning_tokens": 0,
+      "cached_input_tokens": 2362,
+      "calls": 4,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1100,
+          "output_tokens": 125,
+          "reasoning_tokens": 0,
+          "latency_ms": 1844,
+          "cost_usd": 0.00017254
+        },
+        "ambiguity_gate": {
+          "calls": 2,
+          "input_tokens": 3833,
+          "output_tokens": 318,
+          "reasoning_tokens": 0,
+          "latency_ms": 3528,
+          "cost_usd": 0.0011482
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1268,
+          "output_tokens": 75,
+          "reasoning_tokens": 0,
+          "latency_ms": 1213,
+          "cost_usd": 0.0001159
+        }
+      }
+    },
+    {
+      "id": "course_teach:a498dc046efd",
+      "db_id": "course_teach",
+      "question": "What are the names of the teachers and how many courses do they teach?",
+      "hardness": "medium",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT T2.Name ,  COUNT(*) FROM course_arrange AS T1 JOIN teacher AS T2 ON T1.Teacher_ID  =  T2.Teacher_ID GROUP BY T2.Name",
+      "generated_sql": "SELECT t.Name, COUNT(DISTINCT ca.Course_ID) AS course_count\nFROM teacher AS t\nLEFT JOIN course_arrange AS ca\n  ON t.Teacher_ID = ca.Teacher_ID\nGROUP BY t.Teacher_ID, t.Name;",
+      "result_match": false,
+      "result_match_values": false,
+      "result_match_lenient": false,
+      "failure_label": "join_type",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "course_arrange",
+          "teacher"
+        ],
+        "selected_tables": [
+          "course",
+          "course_arrange",
+          "teacher"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "course",
+        "course_arrange",
+        "teacher"
+      ],
+      "gold_result": {
+        "columns": [
+          "Name",
+          "COUNT(*)"
+        ],
+        "row_count": 5,
+        "rows": [
+          {
+            "Name": "Anne Walker",
+            "COUNT(*)": 2
+          },
+          {
+            "Name": "Gustaaf Deloor",
+            "COUNT(*)": 1
+          },
+          {
+            "Name": "Kearsley Brown",
+            "COUNT(*)": 1
+          },
+          {
+            "Name": "Lucy Wong",
+            "COUNT(*)": 1
+          },
+          {
+            "Name": "Vicente Carretero",
+            "COUNT(*)": 1
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Name",
+          "course_count"
+        ],
+        "row_count": 7,
+        "rows": [
+          {
+            "Name": "Joseph Huts",
+            "course_count": 0
+          },
+          {
+            "Name": "Gustaaf Deloor",
+            "course_count": 1
+          },
+          {
+            "Name": "Vicente Carretero",
+            "course_count": 1
+          },
+          {
+            "Name": "John Deloor",
+            "course_count": 0
+          },
+          {
+            "Name": "Kearsley Brown",
+            "course_count": 1
+          },
+          {
+            "Name": "Anne Walker",
+            "course_count": 2
+          },
+          {
+            "Name": "Lucy Wong",
+            "course_count": 1
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "execution_gate;single_cluster;n=1",
+        "reason": "All executable candidates agree on results",
+        "assumption": "List each teacher's name and the number of distinct courses assigned to that teacher.",
+        "should_clarify": false,
+        "proposal_status": null,
+        "options": [],
+        "candidates": [],
+        "selected": null,
+        "clusters": [
+          {
+            "size": 1,
+            "sql": "SELECT t.Name, COUNT(DISTINCT ca.Course_ID) AS course_count\nFROM teacher AS t\nLEFT JOIN course_arrange AS ca\n  ON t.Teacher_ID = ca.Teacher_ID\nGROUP BY t.Teacher_ID, t.Name;",
+            "row_count": 7
+          }
+        ],
+        "gate": "execution_evidence"
+      },
+      "assumption": "List each teacher's name and the number of distinct courses assigned to that teacher.",
+      "elapsed_ms": 11182,
+      "cost_usd": 0.00185654,
+      "input_tokens": 6226,
+      "output_tokens": 866,
+      "reasoning_tokens": 279,
+      "cached_input_tokens": 2377,
+      "calls": 4,
+      "estimated_calls": 0,
+      "by_stage": {
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1104,
+          "output_tokens": 349,
+          "reasoning_tokens": 183,
+          "latency_ms": 4033,
+          "cost_usd": 0.00044142
+        },
+        "ambiguity_gate": {
+          "calls": 2,
+          "input_tokens": 3843,
+          "output_tokens": 433,
+          "reasoning_tokens": 96,
+          "latency_ms": 5374,
+          "cost_usd": 0.0012882
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1279,
+          "output_tokens": 84,
+          "reasoning_tokens": 0,
+          "latency_ms": 1265,
+          "cost_usd": 0.00012692
+        }
+      }
+    }
+  ],
+  "accuracy": {
+    "overall": {
+      "n": 20,
+      "strict_correct": 11,
+      "values_correct": 16,
+      "lenient_correct": 16,
+      "strict_accuracy": 0.55,
+      "values_accuracy": 0.8,
+      "lenient_accuracy": 0.8
+    },
+    "by_hardness": {
+      "easy": {
+        "n": 4,
+        "strict_correct": 4,
+        "values_correct": 4,
+        "lenient_correct": 4,
+        "strict_accuracy": 1.0,
+        "values_accuracy": 1.0,
+        "lenient_accuracy": 1.0
+      },
+      "extra": {
+        "n": 2,
+        "strict_correct": 1,
+        "values_correct": 1,
+        "lenient_correct": 1,
+        "strict_accuracy": 0.5,
+        "values_accuracy": 0.5,
+        "lenient_accuracy": 0.5
+      },
+      "hard": {
+        "n": 5,
+        "strict_correct": 2,
+        "values_correct": 3,
+        "lenient_correct": 3,
+        "strict_accuracy": 0.4,
+        "values_accuracy": 0.6,
+        "lenient_accuracy": 0.6
+      },
+      "medium": {
+        "n": 9,
+        "strict_correct": 4,
+        "values_correct": 8,
+        "lenient_correct": 8,
+        "strict_accuracy": 0.4444,
+        "values_accuracy": 0.8889,
+        "lenient_accuracy": 0.8889
+      }
+    },
+    "by_database": {
+      "course_teach": {
+        "n": 4,
+        "strict_correct": 3,
+        "values_correct": 3,
+        "lenient_correct": 3,
+        "strict_accuracy": 0.75,
+        "values_accuracy": 0.75,
+        "lenient_accuracy": 0.75
+      },
+      "poker_player": {
+        "n": 4,
+        "strict_correct": 2,
+        "values_correct": 4,
+        "lenient_correct": 4,
+        "strict_accuracy": 0.5,
+        "values_accuracy": 1.0,
+        "lenient_accuracy": 1.0
+      },
+      "real_estate_properties": {
+        "n": 4,
+        "strict_correct": 2,
+        "values_correct": 3,
+        "lenient_correct": 3,
+        "strict_accuracy": 0.5,
+        "values_accuracy": 0.75,
+        "lenient_accuracy": 0.75
+      },
+      "voter_1": {
+        "n": 4,
+        "strict_correct": 2,
+        "values_correct": 3,
+        "lenient_correct": 3,
+        "strict_accuracy": 0.5,
+        "values_accuracy": 0.75,
+        "lenient_accuracy": 0.75
+      },
+      "world_1": {
+        "n": 4,
+        "strict_correct": 2,
+        "values_correct": 3,
+        "lenient_correct": 3,
+        "strict_accuracy": 0.5,
+        "values_accuracy": 0.75,
+        "lenient_accuracy": 0.75
+      }
+    },
+    "failure_labels": {
+      "wrong_table": 2,
+      "wrong_filter_or_value": 1,
+      "join_type": 1
+    },
+    "schema_linking_recall": {
+      "n": 20,
+      "full_hit": 20,
+      "rate": 1.0
+    },
+    "convention_adjusted": {
+      "n": 20,
+      "values_correct": 16,
+      "values_accuracy": 0.8,
+      "convention_adjusted_correct": 17,
+      "convention_adjusted_accuracy": 0.85
+    }
+  },
+  "totals": {
+    "cost_usd": 0.036086,
+    "elapsed_ms": 210834,
+    "latency_p50_ms": 8462.0,
+    "latency_p95_ms": 16407.0,
+    "latency_mean_ms": 10541.7,
+    "avg_cost_usd": 0.001804,
+    "input_tokens": 206452,
+    "output_tokens": 14519,
+    "reasoning_tokens": 2315,
+    "calls": 89,
+    "estimated_calls": 0,
+    "correct_strict": 11,
+    "correct_values": 16,
+    "n": 20
+  },
+  "by_stage": {
+    "query_generator": {
+      "calls": 24,
+      "input_tokens": 50282,
+      "output_tokens": 4892,
+      "reasoning_tokens": 1415,
+      "latency_ms": 63884,
+      "cost_usd": 0.00848884,
+      "latency_p50_ms": 2031.0,
+      "latency_p95_ms": 5636.0,
+      "latency_mean_ms": 2661.8
+    },
+    "ambiguity_gate": {
+      "calls": 43,
+      "input_tokens": 113954,
+      "output_tokens": 7601,
+      "reasoning_tokens": 597,
+      "latency_ms": 102255,
+      "cost_usd": 0.02280256,
+      "latency_p50_ms": 2066.0,
+      "latency_p95_ms": 3629.0,
+      "latency_mean_ms": 2378.0
+    },
+    "query_validator": {
+      "calls": 22,
+      "input_tokens": 42216,
+      "output_tokens": 2026,
+      "reasoning_tokens": 303,
+      "latency_ms": 33730,
+      "cost_usd": 0.0047949,
+      "latency_p50_ms": 1325.0,
+      "latency_p95_ms": 2686.0,
+      "latency_mean_ms": 1533.2
+    }
+  },
+  "extrapolation": {
+    "spider_dev_1034": {
+      "n_questions": 1034,
+      "setup_cost_usd": 0.0,
+      "questions_cost_usd": 1.865662,
+      "total_cost_usd": 1.865662,
+      "avg_cost_per_question_usd": 0.001804,
+      "avg_latency_ms": 10541.7,
+      "estimated_total_latency_ms": 10900153.8
+    },
+    "bird_mini_dev_500": {
+      "n_questions": 500,
+      "setup_cost_usd": 0.0,
+      "questions_cost_usd": 0.902158,
+      "total_cost_usd": 0.902158,
+      "avg_cost_per_question_usd": 0.001804,
+      "avg_latency_ms": 10541.7,
+      "estimated_total_latency_ms": 5270886.0
+    }
+  },
+  "usage": {
+    "total_cost_usd": 0.0360863,
+    "total_calls": 89,
+    "estimated_calls": 0,
+    "by_stage": {
+      "query_generator": {
+        "calls": 24,
+        "input_tokens": 50282,
+        "output_tokens": 4892,
+        "reasoning_tokens": 1415,
+        "cached_input_tokens": 41322,
+        "latency_ms": 63884,
+        "cost_usd": 0.00848884,
+        "estimated_calls": 0,
+        "latency_p50_ms": 2031.0,
+        "latency_p95_ms": 5636.0,
+        "latency_mean_ms": 2661.8
+      },
+      "ambiguity_gate": {
+        "calls": 43,
+        "input_tokens": 113954,
+        "output_tokens": 7601,
+        "reasoning_tokens": 597,
+        "cached_input_tokens": 50608,
+        "latency_ms": 102255,
+        "cost_usd": 0.02280256,
+        "estimated_calls": 0,
+        "latency_p50_ms": 2066.0,
+        "latency_p95_ms": 3629.0,
+        "latency_mean_ms": 2378.0
+      },
+      "query_validator": {
+        "calls": 22,
+        "input_tokens": 42216,
+        "output_tokens": 2026,
+        "reasoning_tokens": 303,
+        "cached_input_tokens": 33775,
+        "latency_ms": 33730,
+        "cost_usd": 0.0047949,
+        "estimated_calls": 0,
+        "latency_p50_ms": 1325.0,
+        "latency_p95_ms": 2686.0,
+        "latency_mean_ms": 1533.2
+      }
+    },
+    "records": [
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "voter_1:a57cad1941ba",
+        "label": "",
+        "input_tokens": 1322,
+        "output_tokens": 96,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1319,
+        "latency_ms": 2256,
+        "cost_usd": 0.00014218,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "voter_1:a57cad1941ba",
+        "label": "",
+        "input_tokens": 2096,
+        "output_tokens": 94,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 2093,
+        "latency_ms": 1578,
+        "cost_usd": 0.00015526,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "voter_1:a57cad1941ba",
+        "label": "",
+        "input_tokens": 2103,
+        "output_tokens": 71,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 2100,
+        "latency_ms": 1483,
+        "cost_usd": 0.0001278,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "voter_1:a57cad1941ba",
+        "label": "",
+        "input_tokens": 1351,
+        "output_tokens": 46,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1439,
+        "cost_usd": 0.0003254,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "voter_1:7ac1539e491d",
+        "label": "",
+        "input_tokens": 1342,
+        "output_tokens": 177,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1339,
+        "latency_ms": 2903,
+        "cost_usd": 0.00023978,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "voter_1:7ac1539e491d",
+        "label": "",
+        "input_tokens": 2124,
+        "output_tokens": 316,
+        "reasoning_tokens": 63,
+        "cached_input_tokens": 0,
+        "latency_ms": 3503,
+        "cost_usd": 0.000804,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "voter_1:7ac1539e491d",
+        "label": "",
+        "input_tokens": 2131,
+        "output_tokens": 137,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1945,
+        "cost_usd": 0.0005906,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "voter_1:7ac1539e491d",
+        "label": "",
+        "input_tokens": 1415,
+        "output_tokens": 100,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1412,
+        "latency_ms": 1600,
+        "cost_usd": 0.00014884,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "voter_1:358c15e1209e",
+        "label": "",
+        "input_tokens": 1312,
+        "output_tokens": 172,
+        "reasoning_tokens": 42,
+        "cached_input_tokens": 1309,
+        "latency_ms": 2587,
+        "cost_usd": 0.00023318,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "voter_1:358c15e1209e",
+        "label": "",
+        "input_tokens": 2083,
+        "output_tokens": 151,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 3813,
+        "cost_usd": 0.0005978,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "voter_1:358c15e1209e",
+        "label": "",
+        "input_tokens": 2090,
+        "output_tokens": 151,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1736,
+        "cost_usd": 0.0005992,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "voter_1:358c15e1209e",
+        "label": "",
+        "input_tokens": 1378,
+        "output_tokens": 78,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1375,
+        "latency_ms": 1406,
+        "cost_usd": 0.0001217,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "voter_1:cd5dfe31c8c7",
+        "label": "",
+        "input_tokens": 1382,
+        "output_tokens": 188,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1379,
+        "latency_ms": 2441,
+        "cost_usd": 0.00025378,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "voter_1:cd5dfe31c8c7",
+        "label": "",
+        "input_tokens": 2159,
+        "output_tokens": 307,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 3011,
+        "cost_usd": 0.0008002,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "voter_1:cd5dfe31c8c7",
+        "label": "",
+        "input_tokens": 2166,
+        "output_tokens": 289,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2996,
+        "cost_usd": 0.00078,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "voter_1:cd5dfe31c8c7",
+        "label": "",
+        "input_tokens": 2159,
+        "output_tokens": 380,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 2156,
+        "latency_ms": 3299,
+        "cost_usd": 0.00049972,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "voter_1:cd5dfe31c8c7",
+        "label": "",
+        "input_tokens": 2166,
+        "output_tokens": 350,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 2163,
+        "latency_ms": 3360,
+        "cost_usd": 0.00046386,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "voter_1:cd5dfe31c8c7",
+        "label": "",
+        "input_tokens": 2159,
+        "output_tokens": 617,
+        "reasoning_tokens": 202,
+        "cached_input_tokens": 2156,
+        "latency_ms": 5840,
+        "cost_usd": 0.00078412,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "voter_1:cd5dfe31c8c7",
+        "label": "",
+        "input_tokens": 1496,
+        "output_tokens": 273,
+        "reasoning_tokens": 120,
+        "cached_input_tokens": 0,
+        "latency_ms": 3440,
+        "cost_usd": 0.0006268,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "voter_1:cd5dfe31c8c7",
+        "label": "",
+        "input_tokens": 2410,
+        "output_tokens": 726,
+        "reasoning_tokens": 401,
+        "cached_input_tokens": 0,
+        "latency_ms": 6261,
+        "cost_usd": 0.0013532,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "voter_1:cd5dfe31c8c7",
+        "label": "",
+        "input_tokens": 2417,
+        "output_tokens": 631,
+        "reasoning_tokens": 253,
+        "cached_input_tokens": 0,
+        "latency_ms": 6926,
+        "cost_usd": 0.0012406,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "voter_1:cd5dfe31c8c7",
+        "label": "",
+        "input_tokens": 1513,
+        "output_tokens": 254,
+        "reasoning_tokens": 82,
+        "cached_input_tokens": 0,
+        "latency_ms": 2756,
+        "cost_usd": 0.0006074,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "world_1:0265b93a3c45",
+        "label": "",
+        "input_tokens": 2652,
+        "output_tokens": 84,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 2649,
+        "latency_ms": 1517,
+        "cost_usd": 0.00015438,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "world_1:0265b93a3c45",
+        "label": "",
+        "input_tokens": 3238,
+        "output_tokens": 101,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 3235,
+        "latency_ms": 1466,
+        "cost_usd": 0.0001865,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "world_1:0265b93a3c45",
+        "label": "",
+        "input_tokens": 3245,
+        "output_tokens": 103,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 3242,
+        "latency_ms": 2989,
+        "cost_usd": 0.00018904,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "world_1:0265b93a3c45",
+        "label": "",
+        "input_tokens": 2525,
+        "output_tokens": 51,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 2522,
+        "latency_ms": 987,
+        "cost_usd": 0.00011224,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "world_1:80b2aff9218f",
+        "label": "",
+        "input_tokens": 2676,
+        "output_tokens": 217,
+        "reasoning_tokens": 54,
+        "cached_input_tokens": 2673,
+        "latency_ms": 2467,
+        "cost_usd": 0.00031446,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "world_1:80b2aff9218f",
+        "label": "",
+        "input_tokens": 3268,
+        "output_tokens": 191,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 3265,
+        "latency_ms": 2821,
+        "cost_usd": 0.0002951,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "world_1:80b2aff9218f",
+        "label": "",
+        "input_tokens": 3275,
+        "output_tokens": 111,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 3272,
+        "latency_ms": 1394,
+        "cost_usd": 0.00019924,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "world_1:80b2aff9218f",
+        "label": "",
+        "input_tokens": 2575,
+        "output_tokens": 89,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 2572,
+        "latency_ms": 1532,
+        "cost_usd": 0.00015884,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "world_1:fe63888e6d15",
+        "label": "",
+        "input_tokens": 2668,
+        "output_tokens": 524,
+        "reasoning_tokens": 328,
+        "cached_input_tokens": 2665,
+        "latency_ms": 5636,
+        "cost_usd": 0.0006827,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "world_1:fe63888e6d15",
+        "label": "",
+        "input_tokens": 3259,
+        "output_tokens": 264,
+        "reasoning_tokens": 69,
+        "cached_input_tokens": 3256,
+        "latency_ms": 3629,
+        "cost_usd": 0.00038252,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "world_1:fe63888e6d15",
+        "label": "",
+        "input_tokens": 3266,
+        "output_tokens": 148,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 3263,
+        "latency_ms": 4258,
+        "cost_usd": 0.00024346,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "world_1:fe63888e6d15",
+        "label": "",
+        "input_tokens": 2566,
+        "output_tokens": 195,
+        "reasoning_tokens": 101,
+        "cached_input_tokens": 2563,
+        "latency_ms": 2686,
+        "cost_usd": 0.00028586,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "world_1:07be62d2462c",
+        "label": "",
+        "input_tokens": 2668,
+        "output_tokens": 159,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 2665,
+        "latency_ms": 2379,
+        "cost_usd": 0.0002447,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "world_1:07be62d2462c",
+        "label": "",
+        "input_tokens": 3259,
+        "output_tokens": 247,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2592,
+        "cost_usd": 0.0009482,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "world_1:07be62d2462c",
+        "label": "",
+        "input_tokens": 3266,
+        "output_tokens": 217,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2157,
+        "cost_usd": 0.0009136,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "world_1:07be62d2462c",
+        "label": "",
+        "input_tokens": 2592,
+        "output_tokens": 114,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1917,
+        "cost_usd": 0.0006552,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "poker_player:3a98018d39a5",
+        "label": "",
+        "input_tokens": 1400,
+        "output_tokens": 88,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1397,
+        "latency_ms": 2462,
+        "cost_usd": 0.00013414,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "poker_player:3a98018d39a5",
+        "label": "",
+        "input_tokens": 2133,
+        "output_tokens": 90,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1496,
+        "cost_usd": 0.0005346,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "poker_player:3a98018d39a5",
+        "label": "",
+        "input_tokens": 2140,
+        "output_tokens": 74,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1689,
+        "cost_usd": 0.0005168,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "poker_player:3a98018d39a5",
+        "label": "",
+        "input_tokens": 1415,
+        "output_tokens": 45,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1412,
+        "latency_ms": 935,
+        "cost_usd": 8.284e-05,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "poker_player:7ffc9e879076",
+        "label": "",
+        "input_tokens": 1384,
+        "output_tokens": 81,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1381,
+        "latency_ms": 1280,
+        "cost_usd": 0.00012542,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "poker_player:7ffc9e879076",
+        "label": "",
+        "input_tokens": 2111,
+        "output_tokens": 94,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 2108,
+        "latency_ms": 2078,
+        "cost_usd": 0.00015556,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "poker_player:7ffc9e879076",
+        "label": "",
+        "input_tokens": 2118,
+        "output_tokens": 69,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 2115,
+        "latency_ms": 1493,
+        "cost_usd": 0.0001257,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "poker_player:7ffc9e879076",
+        "label": "",
+        "input_tokens": 1406,
+        "output_tokens": 44,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1403,
+        "latency_ms": 1256,
+        "cost_usd": 8.146e-05,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "poker_player:5bc4bf0f23fa",
+        "label": "",
+        "input_tokens": 1392,
+        "output_tokens": 119,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1389,
+        "latency_ms": 1844,
+        "cost_usd": 0.00017118,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "poker_player:5bc4bf0f23fa",
+        "label": "",
+        "input_tokens": 2126,
+        "output_tokens": 151,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 2123,
+        "latency_ms": 2066,
+        "cost_usd": 0.00022426,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "poker_player:5bc4bf0f23fa",
+        "label": "",
+        "input_tokens": 2133,
+        "output_tokens": 112,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 2130,
+        "latency_ms": 1557,
+        "cost_usd": 0.0001776,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "poker_player:5bc4bf0f23fa",
+        "label": "",
+        "input_tokens": 1435,
+        "output_tokens": 69,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1432,
+        "latency_ms": 1358,
+        "cost_usd": 0.00011204,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "poker_player:baf9c7fec8bd",
+        "label": "",
+        "input_tokens": 1410,
+        "output_tokens": 105,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1407,
+        "latency_ms": 1844,
+        "cost_usd": 0.00015474,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "poker_player:baf9c7fec8bd",
+        "label": "",
+        "input_tokens": 2146,
+        "output_tokens": 129,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 2143,
+        "latency_ms": 1684,
+        "cost_usd": 0.00019826,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "poker_player:baf9c7fec8bd",
+        "label": "",
+        "input_tokens": 2153,
+        "output_tokens": 92,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 2150,
+        "latency_ms": 1626,
+        "cost_usd": 0.000154,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "poker_player:baf9c7fec8bd",
+        "label": "",
+        "input_tokens": 1438,
+        "output_tokens": 63,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1452,
+        "cost_usd": 0.0003632,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "real_estate_properties:adb7d15a1edf",
+        "label": "",
+        "input_tokens": 3842,
+        "output_tokens": 310,
+        "reasoning_tokens": 154,
+        "cached_input_tokens": 3839,
+        "latency_ms": 3556,
+        "cost_usd": 0.00044938,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "real_estate_properties:adb7d15a1edf",
+        "label": "",
+        "input_tokens": 4004,
+        "output_tokens": 263,
+        "reasoning_tokens": 110,
+        "cached_input_tokens": 0,
+        "latency_ms": 3204,
+        "cost_usd": 0.0011164,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "real_estate_properties:adb7d15a1edf",
+        "label": "",
+        "input_tokens": 4011,
+        "output_tokens": 197,
+        "reasoning_tokens": 57,
+        "cached_input_tokens": 0,
+        "latency_ms": 2671,
+        "cost_usd": 0.0010386,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "real_estate_properties:adb7d15a1edf",
+        "label": "",
+        "input_tokens": 3201,
+        "output_tokens": 65,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 3198,
+        "latency_ms": 1493,
+        "cost_usd": 0.00014256,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "real_estate_properties:9c13804a70d0",
+        "label": "",
+        "input_tokens": 3856,
+        "output_tokens": 101,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 3853,
+        "latency_ms": 1742,
+        "cost_usd": 0.00019886,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "real_estate_properties:9c13804a70d0",
+        "label": "",
+        "input_tokens": 4019,
+        "output_tokens": 193,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2736,
+        "cost_usd": 0.0010354,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "real_estate_properties:9c13804a70d0",
+        "label": "",
+        "input_tokens": 4026,
+        "output_tokens": 154,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1859,
+        "cost_usd": 0.00099,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "real_estate_properties:9c13804a70d0",
+        "label": "",
+        "input_tokens": 3227,
+        "output_tokens": 86,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 3224,
+        "latency_ms": 1281,
+        "cost_usd": 0.00016828,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "real_estate_properties:60f63962a931",
+        "label": "",
+        "input_tokens": 3840,
+        "output_tokens": 142,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 3837,
+        "latency_ms": 2031,
+        "cost_usd": 0.00024774,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "real_estate_properties:60f63962a931",
+        "label": "",
+        "input_tokens": 3998,
+        "output_tokens": 214,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 3248,
+        "cost_usd": 0.0010564,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "real_estate_properties:60f63962a931",
+        "label": "",
+        "input_tokens": 4005,
+        "output_tokens": 177,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2111,
+        "cost_usd": 0.0010134,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "real_estate_properties:60f63962a931",
+        "label": "",
+        "input_tokens": 3220,
+        "output_tokens": 86,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 3217,
+        "latency_ms": 1325,
+        "cost_usd": 0.00016814,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "real_estate_properties:206c581552eb",
+        "label": "",
+        "input_tokens": 3836,
+        "output_tokens": 90,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 3833,
+        "latency_ms": 1634,
+        "cost_usd": 0.00018526,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "real_estate_properties:206c581552eb",
+        "label": "",
+        "input_tokens": 3993,
+        "output_tokens": 98,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1656,
+        "cost_usd": 0.0009162,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "real_estate_properties:206c581552eb",
+        "label": "",
+        "input_tokens": 4000,
+        "output_tokens": 77,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1549,
+        "cost_usd": 0.0008924,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "real_estate_properties:206c581552eb",
+        "label": "",
+        "input_tokens": 3181,
+        "output_tokens": 48,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 3178,
+        "latency_ms": 1282,
+        "cost_usd": 0.00012176,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "course_teach:365531823c43",
+        "label": "",
+        "input_tokens": 1100,
+        "output_tokens": 83,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1097,
+        "latency_ms": 1371,
+        "cost_usd": 0.00012214,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "course_teach:365531823c43",
+        "label": "",
+        "input_tokens": 1912,
+        "output_tokens": 107,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1909,
+        "latency_ms": 1435,
+        "cost_usd": 0.00016718,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "course_teach:365531823c43",
+        "label": "",
+        "input_tokens": 1919,
+        "output_tokens": 91,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1916,
+        "latency_ms": 1616,
+        "cost_usd": 0.00014812,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "course_teach:365531823c43",
+        "label": "",
+        "input_tokens": 1239,
+        "output_tokens": 47,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1236,
+        "latency_ms": 1121,
+        "cost_usd": 8.172e-05,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "course_teach:28ffb4c9eadb",
+        "label": "",
+        "input_tokens": 1096,
+        "output_tokens": 97,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1093,
+        "latency_ms": 1440,
+        "cost_usd": 0.00013886,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "course_teach:28ffb4c9eadb",
+        "label": "",
+        "input_tokens": 1906,
+        "output_tokens": 117,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1903,
+        "latency_ms": 2061,
+        "cost_usd": 0.00017906,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "course_teach:28ffb4c9eadb",
+        "label": "",
+        "input_tokens": 1913,
+        "output_tokens": 106,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1910,
+        "latency_ms": 1648,
+        "cost_usd": 0.000166,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "course_teach:28ffb4c9eadb",
+        "label": "",
+        "input_tokens": 1248,
+        "output_tokens": 57,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1245,
+        "latency_ms": 1039,
+        "cost_usd": 9.39e-05,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "course_teach:28ffb4c9eadb",
+        "label": "",
+        "input_tokens": 2033,
+        "output_tokens": 118,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1817,
+        "cost_usd": 0.0005482,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "course_teach:28ffb4c9eadb",
+        "label": "",
+        "input_tokens": 2040,
+        "output_tokens": 110,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1613,
+        "cost_usd": 0.00054,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "course_teach:28ffb4c9eadb",
+        "label": "",
+        "input_tokens": 1248,
+        "output_tokens": 57,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1245,
+        "latency_ms": 947,
+        "cost_usd": 9.39e-05,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "course_teach:47c5aec60877",
+        "label": "",
+        "input_tokens": 1100,
+        "output_tokens": 125,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1097,
+        "latency_ms": 1844,
+        "cost_usd": 0.00017254,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "course_teach:47c5aec60877",
+        "label": "",
+        "input_tokens": 1913,
+        "output_tokens": 178,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1866,
+        "cost_usd": 0.0005962,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "course_teach:47c5aec60877",
+        "label": "",
+        "input_tokens": 1920,
+        "output_tokens": 140,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 1662,
+        "cost_usd": 0.000552,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "course_teach:47c5aec60877",
+        "label": "",
+        "input_tokens": 1268,
+        "output_tokens": 75,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1265,
+        "latency_ms": 1213,
+        "cost_usd": 0.0001159,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_generator",
+        "case_id": "course_teach:a498dc046efd",
+        "label": "",
+        "input_tokens": 1104,
+        "output_tokens": 349,
+        "reasoning_tokens": 183,
+        "cached_input_tokens": 1101,
+        "latency_ms": 4033,
+        "cost_usd": 0.00044142,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "course_teach:a498dc046efd",
+        "label": "",
+        "input_tokens": 1918,
+        "output_tokens": 287,
+        "reasoning_tokens": 96,
+        "cached_input_tokens": 0,
+        "latency_ms": 3216,
+        "cost_usd": 0.000728,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "ambiguity_gate",
+        "case_id": "course_teach:a498dc046efd",
+        "label": "",
+        "input_tokens": 1925,
+        "output_tokens": 146,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 0,
+        "latency_ms": 2158,
+        "cost_usd": 0.0005602,
+        "estimated": false
+      },
+      {
+        "kind": "chat",
+        "model": "gpt-5.6-luna",
+        "stage": "query_validator",
+        "case_id": "course_teach:a498dc046efd",
+        "label": "",
+        "input_tokens": 1279,
+        "output_tokens": 84,
+        "reasoning_tokens": 0,
+        "cached_input_tokens": 1276,
+        "latency_ms": 1265,
+        "cost_usd": 0.00012692,
+        "estimated": false
+      }
+    ]
+  }
+}

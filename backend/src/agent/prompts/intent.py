@@ -18,6 +18,8 @@ Classify the user's message into exactly one of:
 Rules:
 - Prefer SQL_QUERY for ordinary data questions even if slightly vague
   ("how many partners", "latest orders", "best employee", "revenue in 2025").
+- If AVAILABLE TABLES is provided and the question mentions or clearly refers
+  to any of those tables (or their subject), classify as SQL_QUERY.
 - Do NOT classify as META just because the question is ambiguous.
 - Do NOT invent example account numbers, IDs, or dates in the reason field.
 - When CONVERSATION HISTORY is present, resolve pronouns and references using
@@ -34,7 +36,7 @@ Return JSON only:
 """
 
 INTENT_USER_PROMPT = """\
-{conversation_history_block}Current question:
+{conversation_history_block}{schema_tables_block}Current question:
 {user_question}
 """
 
@@ -42,6 +44,7 @@ INTENT_USER_PROMPT = """\
 def render_intent_prompt(
     user_question: str,
     conversation_history: str = "",
+    schema_tables: list[str] | None = None,
 ) -> tuple[str, str]:
     history = (conversation_history or "").strip()
     if history:
@@ -51,8 +54,19 @@ def render_intent_prompt(
         )
     else:
         history_block = ""
+    tables = [str(t).strip() for t in (schema_tables or []) if str(t).strip()]
+    if tables:
+        preview = ", ".join(tables[:40])
+        more = f" (+{len(tables) - 40} more)" if len(tables) > 40 else ""
+        schema_tables_block = (
+            "AVAILABLE TABLES (prefer SQL_QUERY when the question relates):\n"
+            f"{preview}{more}\n\n"
+        )
+    else:
+        schema_tables_block = ""
     return INTENT_SYSTEM_PROMPT, render(
         INTENT_USER_PROMPT,
         user_question=user_question,
         conversation_history_block=history_block,
+        schema_tables_block=schema_tables_block,
     )

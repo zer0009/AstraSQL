@@ -157,7 +157,7 @@ Current date: {current_date}
 
 Return JSON only:
 {{
-  "status": "clear" | "assumed" | "ambiguous" | "unanswerable",
+  "status": "clear" | "assumed" | "ambiguous" | "unanswerable" | "not_a_data_question",
   "interpretation": "one-sentence reading of the question",
   "assumptions": ["assumption if any"],
   "decision_points": [
@@ -167,6 +167,10 @@ Return JSON only:
   "step2_tables": ["table1"],
   "sql": "SELECT ...;"
 }}
+
+If the message is clearly not a data question (greeting, meta about the product
+with no schema relevance), set status to "not_a_data_question" and sql to "".
+When in doubt and the schema could answer it, prefer a SQL status.
 """
 
 

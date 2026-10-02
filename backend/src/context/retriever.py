@@ -1256,6 +1256,11 @@ class ContextRetriever:
         value_index = build_value_index(enrich_map)
         literals = extract_literals(question)
         value_hints = match_literals_to_values(literals, value_index)
+        if not value_hints and literals and value_index:
+            # Fuzzy fallback for high-cardinality / near-match literals.
+            from src.context.value_grounding import match_literals_fuzzy
+
+            value_hints = match_literals_fuzzy(literals, value_index)
         hints_block = format_value_hints(value_hints)
         if hints_block:
             enriched_schema = f"{enriched_schema}\n\n{hints_block}"

@@ -51,8 +51,9 @@ def _initial_state(
     connection: Connection,
     question: str,
     conversation_history: list[dict[str, Any]] | None = None,
+    evidence: str = "",
 ) -> AgentState:
-    return {
+    state: AgentState = {
         "connection_id": connection.id,
         "question": question,
         "retries": 0,
@@ -61,6 +62,9 @@ def _initial_state(
         "error": None,
         "conversation_history": _normalize_conversation_history(conversation_history),
     }
+    if (evidence or "").strip():
+        state["evidence"] = evidence.strip()
+    return state
 
 
 def _run_config(
@@ -212,6 +216,7 @@ async def run_query(
     question: str,
     conversation_history: list[dict[str, Any]] | None = None,
     session_id: str | None = None,
+    evidence: str = "",
 ) -> AgentState:
     """Run the full agent graph and persist QueryHistory on completion.
 
@@ -219,13 +224,18 @@ async def run_query(
     caller), stage labels from the graph are recorded automatically via LLM
     callbacks. A compact ``usage_summary`` is attached to the returned state
     for production telemetry and eval.
+
+    ``evidence`` is optional external knowledge (e.g. BIRD evidence or a
+    customer glossary snippet) injected into business rules for this turn.
     """
     from src.observability.usage import get_active_tracker
 
     provider = provider_from_connection(connection)
     try:
         graph = get_graph()
-        initial = _initial_state(connection, question, conversation_history)
+        initial = _initial_state(
+            connection, question, conversation_history, evidence=evidence
+        )
         result = await graph.ainvoke(
             initial,
             config=_run_config(session, connection, provider),

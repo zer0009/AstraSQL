@@ -7,7 +7,7 @@ import json
 import random
 import zipfile
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Iterable, Optional
 from urllib.request import urlretrieve
 
 _BACKEND = Path(__file__).resolve().parents[2]
@@ -281,3 +281,92 @@ def question_stable_id(item: dict[str, Any]) -> str:
     q = str(item.get("question") or "")
     digest = hashlib.sha1(f"{db}::{q}".encode("utf-8")).hexdigest()[:12]
     return f"{db}:{digest}"
+
+
+# Databases used in run25/run50/run100 (seed 42 small-DB pick). Tune only on these.
+TUNING_DB_IDS: tuple[str, ...] = (
+    "car_1",
+    "concert_singer",
+    "cre_Doc_Template_Mgt",
+    "dog_kennels",
+    "employee_hire_evaluation",
+    "museum_visit",
+    "network_1",
+    "orchestra",
+    "tvshow",
+    "wta_1",
+)
+
+
+def pick_held_out(
+    items: list[dict[str, Any]],
+    *,
+    n_dbs: int = 5,
+    per_db: int = 12,
+    seed: int = 99,
+    root: Path | None = None,
+    exclude_db_ids: Iterable[str] | None = None,
+) -> list[dict[str, Any]]:
+    """Pick a held-out multi-DB sample that avoids the tuning databases.
+
+    Uses a different default seed than the historical pilots (42) so question
+    selection does not overlap the run25/50/100 question sets even if a DB
+    is reused later.
+    """
+    excluded = set(exclude_db_ids or TUNING_DB_IDS)
+    # Prefer DBs not in the tuning set; fall back to any unused combo.
+    eligible = [
+        db
+        for db in list_dev_databases(items)
+        if db not in excluded
+    ]
+    if not eligible:
+        # Extreme fallback: any DB with enough questions, still with held-out seed.
+        eligible = list_dev_databases(items)
+    # Restrict pick_small_databases pool by filtering items.
+    filtered = [x for x in items if str(x.get("db_id") or "") in set(eligible)]
+    if not filtered:
+        filtered = items
+    db_ids = pick_small_databases(
+        filtered,
+        n_dbs=n_dbs,
+        min_questions=per_db,
+        seed=seed,
+        root=root,
+    )
+    picked = pick_multi_db(
+        items,
+        db_ids=db_ids,
+        per_db=per_db,
+        seed=seed,
+        root=root,
+    )
+    for item in picked:
+        item["_split"] = "held_out"
+    return picked
+
+
+def pick_tuning_split(
+    items: list[dict[str, Any]],
+    *,
+    n_dbs: int = 10,
+    per_db: int = 6,
+    seed: int = 42,
+    root: Path | None = None,
+) -> list[dict[str, Any]]:
+    """Dev/tune split on the historical small-DB set (seed 42 family)."""
+    available = [db for db in TUNING_DB_IDS if any(
+        str(x.get("db_id") or "") == db for x in items
+    )]
+    db_ids = available[:n_dbs] if available else None
+    picked = pick_multi_db(
+        items,
+        db_ids=db_ids,
+        n_dbs=n_dbs,
+        per_db=per_db,
+        seed=seed,
+        root=root,
+    )
+    for item in picked:
+        item["_split"] = "tune"
+    return picked

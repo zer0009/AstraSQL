@@ -29,5 +29,7 @@ class AgentState(TypedDict, total=False):
     # Prior completed turns for multi-turn follow-ups (working-memory window).
     # Optional trust_level helps clarification budget detection.
     conversation_history: list[dict]  # [{question, sql, answer, trust_level?}, ...]
+    # Optional external knowledge (BIRD evidence, customer data dictionary notes).
+    evidence: str
     # Injected by runner (not from LLM):
     # session and connection are handled outside graph or via config

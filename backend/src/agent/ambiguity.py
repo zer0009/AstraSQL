@@ -75,6 +75,23 @@ def _rule_keyword_overlap(question_tokens: set[str], rule: str) -> set[str]:
     return question_tokens & _content_tokens(rule)
 
 
+def _looks_like_relationship_rule(text: str) -> bool:
+    """Join-path / FK lines from the semantic layer are not metric conflicts."""
+    t = (text or "").strip().lower()
+    if not t:
+        return False
+    if t.startswith("relationships"):
+        return True
+    # e.g. orders.customer_id = customers.id  OR  a.b → c.d [approved]
+    if "→" in text or "->" in text:
+        return True
+    if " = " in t and "." in t and " means " not in t:
+        return True
+    if "[approved]" in t or "[proposed]" in t:
+        return True
+    return False
+
+
 def _rules_conflict(question: str, rules: list[str]) -> tuple[bool, str, list[str]]:
     q_tokens = _content_tokens(question)
     if not q_tokens:
@@ -83,7 +100,7 @@ def _rules_conflict(question: str, rules: list[str]) -> tuple[bool, str, list[st
     indexed: list[tuple[set[str], set[str], str]] = []
     for rule in rules:
         content = (rule or "").strip()
-        if not content:
+        if not content or _looks_like_relationship_rule(content):
             continue
         overlap = _rule_keyword_overlap(q_tokens, content)
         if not overlap:
@@ -309,9 +326,13 @@ def _pick_by_knowns(
     golden_questions: list[str],
     conversation_history: list[dict[str, Any]] | None,
 ) -> Optional[InterpretationCandidate]:
-    """If rules, goldens, or history clearly select one candidate, return it."""
-    if len(candidates) == 1:
-        return candidates[0]
+    """If rules, goldens, or history clearly select one candidate, return it.
+
+    A sole candidate is NOT treated as "known" — that is a separate path
+    (``single_candidate``) so the execution gate can still run when needed.
+    """
+    if not candidates:
+        return None
 
     q_tokens = _content_tokens(question)
     # Prefer a candidate whose question is close to a golden.
@@ -471,6 +492,8 @@ def _assume_top_candidate(
     proposal: InterpretationProposal,
     decision_why: str,
     reason: str,
+    needs_execution_gate: bool = False,
+    decision_points: tuple[str, ...] = (),
 ) -> PolicyDecision:
     selected = valid[0]
     return PolicyDecision(
@@ -482,6 +505,8 @@ def _assume_top_candidate(
         options=[c.question for c in valid[1:4]],
         decision_why=decision_why,
         selected=selected,
+        needs_execution_gate=needs_execution_gate,
+        decision_points=decision_points,
     )
 
 
@@ -563,6 +588,7 @@ def apply_interpretation_policy(
             proposal.assumption
             or f"Using: {known.label or known.question}"
         )
+        # Real knowns resolve the ask; still gate when decision_points exist.
         return PolicyDecision(
             should_clarify=False,
             status="assumed",
@@ -575,6 +601,7 @@ def apply_interpretation_policy(
             ][:3],
             decision_why=f"resolved_known;candidates={len(valid)}",
             selected=known,
+            needs_execution_gate=bool(dpoints) if defer_ask_to_execution_gate else False,
             decision_points=dpoints,
         )
 
@@ -616,6 +643,10 @@ def apply_interpretation_policy(
             decision_points=dpoints,
         )
 
+    # Non-clear outcomes defer to the execution gate when enabled so join-type /
+    # aggregation / NULL differences are not bypassed by table/column equality.
+    gate_nonclear = defer_ask_to_execution_gate and proposal.status != "clear"
+
     if len(valid) >= 2:
         if budget_spent and material:
             return _assume_top_candidate(
@@ -623,6 +654,8 @@ def apply_interpretation_policy(
                 proposal=proposal,
                 decision_why=f"budget_spent;candidates={len(valid)}",
                 reason="Clarification budget spent; proceeding with top candidate",
+                needs_execution_gate=gate_nonclear or bool(dpoints),
+                decision_points=dpoints,
             )
         if not material:
             return _assume_top_candidate(
@@ -631,6 +664,8 @@ def apply_interpretation_policy(
                 decision_why=f"assumed_immaterial;candidates={len(valid)}",
                 reason=proposal.reason
                 or "Candidates differ only by phrasing/join path; proceeding",
+                needs_execution_gate=defer_ask_to_execution_gate or bool(dpoints),
+                decision_points=dpoints,
             )
         return _assume_top_candidate(
             valid,
@@ -640,10 +675,14 @@ def apply_interpretation_policy(
             ),
             reason=proposal.reason
             or "Proceeding with top grounded candidate",
+            needs_execution_gate=gate_nonclear or bool(dpoints),
+            decision_points=dpoints,
         )
 
     if len(valid) == 1:
         selected = valid[0]
+        # Truthful reason: single grounded candidate, not "resolved_known".
+        # (clear + 1 already returned above; this path is non-clear.)
         return PolicyDecision(
             should_clarify=False,
             status="assumed",
@@ -651,8 +690,10 @@ def apply_interpretation_policy(
             assumption=proposal.assumption
             or f"Assumed: {selected.label or selected.question}",
             options=[],
-            decision_why="assumed;candidates=1",
+            decision_why="single_candidate;candidates=1",
             selected=selected,
+            needs_execution_gate=bool(defer_ask_to_execution_gate or dpoints),
+            decision_points=dpoints,
         )
 
     # No valid candidates — fail open (proceed without asking).
@@ -664,6 +705,8 @@ def apply_interpretation_policy(
         options=[],
         decision_why="failed_open;valid=0",
         selected=None,
+        needs_execution_gate=False,
+        decision_points=dpoints,
     )
 
 

@@ -64,9 +64,18 @@ async def context_retriever_node(
             ),
         }
 
+    business_rules = retrieved.business_rules or ""
+    evidence = (state.get("evidence") or "").strip()
+    if evidence:
+        block = f"External knowledge for this question:\n{evidence}"
+        if business_rules and business_rules.strip() not in {"", "(none)"}:
+            business_rules = f"{business_rules.rstrip()}\n\n{block}"
+        else:
+            business_rules = block
+
     context = {
         "enriched_schema": retrieved.enriched_schema,
-        "business_rules": retrieved.business_rules,
+        "business_rules": business_rules,
         "golden_records_text": retrieved.golden_records_text,
         "selected_tables": retrieved.selected_tables,
         "selected_columns": retrieved.selected_columns,
@@ -100,15 +109,29 @@ async def context_retriever_node(
                 },
             }
         )
-    decision = decide_ambiguity(
-        question,
-        rules=_rules_from_text(retrieved.business_rules),
-        golden_questions=retrieved.golden_questions,
-    )
+    from src.config.settings import get_settings
+
+    settings = get_settings()
+    # When the execution-evidence gate is on, skip early rule-conflict asks here;
+    # the schema-grounded resolver + gate handle ambiguity with SQL evidence.
+    # Relationship edges in the semantic layer must not trigger "conflicting rules".
+    if bool(getattr(settings, "execution_evidence_gate", True)):
+        decision_should = False
+        decision_reason = "Deferred to schema-grounded / execution-evidence path"
+        decision_options: list[str] = []
+    else:
+        early = decide_ambiguity(
+            question,
+            rules=_rules_from_text(retrieved.business_rules),
+            golden_questions=retrieved.golden_questions,
+        )
+        decision_should = early.should_clarify
+        decision_reason = early.reason
+        decision_options = list(early.options or [])
     ambiguity = {
-        "should_clarify": decision.should_clarify,
-        "reason": decision.reason,
-        "options": decision.options,
+        "should_clarify": decision_should,
+        "reason": decision_reason,
+        "options": decision_options,
     }
     steps.append(
         {
@@ -120,11 +143,11 @@ async def context_retriever_node(
             "tables": retrieved.selected_tables,
         }
     )
-    if decision.should_clarify:
+    if decision_should:
         steps.append(
             {
                 "name": "ambiguity_gate",
-                "detail": decision.reason,
+                "detail": decision_reason,
             }
         )
 
@@ -135,9 +158,12 @@ async def context_retriever_node(
         "error": None,
         "steps": steps,
     }
-    if decision.should_clarify:
+    # Merged path skips intent_classifier — default to SQL until generator says otherwise.
+    if not state.get("intent"):
+        update["intent"] = "SQL_QUERY"
+    if decision_should:
         update["intent"] = "CLARIFICATION_NEEDED"
-        update["intent_reason"] = decision.reason
+        update["intent_reason"] = decision_reason
         if decision.options:
             update["clarification_options"] = decision.options
     return update

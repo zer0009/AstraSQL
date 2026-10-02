@@ -167,42 +167,46 @@ def perturb_sqlite(
             if drop_fks and _fk_list(conn, table):
                 notes.append(f"{table}: dropped FOREIGN KEY constraints")
 
-            # Build new CREATE TABLE.
-            col_defs: list[str] = []
-            for c in cols:
-                _cid, name, ctype, notnull, dflt, pk = c
-                new_name = rename[name]
-                bits = [_quote_ident(new_name), _sql_type(ctype)]
-                if pk:
-                    bits.append("PRIMARY KEY")
-                if notnull and not pk:
-                    bits.append("NOT NULL")
-                if dflt is not None:
-                    bits.append(f"DEFAULT {dflt}")
-                col_defs.append(" ".join(bits))
-
             if soft_col:
-                col_defs.append(f"{_quote_ident(soft_col)} INTEGER DEFAULT 0")
                 notes.append(f"{table}: added {soft_col} column")
-
-            # FK clauses (optional).
-            for fk in fks:
-                # id, seq, table, from, to, on_update, on_delete, match
-                src_col = rename.get(fk[3], fk[3])
-                ref_table = fk[2]
-                ref_col = fk[4]
-                col_defs.append(
-                    f"FOREIGN KEY ({_quote_ident(src_col)}) "
-                    f"REFERENCES {_quote_ident(ref_table)}({_quote_ident(ref_col)})"
-                )
 
             tmp = f"__pert_{table}"
             # Avoid collision if tmp exists.
             while tmp in tables or tmp in _table_names(conn):
                 tmp = tmp + "_x"
 
+            # SQLite allows at most one PRIMARY KEY clause in CREATE TABLE;
+            # composite keys from PRAGMA are collapsed to a table-level PK list.
+            pk_cols = [
+                old_names[i]
+                for i, c in enumerate(cols)
+                if int(c[5] or 0) > 0
+            ]
+            cleaned_defs: list[str] = []
+            for _cid, name, ctype, notnull, dflt, pk in cols:
+                new_name = rename.get(name, name)
+                piece = f"{_quote_ident(new_name)} {_sql_type(ctype)}"
+                if notnull and int(pk or 0) == 0:
+                    piece += " NOT NULL"
+                if dflt is not None and int(pk or 0) == 0:
+                    piece += f" DEFAULT {dflt}"
+                cleaned_defs.append(piece)
+            if soft_col:
+                cleaned_defs.append(f"{_quote_ident(soft_col)} INTEGER DEFAULT 0")
+            if pk_cols:
+                pk_q = ", ".join(_quote_ident(rename.get(c, c)) for c in pk_cols)
+                cleaned_defs.append(f"PRIMARY KEY ({pk_q})")
+            for fk in fks:
+                # id, seq, table, from, to, on_update, on_delete, match
+                src_col = rename.get(fk[3], fk[3])
+                ref_table = fk[2]
+                ref_col = fk[4]
+                cleaned_defs.append(
+                    f"FOREIGN KEY ({_quote_ident(src_col)}) "
+                    f"REFERENCES {_quote_ident(ref_table)}({_quote_ident(ref_col)})"
+                )
             create_sql = (
-                f"CREATE TABLE {_quote_ident(tmp)} ({', '.join(col_defs)})"
+                f"CREATE TABLE {_quote_ident(tmp)} ({', '.join(cleaned_defs)})"
             )
             conn.execute(create_sql)
 
@@ -252,4 +256,100 @@ def perturb_sqlite(
         "coded_values": coded_values,
         "seed": seed,
         "notes": notes,
+    }
+
+
+def inflate_schema(
+    target_sqlite: str | Path,
+    donor_sqlites: list[str | Path],
+    dst_path: str | Path,
+    *,
+    prefix_tables: bool = True,
+) -> dict[str, Any]:
+    """Graft tables from donor DBs into a copy of ``target_sqlite``.
+
+    Used to stress-test large-schema retrieval (100+ tables) while keeping the
+    target DB's gold questions valid (target tables keep original names).
+    """
+    target = Path(target_sqlite)
+    dst = Path(dst_path)
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(target, dst)
+
+    grafted: list[dict[str, str]] = []
+    conn = sqlite3.connect(str(dst))
+    try:
+        existing = set(_table_names(conn))
+        for donor_path in donor_sqlites:
+            donor = Path(donor_path)
+            if not donor.exists():
+                continue
+            # Copy via a separate connection to avoid ATTACH/WAL lock issues.
+            dconn = sqlite3.connect(str(donor))
+            try:
+                donor_tables = _table_names(dconn)
+                for table in donor_tables:
+                    new_name = (
+                        f"{donor.stem}__{table}" if prefix_tables else table
+                    )
+                    base = new_name
+                    n = 2
+                    while new_name in existing:
+                        new_name = f"{base}_{n}"
+                        n += 1
+                    try:
+                        cols = _column_info(dconn, table)
+                        col_defs = []
+                        col_names = []
+                        for _cid, name, ctype, notnull, dflt, pk in cols:
+                            col_names.append(name)
+                            parts = [f"{_quote_ident(name)} {_sql_type(ctype)}"]
+                            if pk:
+                                parts.append("PRIMARY KEY")
+                            elif notnull:
+                                parts.append("NOT NULL")
+                            col_defs.append(" ".join(parts))
+                        conn.execute(
+                            f"CREATE TABLE {_quote_ident(new_name)} "
+                            f"({', '.join(col_defs)})"
+                        )
+                        rows = dconn.execute(
+                            f"SELECT * FROM {_quote_ident(table)} LIMIT 50"
+                        ).fetchall()
+                        if rows and col_names:
+                            placeholders = ", ".join("?" for _ in col_names)
+                            col_q = ", ".join(_quote_ident(c) for c in col_names)
+                            conn.executemany(
+                                f"INSERT INTO {_quote_ident(new_name)} ({col_q}) "
+                                f"VALUES ({placeholders})",
+                                rows,
+                            )
+                        existing.add(new_name)
+                        grafted.append(
+                            {
+                                "donor": str(donor),
+                                "source_table": table,
+                                "table": new_name,
+                            }
+                        )
+                    except sqlite3.Error as exc:
+                        grafted.append(
+                            {
+                                "donor": str(donor),
+                                "source_table": table,
+                                "error": str(exc),
+                            }
+                        )
+            finally:
+                dconn.close()
+            conn.commit()
+        conn.commit()
+    finally:
+        conn.close()
+
+    return {
+        "src": str(target),
+        "dst": str(dst),
+        "grafted_tables": len([g for g in grafted if "table" in g]),
+        "grafted": grafted,
     }

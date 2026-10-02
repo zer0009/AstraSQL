@@ -205,6 +205,104 @@ def build_value_index(enrich_map: dict[str, dict[str, Any]]) -> dict[str, list[s
     return index
 
 
+def _trigrams(text: str) -> set[str]:
+    s = f"  {(text or '').lower()} "
+    if len(s) < 3:
+        return {s.strip()} if s.strip() else set()
+    return {s[i : i + 3] for i in range(len(s) - 2)}
+
+
+def trigram_similarity(a: str, b: str) -> float:
+    """Jaccard similarity over character trigrams (0..1)."""
+    ta, tb = _trigrams(a), _trigrams(b)
+    if not ta or not tb:
+        return 0.0
+    return len(ta & tb) / len(ta | tb)
+
+
+def match_literals_fuzzy(
+    literals: list[str],
+    value_index: dict[str, list[str]],
+    *,
+    min_score: float = 0.45,
+    max_per_literal: int = 3,
+) -> list[dict[str, str]]:
+    """Fuzzy-match question literals to indexed values (high-cardinality safe).
+
+    Uses trigram Jaccard; suitable when exact match misses near-spellings or
+    when the index holds a sampled subset of a large column.
+    """
+    hints: list[dict[str, str]] = []
+    seen: set[tuple[str, str, str]] = set()
+    for lit in literals:
+        lit_text = str(lit or "").strip()
+        if len(lit_text) < 2:
+            continue
+        scored: list[tuple[float, str, str, str]] = []
+        for key, values in (value_index or {}).items():
+            if "." not in key:
+                continue
+            table, column = key.split(".", 1)
+            for value in values or []:
+                score = trigram_similarity(lit_text, str(value))
+                if score >= min_score:
+                    scored.append((score, table, column, str(value)))
+        scored.sort(key=lambda t: t[0], reverse=True)
+        for score, table, column, value in scored[:max_per_literal]:
+            sig = (table, column, value)
+            if sig in seen:
+                continue
+            seen.add(sig)
+            hints.append(
+                {
+                    "literal": lit_text,
+                    "table": table,
+                    "column": column,
+                    "value": value,
+                    "score": f"{score:.2f}",
+                }
+            )
+    return hints
+
+
+async def sample_high_cardinality_values(
+    db_provider: BaseDatabaseProvider,
+    table: str,
+    column: str,
+    *,
+    sample_limit: int = 200,
+    dialect: str = "",
+) -> list[str]:
+    """On-demand sample of distinct values for a high-cardinality column."""
+    table_q = _quote_ident(table, dialect)
+    col_q = _quote_ident(column, dialect)
+    if table_q is None or col_q is None:
+        return []
+    sql = (
+        f"SELECT DISTINCT {col_q} AS v FROM {table_q} "
+        f"WHERE {col_q} IS NOT NULL LIMIT {int(sample_limit)}"
+    )
+    try:
+        result = await db_provider.execute_readonly(sql, max_rows=sample_limit)
+    except Exception as exc:
+        logger.debug("high-card sample failed %s.%s: %s", table, column, exc)
+        return []
+    rows = list(result.get("rows") or [])
+    out: list[str] = []
+    for row in rows:
+        if isinstance(row, dict):
+            val = row.get("v")
+            if val is None:
+                val = next(iter(row.values()), None)
+        elif isinstance(row, (list, tuple)):
+            val = row[0] if row else None
+        else:
+            val = row
+        if val is not None and str(val).strip():
+            out.append(str(val))
+    return out
+
+
 def format_value_hints(hints: list[dict[str, str]], *, max_hints: int = 8) -> str:
     """Render a short 'Value hints:' block for the generator context."""
     if not hints:

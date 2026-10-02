@@ -13,9 +13,25 @@ def test_route_after_context_clarifies():
     )
 
 
-def test_route_after_context_resolves_by_default():
+def test_route_after_context_resolves_by_default(monkeypatch):
+    from src.config.settings import get_settings
+
+    get_settings.cache_clear()
+    monkeypatch.setenv("MERGE_INTERPRET_GENERATE", "false")
+    get_settings.cache_clear()
     assert route_after_context({}) == "resolve"
     assert route_after_context({"ambiguity": {"should_clarify": False}}) == "resolve"
+    get_settings.cache_clear()
+
+
+def test_route_after_context_generates_when_merged(monkeypatch):
+    from src.config.settings import get_settings
+
+    get_settings.cache_clear()
+    monkeypatch.setenv("MERGE_INTERPRET_GENERATE", "true")
+    get_settings.cache_clear()
+    assert route_after_context({}) == "generate"
+    get_settings.cache_clear()
 
 
 def test_route_after_interpretation_clarifies_or_generates():

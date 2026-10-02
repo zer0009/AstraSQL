@@ -1,0 +1,1019 @@
+{
+  "db_ids": [
+    "course_teach",
+    "real_estate_properties",
+    "voter_1",
+    "world_1"
+  ],
+  "questions": [
+    {
+      "id": "voter_1:cd5dfe31c8c7",
+      "db_id": "voter_1",
+      "question": "List the area codes in which voters voted both for the contestant 'Tabatha Gehling' and the contestant 'Kelly Clauss'.",
+      "hardness": "extra",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT T3.area_code FROM contestants AS T1 JOIN votes AS T2 ON T1.contestant_number  =  T2.contestant_number JOIN area_code_state AS T3 ON T2.state  =  T3.state WHERE T1.contestant_name  =  'Tabatha Gehling' INTERSECT SELECT T3.area_code FROM contestants AS T1 JOIN votes AS T2 ON T1.contestant_number  =  T2.contestant_number JOIN area_code_state AS T3 ON T2.state  =  T3.state WHERE T1.contestant_name  =  'Kelly Clauss'",
+      "generated_sql": "WITH contestant_area_codes AS (\n  SELECT\n    v.phone_number / 10000000 AS area_code,\n    c.contestant_name\n  FROM VOTES AS v\n  JOIN CONTESTANTS AS c\n    ON v.contestant_number = c.contestant_number\n  WHERE c.contestant_name IN ('Tabatha Gehling', 'Kelly Clauss')\n  GROUP BY area_code, c.contestant_name\n)\nSELECT cac.area_code\nFROM contestant_area_codes AS cac\nGROUP BY cac.area_code\nHAVING COUNT(DISTINCT cac.contestant_name) = 2;",
+      "result_match": false,
+      "result_match_values": false,
+      "result_match_lenient": false,
+      "failure_label": "wrong_table",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 1,
+      "schema_linking": {
+        "gold_tables": [
+          "area_code_state",
+          "contestants",
+          "votes"
+        ],
+        "selected_tables": [
+          "area_code_state",
+          "contestants",
+          "votes"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "AREA_CODE_STATE",
+        "CONTESTANTS",
+        "VOTES"
+      ],
+      "gold_result": {
+        "columns": [
+          "area_code"
+        ],
+        "row_count": 14,
+        "rows": [
+          {
+            "area_code": 212
+          },
+          {
+            "area_code": 315
+          },
+          {
+            "area_code": 347
+          },
+          {
+            "area_code": 516
+          },
+          {
+            "area_code": 518
+          },
+          {
+            "area_code": 585
+          },
+          {
+            "area_code": 607
+          },
+          {
+            "area_code": 631
+          }
+        ],
+        "truncated": true
+      },
+      "generated_result": {
+        "columns": [
+          "area_code"
+        ],
+        "row_count": 0,
+        "rows": [],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "clear;candidates=1",
+        "reason": "The question specifies both contestants and asks for area_code values associated with states that have votes for each contestant.",
+        "assumption": null,
+        "should_clarify": false,
+        "proposal_status": "clear",
+        "options": [],
+        "candidates": [
+          {
+            "label": "Area codes with votes for both contestants",
+            "question": "List the area_code values from AREA_CODE_STATE for states that have votes for both Tabatha Gehling and Kelly Clauss, matching contestants through CONTESTANTS and votes through VOTES.",
+            "tables": [
+              "AREA_CODE_STATE",
+              "CONTESTANTS",
+              "VOTES"
+            ],
+            "columns": [
+              "AREA_CODE_STATE.area_code",
+              "AREA_CODE_STATE.state",
+              "CONTESTANTS.contestant_number",
+              "CONTESTANTS.contestant_name",
+              "VOTES.state",
+              "VOTES.contestant_number"
+            ]
+          }
+        ],
+        "selected": {
+          "label": "Area codes with votes for both contestants",
+          "question": "List the area_code values from AREA_CODE_STATE for states that have votes for both Tabatha Gehling and Kelly Clauss, matching contestants through CONTESTANTS and votes through VOTES.",
+          "tables": [
+            "area_code_state",
+            "contestants",
+            "votes"
+          ],
+          "columns": [
+            "AREA_CODE_STATE.area_code",
+            "AREA_CODE_STATE.state",
+            "CONTESTANTS.contestant_number",
+            "CONTESTANTS.contestant_name",
+            "VOTES.state",
+            "VOTES.contestant_number"
+          ]
+        },
+        "clusters": null,
+        "gate": null
+      },
+      "assumption": "",
+      "elapsed_ms": 29806,
+      "cost_usd": 0.0052164,
+      "input_tokens": 11088,
+      "output_tokens": 2499,
+      "reasoning_tokens": 918,
+      "cached_input_tokens": 0,
+      "calls": 7,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 410,
+          "output_tokens": 28,
+          "reasoning_tokens": 0,
+          "latency_ms": 1543,
+          "cost_usd": 0.0001156
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 670,
+          "output_tokens": 373,
+          "reasoning_tokens": 175,
+          "latency_ms": 5075,
+          "cost_usd": 0.0005816
+        },
+        "query_generator": {
+          "calls": 3,
+          "input_tokens": 6972,
+          "output_tokens": 1426,
+          "reasoning_tokens": 425,
+          "latency_ms": 14773,
+          "cost_usd": 0.0031056
+        },
+        "query_validator": {
+          "calls": 2,
+          "input_tokens": 3036,
+          "output_tokens": 672,
+          "reasoning_tokens": 318,
+          "latency_ms": 8014,
+          "cost_usd": 0.0014136
+        }
+      }
+    },
+    {
+      "id": "world_1:fe63888e6d15",
+      "db_id": "world_1",
+      "question": "What are the African countries that have a  population less than any country in Asia?",
+      "hardness": "hard",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT Name FROM country WHERE Continent  =  \"Africa\"  AND population  <  (SELECT max(population) FROM country WHERE Continent  =  \"Asia\")",
+      "generated_sql": "SELECT c.Name\nFROM country AS c\nWHERE c.Continent = 'Africa'\n  AND c.Population < (\n    SELECT MIN(a.Population)\n    FROM country AS a\n    WHERE a.Continent = 'Asia'\n  );",
+      "result_match": false,
+      "result_match_values": false,
+      "result_match_lenient": false,
+      "failure_label": "wrong_filter_or_value",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "country"
+        ],
+        "selected_tables": [
+          "city",
+          "country",
+          "countrylanguage"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "city",
+        "country",
+        "countrylanguage"
+      ],
+      "gold_result": {
+        "columns": [
+          "Name"
+        ],
+        "row_count": 58,
+        "rows": [
+          {
+            "Name": "Angola"
+          },
+          {
+            "Name": "Burundi"
+          },
+          {
+            "Name": "Benin"
+          },
+          {
+            "Name": "Burkina Faso"
+          },
+          {
+            "Name": "Botswana"
+          },
+          {
+            "Name": "Central African Republic"
+          },
+          {
+            "Name": "C\u00f4te d\u2019Ivoire"
+          },
+          {
+            "Name": "Cameroon"
+          }
+        ],
+        "truncated": true
+      },
+      "generated_result": {
+        "columns": [
+          "Name"
+        ],
+        "row_count": 5,
+        "rows": [
+          {
+            "Name": "British Indian Ocean Territory"
+          },
+          {
+            "Name": "Mayotte"
+          },
+          {
+            "Name": "Saint Helena"
+          },
+          {
+            "Name": "Sao Tome and Principe"
+          },
+          {
+            "Name": "Seychelles"
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "execution_gate;single_cluster;n=2",
+        "reason": "All executable candidates agree on results",
+        "assumption": "Assumed: Less than every Asian country",
+        "should_clarify": false,
+        "proposal_status": "ambiguous",
+        "options": [],
+        "candidates": [
+          {
+            "label": "Less than every Asian country",
+            "question": "Which countries in Africa have a population less than the population of every country in Asia?",
+            "tables": [
+              "country"
+            ],
+            "columns": [
+              "country.Name",
+              "country.Continent",
+              "country.Population"
+            ]
+          },
+          {
+            "label": "Less than at least one Asian country",
+            "question": "Which countries in Africa have a population less than the population of at least one country in Asia?",
+            "tables": [
+              "country"
+            ],
+            "columns": [
+              "country.Name",
+              "country.Continent",
+              "country.Population"
+            ]
+          }
+        ],
+        "selected": {
+          "label": "Less than every Asian country",
+          "question": "Which countries in Africa have a population less than the population of every country in Asia?",
+          "tables": [
+            "country"
+          ],
+          "columns": [
+            "country.Name",
+            "country.Continent",
+            "country.Population"
+          ]
+        },
+        "clusters": [
+          {
+            "size": 2,
+            "sql": "SELECT c.Name\nFROM country AS c\nWHERE c.Continent = 'Africa'\n  AND c.Population < (\n    SELECT MIN(a.Population)\n    FROM country AS a\n    WHERE a.Continent = 'Asia'\n  );",
+            "row_count": 5
+          }
+        ],
+        "gate": "execution_evidence"
+      },
+      "assumption": "Assumed: Less than every Asian country",
+      "elapsed_ms": 16399,
+      "cost_usd": 0.0042336,
+      "input_tokens": 13524,
+      "output_tokens": 1274,
+      "reasoning_tokens": 423,
+      "cached_input_tokens": 0,
+      "calls": 6,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 397,
+          "output_tokens": 33,
+          "reasoning_tokens": 0,
+          "latency_ms": 1226,
+          "cost_usd": 0.000119
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 825,
+          "output_tokens": 271,
+          "reasoning_tokens": 77,
+          "latency_ms": 2909,
+          "cost_usd": 0.0004902
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 3225,
+          "output_tokens": 272,
+          "reasoning_tokens": 75,
+          "latency_ms": 3055,
+          "cost_usd": 0.0009714
+        },
+        "ambiguity_gate": {
+          "calls": 2,
+          "input_tokens": 6511,
+          "output_tokens": 491,
+          "reasoning_tokens": 158,
+          "latency_ms": 5922,
+          "cost_usd": 0.0018914
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 2566,
+          "output_tokens": 207,
+          "reasoning_tokens": 113,
+          "latency_ms": 2793,
+          "cost_usd": 0.0007616
+        }
+      }
+    },
+    {
+      "id": "world_1:07be62d2462c",
+      "db_id": "world_1",
+      "question": "What are the names of cities in Europe for which English is not the official language?",
+      "hardness": "extra",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT DISTINCT T2.Name FROM country AS T1 JOIN city AS T2 ON T2.CountryCode  =  T1.Code WHERE T1.Continent  =  'Europe' AND T1.Name NOT IN (SELECT T3.Name FROM country AS T3 JOIN countrylanguage AS T4 ON T3.Code  =  T4.CountryCode WHERE T4.IsOfficial  =  'T' AND T4.Language  =  'English')",
+      "generated_sql": "SELECT DISTINCT city.Name\nFROM city\nJOIN country ON city.CountryCode = country.Code\nJOIN countrylanguage ON countrylanguage.CountryCode = country.Code\nWHERE country.Continent = 'Europe'\n  AND countrylanguage.Language = 'English'\n  AND countrylanguage.IsOfficial <> 'T';",
+      "result_match": false,
+      "result_match_values": false,
+      "result_match_lenient": false,
+      "failure_label": "wrong_filter_or_value",
+      "sql_match": false,
+      "clarified": true,
+      "error": null,
+      "intent": "CLARIFICATION_NEEDED",
+      "trust_level": "clarifying",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "city",
+          "country",
+          "countrylanguage"
+        ],
+        "selected_tables": [
+          "city",
+          "country",
+          "countrylanguage"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "city",
+        "country",
+        "countrylanguage"
+      ],
+      "gold_result": {
+        "columns": [
+          "Name"
+        ],
+        "row_count": 500,
+        "rows": [
+          {
+            "Name": "Tirana"
+          },
+          {
+            "Name": "Andorra la Vella"
+          },
+          {
+            "Name": "Wien"
+          },
+          {
+            "Name": "Graz"
+          },
+          {
+            "Name": "Linz"
+          },
+          {
+            "Name": "Salzburg"
+          },
+          {
+            "Name": "Innsbruck"
+          },
+          {
+            "Name": "Klagenfurt"
+          }
+        ],
+        "truncated": true
+      },
+      "generated_result": {
+        "columns": [
+          "Name"
+        ],
+        "row_count": 13,
+        "rows": [
+          {
+            "Name": "K\u00f8benhavn"
+          },
+          {
+            "Name": "\u00c5rhus"
+          },
+          {
+            "Name": "Odense"
+          },
+          {
+            "Name": "Aalborg"
+          },
+          {
+            "Name": "Frederiksberg"
+          },
+          {
+            "Name": "Reykjav\u00edk"
+          },
+          {
+            "Name": "Monte-Carlo"
+          },
+          {
+            "Name": "Monaco-Ville"
+          }
+        ],
+        "truncated": true
+      },
+      "ambiguity": {
+        "status": "ambiguous",
+        "decision_why": "execution_gate;split;mass=0.50;threshold=0.67;clusters=3",
+        "reason": "Candidates produce materially different results; please choose the intended reading",
+        "assumption": null,
+        "should_clarify": true,
+        "proposal_status": "ambiguous",
+        "options": [
+          "Use reading where: Different SQL implementations",
+          "Other (describe what you mean)"
+        ],
+        "candidates": [
+          {
+            "label": "English explicitly non-official",
+            "question": "What are the names of cities in countries in Europe where English is listed in countrylanguage.Language and countrylanguage.IsOfficial is F?",
+            "tables": [
+              "city",
+              "country",
+              "countrylanguage"
+            ],
+            "columns": [
+              "city.Name",
+              "city.CountryCode",
+              "country.Code",
+              "country.Continent",
+              "countrylanguage.CountryCode",
+              "countrylanguage.Language",
+              "countrylanguage.IsOfficial"
+            ]
+          },
+          {
+            "label": "English not officially listed",
+            "question": "What are the names of cities in countries in Europe that have no countrylanguage record marking English as an official language?",
+            "tables": [
+              "city",
+              "country",
+              "countrylanguage"
+            ],
+            "columns": [
+              "city.Name",
+              "city.CountryCode",
+              "country.Code",
+              "country.Continent",
+              "countrylanguage.CountryCode",
+              "countrylanguage.Language",
+              "countrylanguage.IsOfficial"
+            ]
+          },
+          {
+            "label": "English absent or non-official",
+            "question": "What are the names of cities in countries in Europe where English is either absent from countrylanguage or is listed with countrylanguage.IsOfficial set to F?",
+            "tables": [
+              "city",
+              "country",
+              "countrylanguage"
+            ],
+            "columns": [
+              "city.Name",
+              "city.CountryCode",
+              "country.Code",
+              "country.Continent",
+              "countrylanguage.CountryCode",
+              "countrylanguage.Language",
+              "countrylanguage.IsOfficial"
+            ]
+          }
+        ],
+        "selected": {
+          "label": "English explicitly non-official",
+          "question": "What are the names of cities in countries in Europe where English is listed in countrylanguage.Language and countrylanguage.IsOfficial is F?",
+          "tables": [
+            "city",
+            "country",
+            "countrylanguage"
+          ],
+          "columns": [
+            "city.Name",
+            "city.CountryCode",
+            "country.Code",
+            "country.Continent",
+            "countrylanguage.CountryCode",
+            "countrylanguage.Language",
+            "countrylanguage.IsOfficial"
+          ]
+        },
+        "clusters": [
+          {
+            "size": 2,
+            "sql": "SELECT city.Name FROM city JOIN country ON city.CountryCode = country.Code JOIN countrylanguage ON countrylanguage.CountryCode = country.Code WHERE country.Continent = 'Europe' AND countrylanguage.Language = 'English' AND countrylanguage.IsOfficial <> 'T';",
+            "row_count": 13
+          },
+          {
+            "size": 1,
+            "sql": "SELECT DISTINCT ci.Name\nFROM city AS ci\nJOIN country AS co ON ci.CountryCode = co.Code\nWHERE co.Continent = 'Europe'\n  AND NOT EXISTS (\n    SELECT 1\n    FROM countrylanguage AS cl\n    WHERE cl.CountryCode = co.Code\n      AND cl.Language = 'English'\n      AND cl.IsOfficial = 'T'\n  );",
+            "row_count": 500
+          },
+          {
+            "size": 1,
+            "sql": "SELECT ci.Name\nFROM city AS ci\nJOIN country AS co ON ci.CountryCode = co.Code\nWHERE co.Continent = 'Europe'\n  AND NOT EXISTS (\n    SELECT 1\n    FROM countrylanguage AS cl\n    WHERE cl.CountryCode = co.Code\n      AND cl.Language = 'English'\n      AND cl.IsOfficial = 'T'\n  );",
+            "row_count": 500
+          }
+        ],
+        "gate": "execution_evidence"
+      },
+      "assumption": "",
+      "elapsed_ms": 35874,
+      "cost_usd": 0.00535428,
+      "input_tokens": 21420,
+      "output_tokens": 2355,
+      "reasoning_tokens": 516,
+      "cached_input_tokens": 9754,
+      "calls": 9,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 397,
+          "output_tokens": 29,
+          "reasoning_tokens": 0,
+          "latency_ms": 1020,
+          "cost_usd": 0.0001142
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 825,
+          "output_tokens": 642,
+          "reasoning_tokens": 269,
+          "latency_ms": 14139,
+          "cost_usd": 0.0009354
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 3225,
+          "output_tokens": 227,
+          "reasoning_tokens": 0,
+          "latency_ms": 2780,
+          "cost_usd": 0.0009174
+        },
+        "ambiguity_gate": {
+          "calls": 5,
+          "input_tokens": 16274,
+          "output_tokens": 1134,
+          "reasoning_tokens": 112,
+          "latency_ms": 12998,
+          "cost_usd": 0.00285988
+        },
+        "direct_response": {
+          "calls": 1,
+          "input_tokens": 699,
+          "output_tokens": 323,
+          "reasoning_tokens": 135,
+          "latency_ms": 4238,
+          "cost_usd": 0.0005274
+        }
+      }
+    },
+    {
+      "id": "real_estate_properties:9c13804a70d0",
+      "db_id": "real_estate_properties",
+      "question": "What are the names of properties that are either houses or apartments with more than 1 room?",
+      "hardness": "hard",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT property_name FROM Properties WHERE property_type_code  =  \"House\" UNION SELECT property_name FROM Properties WHERE property_type_code  =  \"Apartment\" AND room_count  >  1",
+      "generated_sql": "SELECT p.property_name\nFROM Properties AS p\nJOIN Ref_Property_Types AS rpt\n  ON p.property_type_code = rpt.property_type_code\nWHERE p.property_type_code IN ('House', 'Apartment')\n  AND p.room_count > 1;",
+      "result_match": false,
+      "result_match_values": false,
+      "result_match_lenient": false,
+      "failure_label": "wrong_table",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "properties"
+        ],
+        "selected_tables": [
+          "other_available_features",
+          "other_property_features",
+          "properties",
+          "ref_feature_types",
+          "ref_property_types"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "Other_Available_Features",
+        "Other_Property_Features",
+        "Properties",
+        "Ref_Feature_Types",
+        "Ref_Property_Types"
+      ],
+      "gold_result": {
+        "columns": [
+          "property_name"
+        ],
+        "row_count": 8,
+        "rows": [
+          {
+            "property_name": "longacre"
+          },
+          {
+            "property_name": "parc coliseum"
+          },
+          {
+            "property_name": "parc east"
+          },
+          {
+            "property_name": "park"
+          },
+          {
+            "property_name": "renoir"
+          },
+          {
+            "property_name": "ten tower"
+          },
+          {
+            "property_name": "the cole"
+          },
+          {
+            "property_name": "vogue"
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "property_name"
+        ],
+        "row_count": 7,
+        "rows": [
+          {
+            "property_name": "parc east"
+          },
+          {
+            "property_name": "vogue"
+          },
+          {
+            "property_name": "longacre"
+          },
+          {
+            "property_name": "renoir"
+          },
+          {
+            "property_name": "ten tower"
+          },
+          {
+            "property_name": "parc coliseum"
+          },
+          {
+            "property_name": "park"
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "clear;candidates=1",
+        "reason": "The question specifies the property types, room-count threshold, and requested property name.",
+        "assumption": null,
+        "should_clarify": false,
+        "proposal_status": "clear",
+        "options": [],
+        "candidates": [
+          {
+            "label": "Houses or apartments with more than one room",
+            "question": "What are the property_name values for properties in Properties where property_type_code is House or Apartment and room_count is greater than 1?",
+            "tables": [
+              "Properties"
+            ],
+            "columns": [
+              "Properties.property_name",
+              "Properties.property_type_code",
+              "Properties.room_count"
+            ]
+          }
+        ],
+        "selected": {
+          "label": "Houses or apartments with more than one room",
+          "question": "What are the property_name values for properties in Properties where property_type_code is House or Apartment and room_count is greater than 1?",
+          "tables": [
+            "properties"
+          ],
+          "columns": [
+            "Properties.property_name",
+            "Properties.property_type_code",
+            "Properties.room_count"
+          ]
+        },
+        "clusters": null,
+        "gate": null
+      },
+      "assumption": "",
+      "elapsed_ms": 7181,
+      "cost_usd": 0.0023912,
+      "input_tokens": 8974,
+      "output_tokens": 497,
+      "reasoning_tokens": 46,
+      "cached_input_tokens": 0,
+      "calls": 4,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 417,
+          "output_tokens": 28,
+          "reasoning_tokens": 0,
+          "latency_ms": 969,
+          "cost_usd": 0.000117
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 1353,
+          "output_tokens": 177,
+          "reasoning_tokens": 46,
+          "latency_ms": 2455,
+          "cost_usd": 0.000483
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 3977,
+          "output_tokens": 206,
+          "reasoning_tokens": 0,
+          "latency_ms": 2085,
+          "cost_usd": 0.0010426
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 3227,
+          "output_tokens": 86,
+          "reasoning_tokens": 0,
+          "latency_ms": 1427,
+          "cost_usd": 0.0007486
+        }
+      }
+    },
+    {
+      "id": "course_teach:a498dc046efd",
+      "db_id": "course_teach",
+      "question": "What are the names of the teachers and how many courses do they teach?",
+      "hardness": "medium",
+      "split": "",
+      "dataset": "spider",
+      "evidence": "",
+      "gold_sql": "SELECT T2.Name ,  COUNT(*) FROM course_arrange AS T1 JOIN teacher AS T2 ON T1.Teacher_ID  =  T2.Teacher_ID GROUP BY T2.Name",
+      "generated_sql": "SELECT t.Name, COUNT(DISTINCT ca.Course_ID) AS course_count\nFROM teacher AS t\nLEFT JOIN course_arrange AS ca\n  ON t.Teacher_ID = ca.Teacher_ID\nGROUP BY t.Teacher_ID, t.Name;",
+      "result_match": false,
+      "result_match_values": false,
+      "result_match_lenient": false,
+      "failure_label": "join_type",
+      "sql_match": false,
+      "clarified": false,
+      "error": null,
+      "intent": "SQL_QUERY",
+      "trust_level": "guessed",
+      "retries": 0,
+      "schema_linking": {
+        "gold_tables": [
+          "course_arrange",
+          "teacher"
+        ],
+        "selected_tables": [
+          "course",
+          "course_arrange",
+          "teacher"
+        ],
+        "hit": true,
+        "recall": 1.0
+      },
+      "selected_tables": [
+        "course",
+        "course_arrange",
+        "teacher"
+      ],
+      "gold_result": {
+        "columns": [
+          "Name",
+          "COUNT(*)"
+        ],
+        "row_count": 5,
+        "rows": [
+          {
+            "Name": "Anne Walker",
+            "COUNT(*)": 2
+          },
+          {
+            "Name": "Gustaaf Deloor",
+            "COUNT(*)": 1
+          },
+          {
+            "Name": "Kearsley Brown",
+            "COUNT(*)": 1
+          },
+          {
+            "Name": "Lucy Wong",
+            "COUNT(*)": 1
+          },
+          {
+            "Name": "Vicente Carretero",
+            "COUNT(*)": 1
+          }
+        ],
+        "truncated": false
+      },
+      "generated_result": {
+        "columns": [
+          "Name",
+          "course_count"
+        ],
+        "row_count": 7,
+        "rows": [
+          {
+            "Name": "Joseph Huts",
+            "course_count": 0
+          },
+          {
+            "Name": "Gustaaf Deloor",
+            "course_count": 1
+          },
+          {
+            "Name": "Vicente Carretero",
+            "course_count": 1
+          },
+          {
+            "Name": "John Deloor",
+            "course_count": 0
+          },
+          {
+            "Name": "Kearsley Brown",
+            "course_count": 1
+          },
+          {
+            "Name": "Anne Walker",
+            "course_count": 2
+          },
+          {
+            "Name": "Lucy Wong",
+            "course_count": 1
+          }
+        ],
+        "truncated": false
+      },
+      "ambiguity": {
+        "status": "clear",
+        "decision_why": "clear;candidates=1",
+        "reason": "The question asks for each teacher's name and the number of courses associated with them through course_arrange.",
+        "assumption": null,
+        "should_clarify": false,
+        "proposal_status": "clear",
+        "options": [],
+        "candidates": [
+          {
+            "label": "Teachers and course counts",
+            "question": "What is each teacher's name and how many distinct courses do they teach?",
+            "tables": [
+              "teacher",
+              "course_arrange"
+            ],
+            "columns": [
+              "teacher.Name",
+              "teacher.Teacher_ID",
+              "course_arrange.Teacher_ID",
+              "course_arrange.Course_ID"
+            ]
+          }
+        ],
+        "selected": {
+          "label": "Teachers and course counts",
+          "question": "What is each teacher's name and how many distinct courses do they teach?",
+          "tables": [
+            "teacher",
+            "course_arrange"
+          ],
+          "columns": [
+            "teacher.Name",
+            "teacher.Teacher_ID",
+            "course_arrange.Teacher_ID",
+            "course_arrange.Course_ID"
+          ]
+        },
+        "clusters": null,
+        "gate": null
+      },
+      "assumption": "",
+      "elapsed_ms": 10184,
+      "cost_usd": 0.00139712,
+      "input_tokens": 4102,
+      "output_tokens": 672,
+      "reasoning_tokens": 232,
+      "cached_input_tokens": 1276,
+      "calls": 4,
+      "estimated_calls": 0,
+      "by_stage": {
+        "intent_classifier": {
+          "calls": 1,
+          "input_tokens": 396,
+          "output_tokens": 33,
+          "reasoning_tokens": 0,
+          "latency_ms": 1305,
+          "cost_usd": 0.0001188
+        },
+        "interpretation_resolver": {
+          "calls": 1,
+          "input_tokens": 549,
+          "output_tokens": 288,
+          "reasoning_tokens": 155,
+          "latency_ms": 3676,
+          "cost_usd": 0.0004554
+        },
+        "query_generator": {
+          "calls": 1,
+          "input_tokens": 1878,
+          "output_tokens": 267,
+          "reasoning_tokens": 77,
+          "latency_ms": 3489,
+          "cost_usd": 0.000696
+        },
+        "query_validator": {
+          "calls": 1,
+          "input_tokens": 1279,
+          "output_tokens": 84,
+          "reasoning_tokens": 0,
+          "latency_ms": 1523,
+          "cost_usd": 0.00012692
+        }
+      }
+    }
+  ]
+}

@@ -173,6 +173,7 @@ class UsageTracker:
 
     def summary_by_stage(self) -> dict[str, dict[str, Any]]:
         out: dict[str, dict[str, Any]] = {}
+        latencies: dict[str, list[int]] = {}
         for rec in self.records:
             key = rec.stage or "(unset)"
             bucket = out.setdefault(
@@ -197,6 +198,12 @@ class UsageTracker:
             bucket["cost_usd"] = round(bucket["cost_usd"] + rec.cost_usd, 8)
             if rec.estimated:
                 bucket["estimated_calls"] += 1
+            latencies.setdefault(key, []).append(int(rec.latency_ms))
+        for key, bucket in out.items():
+            stats = latency_percentiles(latencies.get(key) or [])
+            bucket["latency_p50_ms"] = stats["p50"]
+            bucket["latency_p95_ms"] = stats["p95"]
+            bucket["latency_mean_ms"] = stats["mean"]
         return out
 
     def summary_for_case(self, case_id: str) -> dict[str, Any]:
@@ -237,6 +244,26 @@ class UsageTracker:
                 for r in self.records
             ],
         }
+
+
+def latency_percentiles(values: list[int] | list[float]) -> dict[str, float]:
+    """Return mean/p50/p95 for a list of latencies (ms)."""
+    if not values:
+        return {"mean": 0.0, "p50": 0.0, "p95": 0.0}
+    xs = sorted(float(v) for v in values)
+    n = len(xs)
+
+    def _pct(p: float) -> float:
+        if n == 1:
+            return xs[0]
+        idx = int(p * (n - 1))
+        return xs[idx]
+
+    return {
+        "mean": round(sum(xs) / n, 1),
+        "p50": round(_pct(0.50), 1),
+        "p95": round(_pct(0.95), 1),
+    }
 
 
 def _stage_summary(rows: list[CallRecord]) -> dict[str, dict[str, Any]]:

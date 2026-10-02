@@ -27,11 +27,17 @@ def test_classifier_clarification_routes_direct_but_sql_goes_to_context():
     assert route_intent({"intent": "META"}) == "direct"
 
 
-def test_after_context_resolves_before_generate():
+def test_after_context_resolves_before_generate(monkeypatch):
+    from src.config.settings import get_settings
+
+    get_settings.cache_clear()
+    monkeypatch.setenv("MERGE_INTERPRET_GENERATE", "false")
+    get_settings.cache_clear()
     assert route_after_context({}) == "resolve"
     assert (
         route_after_context({"ambiguity": {"should_clarify": True}}) == "clarify"
     )
+    get_settings.cache_clear()
 
 
 def test_after_interpretation_can_clarify_or_generate():
