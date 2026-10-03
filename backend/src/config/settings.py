@@ -1,7 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field, model_validator
+from pydantic import AliasChoices, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _ROOT = Path(__file__).resolve().parents[3]  # AstraSQL_V2/
@@ -16,6 +16,7 @@ class Settings(BaseSettings):
         env_file=(_ROOT / ".env", _BACKEND / ".env", ".env"),
         env_file_encoding="utf-8",
         extra="ignore",
+        populate_by_name=True,
     )
 
     app_name: str = "AstraSQL"
@@ -32,11 +33,22 @@ class Settings(BaseSettings):
     session_ttl_days: int = Field(default=7, ge=1, le=90)
     session_cookie_name: str = "astrasql_session"
 
-    # LLM
+    # LLM (primary fields; OPENAI_* env aliases kept for compatibility)
     llm_provider: str = "openai"
-    openai_api_key: str = ""
-    openai_model: str = "gpt-4o"
-    openai_embedding_model: str = "text-embedding-3-small"
+    llm_api_key: str = Field(
+        default="",
+        validation_alias=AliasChoices("LLM_API_KEY", "OPENAI_API_KEY", "llm_api_key"),
+    )
+    llm_model: str = Field(
+        default="gpt-4o",
+        validation_alias=AliasChoices("LLM_MODEL", "OPENAI_MODEL", "llm_model"),
+    )
+    embedding_model: str = Field(
+        default="text-embedding-3-small",
+        validation_alias=AliasChoices(
+            "EMBEDDING_MODEL", "OPENAI_EMBEDDING_MODEL", "embedding_model"
+        ),
+    )
     llm_temperature: float = 0.0
     llm_max_tokens: int = 8192
     # Reasoning models (gpt-5.*): none|low|medium|high. Empty → omit the param.
@@ -44,7 +56,7 @@ class Settings(BaseSettings):
 
     # Schema enrichment (cheaper/faster path than query generation)
     # Empty enrichment_model → use the provider's default chat model.
-    enrichment_model: str = "gpt-4o-mini"
+    enrichment_model: str = ""
     enrichment_max_tokens: int = Field(default=1000, ge=256, le=8192)
     enrichment_batch_size: int = Field(default=8, ge=1, le=20)
     enrichment_concurrency: int = Field(default=6, ge=1, le=16)
@@ -79,7 +91,7 @@ class Settings(BaseSettings):
     value_grounding_max_distinct: int = Field(default=50, ge=0, le=500)
     # Statement timeout seconds for read-only execute (0 = provider default).
     query_timeout_seconds: float = Field(default=30.0, ge=0.0, le=600.0)
-    # Per-stage model overrides (empty → openai_model / enrichment_model).
+    # Per-stage model overrides (empty → llm_model / enrichment_model).
     intent_model: str = ""
     formatter_model: str = ""
     expansion_model: str = ""
@@ -113,6 +125,8 @@ class Settings(BaseSettings):
     large_schema_table_threshold: int = Field(default=40, ge=10, le=5000)
     # Enable bounded column-exploration tool during repair.
     column_exploration_enabled: bool = True
+    # Deterministic sqlglot repairs after syntax validation (SQLite only).
+    deterministic_sql_repair: bool = True
     # Governed learning: promote thumbs-up / edited SQL to reviewed queries.
     learning_loop_enabled: bool = True
     # Run intent classifier and context retrieval in parallel from START.
@@ -122,6 +136,21 @@ class Settings(BaseSettings):
 
     # CORS
     cors_origins: str = "http://localhost:5173,http://localhost:3000"
+
+    @property
+    def openai_api_key(self) -> str:
+        """Deprecated alias for ``llm_api_key``."""
+        return self.llm_api_key
+
+    @property
+    def openai_model(self) -> str:
+        """Deprecated alias for ``llm_model``."""
+        return self.llm_model
+
+    @property
+    def openai_embedding_model(self) -> str:
+        """Deprecated alias for ``embedding_model``."""
+        return self.embedding_model
 
     @property
     def cors_origin_list(self) -> list[str]:
@@ -155,3 +184,17 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+
+def clear_settings_cache() -> None:
+    """Drop the cached Settings instance (tests / eval model overrides)."""
+    get_settings.cache_clear()
+
+
+def override_settings_env(**env: str) -> None:
+    """Set process env vars and clear the settings cache."""
+    import os
+
+    for key, value in env.items():
+        os.environ[key] = value
+    clear_settings_cache()

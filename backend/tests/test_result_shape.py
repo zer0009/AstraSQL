@@ -9,6 +9,7 @@ def test_result_shape_empty_detection():
         sql="SELECT * FROM t WHERE id = 1",
         results={"columns": ["id"], "rows": [], "row_count": 0},
         max_rows=500,
+        dialect="postgres",
         retries=0,
     )
     assert "empty_result" in shape["warnings"]
@@ -21,6 +22,7 @@ def test_result_shape_empty_no_retry_after_first():
         sql="SELECT 1",
         results={"columns": ["x"], "rows": [], "row_count": 0},
         max_rows=500,
+        dialect="postgres",
         retries=1,
     )
     assert "empty_result" in shape["warnings"]
@@ -33,6 +35,7 @@ def test_result_shape_duplicate_rows():
         sql="SELECT a, b FROM t WHERE x = 1",
         results={"columns": ["a", "b"], "rows": rows, "row_count": len(rows)},
         max_rows=500,
+        dialect="postgres",
         retries=0,
     )
     assert "duplicate_rows" in shape["warnings"]
@@ -46,6 +49,7 @@ def test_result_shape_possible_cartesian():
         sql="SELECT * FROM a CROSS JOIN b",
         results={"columns": ["id"], "rows": rows, "row_count": max_rows},
         max_rows=max_rows,
+        dialect="postgres",
         retries=0,
     )
     assert "possible_cartesian" in shape["warnings"]

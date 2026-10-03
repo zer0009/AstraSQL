@@ -126,6 +126,50 @@ export interface BusinessRuleUpdate {
   content: string;
 }
 
+export type AmbiguityStatus =
+  | "clear"
+  | "assumed"
+  | "ambiguous"
+  | "unanswerable"
+  | "not_a_data_question"
+  | "failed_open";
+
+export interface DecisionPoint {
+  key: string;
+  question?: string;
+  options?: string[];
+}
+
+export interface Ambiguity {
+  status?: AmbiguityStatus;
+  should_clarify?: boolean;
+  reason?: string;
+  options?: string[];
+  decision_why?: string;
+  assumption?: string;
+  decision_points?: DecisionPoint[];
+  needs_execution_gate?: boolean;
+  gate?: Record<string, unknown>;
+  clusters?: unknown[];
+}
+
+export interface UsageStageSummary {
+  stage: string;
+  latency_ms?: number;
+  prompt_tokens?: number;
+  completion_tokens?: number;
+  cost_usd?: number;
+}
+
+export interface UsageSummary {
+  total_prompt_tokens?: number;
+  total_completion_tokens?: number;
+  total_cost_usd?: number;
+  total_latency_ms?: number;
+  stages?: UsageStageSummary[];
+  [key: string]: unknown;
+}
+
 export interface QueryHistoryItem {
   id: string;
   connection_id: string;
@@ -135,9 +179,11 @@ export interface QueryHistoryItem {
   sql: string;
   result_row_count: number | null;
   confidence: number | null;
+  trust_level?: string | null;
   user_rating: number | null;
   explanation: string | null;
   follow_ups: string | null;
+  ambiguity_json?: string | null;
   created_at: string;
 }
 
@@ -196,12 +242,17 @@ export interface AgentStep {
   detail: string;
   /** Tables linked during context retrieval (present on context_retrieved). */
   tables?: string[];
+  status?: string;
+  cluster_count?: number;
+  generation?: Record<string, unknown>;
 }
 
 export interface QueryResult {
   columns: string[];
   rows: Record<string, unknown>[];
   row_count: number;
+  /** True when the SSE payload capped rows (backend sends at most 100). */
+  truncated?: boolean;
 }
 
 export interface ConversationHistoryTurn {
@@ -216,6 +267,8 @@ export interface QueryRequest {
   question: string;
   conversation_history?: ConversationHistoryTurn[];
   session_id?: string;
+  /** Optional schema/business hint injected into retrieval (BIRD-style evidence). */
+  evidence?: string;
 }
 
 export interface ExecuteSqlRequest {
@@ -254,9 +307,53 @@ export interface PublicSettings {
   max_result_rows: number;
   database_types: string[];
   app_name?: string;
+  execution_evidence_gate?: boolean;
+  merge_interpret_generate?: boolean;
+  ambiguity_policy?: string;
+  relationship_discovery_enabled?: boolean;
+  relationship_auto_approve?: boolean;
+  learning_loop_enabled?: boolean;
+  sse_row_preview_limit?: number;
 }
 
+export type StreamEventName =
+  | "start"
+  | "node"
+  | "step"
+  | "done"
+  | "result"
+  | "error"
+  | string;
+
 export interface StreamQueryEvent {
-  event: string;
+  event: StreamEventName;
   data: unknown;
+}
+
+export interface SemanticRelationship {
+  from_table: string;
+  from_col: string;
+  to_table: string;
+  to_col: string;
+  status: "approved" | "proposed" | "rejected" | string;
+  score?: number;
+  evidence?: string;
+  [key: string]: unknown;
+}
+
+export interface SemanticLayerOut {
+  connection_id: string;
+  relationships: SemanticRelationship[];
+  conventions?: string[];
+  reviewed_queries?: unknown[];
+  repair_memory?: unknown[];
+  join_paths?: string[];
+  raw?: Record<string, unknown>;
+}
+
+export interface DictionaryImportResult {
+  enrichments_created: number;
+  enrichments_updated: number;
+  rows_parsed: number;
+  message?: string;
 }

@@ -11,7 +11,7 @@ from src.agent.difficulty_router import estimate_difficulty, route_generation_pl
 from src.agent.result_shape import analyze_result_shape
 from src.context.conventions import detect_join_type, join_type_convention_text
 from src.context.value_grounding import match_literals_fuzzy, trigram_similarity
-from src.eval.spider_data import TUNING_DB_IDS, pick_held_out
+from src.eval.spider_data import TUNING_DB_IDS
 from src.observability.usage import latency_percentiles
 
 
@@ -164,6 +164,7 @@ def test_suspicious_all_null_triggers_retry():
             "rows": [{"a": None}, {"a": None}],
         },
         max_rows=100,
+        dialect="postgres",
         retries=0,
     )
     assert "all_null" in shape["warnings"]

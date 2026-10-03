@@ -5,8 +5,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from src.api.deps import require_ready_user
-from src.api.routers import connections, context, export, history, query, sessions
 from src.api.routers import auth as auth_router
+from src.api.routers import connections, context, export, history, query, sessions
+from src.api.routers import semantic as semantic_router
 from src.api.routers import settings as settings_router
 from src.auth.exceptions import PasswordChangeRequiredError
 from src.config.settings import get_settings
@@ -52,6 +53,9 @@ def create_app() -> FastAPI:
     app.include_router(sessions.router, prefix="/api/sessions", dependencies=protected)
     app.include_router(export.router, prefix="/api/export", dependencies=protected)
     app.include_router(settings_router.router, prefix="/api/settings", dependencies=protected)
+    app.include_router(
+        semantic_router.router, prefix="/api/connections", dependencies=protected
+    )
 
     return app
 

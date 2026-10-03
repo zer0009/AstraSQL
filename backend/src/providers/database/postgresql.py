@@ -125,7 +125,7 @@ class PostgreSQLProvider(BaseDatabaseProvider):
             raise ValueError(
                 "Unbound parameter $n: this runner binds no parameters"
             )
-        refuse_unbound_sql(sql)
+        refuse_unbound_sql(sql, self.sqlglot_dialect())
         engine = self.get_async_engine()
         cleaned = sql.strip().rstrip(";")
         async with engine.connect() as conn:
@@ -357,7 +357,7 @@ class PostgreSQLProvider(BaseDatabaseProvider):
             raise ValueError(
                 "Unbound parameter $n: this runner binds no parameters"
             )
-        refuse_unbound_sql(sql)
+        refuse_unbound_sql(sql, self.sqlglot_dialect())
         limited_sql = self._ensure_limit(sql, max_rows)
         engine = self.get_async_engine()
         async with engine.connect() as conn:
@@ -377,7 +377,7 @@ class PostgreSQLProvider(BaseDatabaseProvider):
                 rows = [
                     {
                         col: _flatten_cell(val)
-                        for col, val in zip(columns, row)
+                        for col, val in zip(columns, row, strict=False)
                     }
                     for row in rows_raw
                 ]

@@ -9,7 +9,7 @@ from src.eval.spider_data import (
 def _fake_items() -> list[dict]:
     items = []
     # concert_singer: mix of hardness
-    for i, (q, sql, hard) in enumerate(
+    for _i, (q, sql, hard) in enumerate(
         [
             ("q_easy_1", "SELECT name FROM singer", "easy"),
             ("q_med_1", "SELECT country, count(*) FROM singer GROUP BY country", "medium"),

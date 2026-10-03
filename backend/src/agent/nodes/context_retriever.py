@@ -164,6 +164,6 @@ async def context_retriever_node(
     if decision_should:
         update["intent"] = "CLARIFICATION_NEEDED"
         update["intent_reason"] = decision_reason
-        if decision.options:
-            update["clarification_options"] = decision.options
+        if decision_options:
+            update["clarification_options"] = decision_options
     return update

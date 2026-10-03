@@ -51,7 +51,7 @@ async def export_data(body: ExportRequest) -> StreamingResponse:
             data: Any = body.rows
         else:
             data = [
-                dict(zip(body.columns, _row_as_list(body.columns, row)))
+                dict(zip(body.columns, _row_as_list(body.columns, row), strict=False))
                 for row in body.rows
             ]
         payload = io.BytesIO(
@@ -60,6 +60,8 @@ async def export_data(body: ExportRequest) -> StreamingResponse:
     else:
         wb = Workbook()
         ws = wb.active
+        if ws is None:
+            raise RuntimeError("Workbook has no active sheet")
         ws.title = "export"
         ws.append(body.columns)
         for row in body.rows:

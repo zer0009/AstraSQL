@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,6 +12,7 @@ from src.context.relationships import (
     edges_to_semantic_join_paths,
     merge_relationship_edges,
 )
+from src.context.schema_labels import fk_label_hint
 from src.context.semantic_layer import parse_semantic_layer
 from src.storage.models import Connection, SchemaCache, SchemaEnrichment
 
@@ -21,7 +22,7 @@ logger = logging.getLogger(__name__)
 _UNSET: Any = object()
 
 
-def _safe_json_loads(raw: Optional[str], default: Any = None) -> Any:
+def _safe_json_loads(raw: str | None, default: Any = None) -> Any:
     if raw is None or raw == "":
         return default if default is not None else None
     try:
@@ -31,14 +32,19 @@ def _safe_json_loads(raw: Optional[str], default: Any = None) -> Any:
 
 
 def _comment_parts(
-    description: Optional[str] = None,
-    alias: Optional[str] = None,
+    description: str | None = None,
+    alias: str | None = None,
     example_values: Any = None,
-    foreign_key: Optional[dict] = None,
+    foreign_key: dict | None = None,
+    *,
+    target_columns: list[dict[str, Any]] | None = None,
 ) -> str:
     bits: list[str] = []
     if foreign_key:
-        bits.append(f"FK to {foreign_key.get('table')}.{foreign_key.get('column')}")
+        bits.append(
+            fk_label_hint(foreign_key, target_columns=target_columns)
+            or f"FK to {foreign_key.get('table')}.{foreign_key.get('column')}"
+        )
     # Hide internal ddl: hashes stored in alias for change detection.
     if alias and not str(alias).startswith("ddl:"):
         bits.append(f"alias: {alias}")
@@ -72,7 +78,7 @@ class SchemaEnrichmentStore:
         session: AsyncSession,
         connection_id: str,
         table_name: str,
-        column_name: Optional[str],
+        column_name: str | None,
         description: Any = _UNSET,
         alias: Any = _UNSET,
         example_values: Any = _UNSET,
@@ -194,6 +200,25 @@ class SchemaEnrichmentStore:
             for cache in result.scalars().all():
                 cache_by_name[cache.table_name] = cache
 
+        # Index columns by table so FK comments can list label columns on targets.
+        columns_by_table: dict[str, list[dict[str, Any]]] = {}
+        for table in tables_data:
+            tname = table.get("table_name") or table.get("name")
+            if not tname:
+                continue
+            cols = table.get("columns")
+            if cols is None:
+                cache = cache_by_name.get(tname)
+                cols = _safe_json_loads(
+                    cache.columns_json if cache else None, default=[]
+                ) or []
+            columns_by_table[str(tname)] = list(cols) if isinstance(cols, list) else []
+        for tname, cache in cache_by_name.items():
+            if tname not in columns_by_table:
+                columns_by_table[tname] = (
+                    _safe_json_loads(cache.columns_json, default=[]) or []
+                )
+
         blocks: list[str] = []
         for table in tables_data:
             table_name = table.get("table_name") or table.get("name")
@@ -213,12 +238,7 @@ class SchemaEnrichmentStore:
             if table_desc:
                 header_lines.append(f"-- Description: {table_desc}")
 
-            columns = table.get("columns")
-            if columns is None:
-                cache = cache_by_name.get(table_name)
-                columns = _safe_json_loads(
-                    cache.columns_json if cache else None, default=[]
-                ) or []
+            columns = columns_by_table.get(str(table_name), [])
 
             col_entries: list[tuple[str, str]] = []  # (sql_part, comment)
             fk_lines: list[str] = []
@@ -235,11 +255,17 @@ class SchemaEnrichmentStore:
 
                 meta = col_enrich.get(name, {})
                 fk = col.get("foreign_key")
+                target_cols = None
+                if isinstance(fk, dict):
+                    target = fk.get("table") or fk.get("foreign_table_name")
+                    if target:
+                        target_cols = columns_by_table.get(str(target))
                 comment = _comment_parts(
                     description=meta.get("description"),
                     alias=meta.get("alias"),
                     example_values=meta.get("example_values"),
-                    foreign_key=fk,
+                    foreign_key=fk if isinstance(fk, dict) else None,
+                    target_columns=target_cols,
                 )
                 col_entries.append((" ".join(parts), comment))
 

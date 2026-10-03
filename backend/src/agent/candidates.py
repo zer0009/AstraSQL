@@ -8,7 +8,7 @@ via ``results_equal_values``. Default count=1 leaves the single-path unchanged.
 from __future__ import annotations
 
 from datetime import date
-from typing import Any, Optional
+from typing import Any
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
@@ -17,8 +17,8 @@ from src.agent.prompts.generator import (
     format_conversation_history,
     render_generator_prompt,
 )
+from src.agent.result_compare import results_equal_values
 from src.agent.utils import extract_json, message_text
-from src.eval.compare import results_equal_values
 from src.providers.llm import get_llm_provider
 
 # Prompt style variants — keep cheap: reuse one system template + suffix.
@@ -45,7 +45,7 @@ def _variant_names(count: int) -> list[str]:
 
 def pick_consensus_sql(
     candidates: list[dict[str, Any]],
-) -> Optional[str]:
+) -> str | None:
     """Pure consensus picker over executed candidate result dicts.
 
     Each item: ``{"sql": str, "results": dict | None}`` where ``results`` is
@@ -90,7 +90,7 @@ async def _generate_one(
     question: str,
     variant: str,
     settings: Any,
-    config: Optional[RunnableConfig],
+    config: RunnableConfig | None,
 ) -> str:
     suffix = _VARIANT_SUFFIXES.get(variant, "")
     llm = get_llm_provider().get_chat_model(
@@ -114,7 +114,7 @@ async def _generate_one(
 async def generate_and_select_candidates(
     *,
     state: dict[str, Any],
-    config: Optional[RunnableConfig],
+    config: RunnableConfig | None,
     db_provider: Any,
     settings: Any,
     candidate_count: int,

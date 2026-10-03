@@ -10,11 +10,11 @@ from tests.conftest import TEST_NEW_PASSWORD
 
 
 @pytest.mark.asyncio
-async def test_alembic_version_is_006_ambiguity_json(app):  # noqa: ARG001
+async def test_alembic_version_is_007_trust_level(app):  # noqa: ARG001
     engine = get_engine()
     async with engine.connect() as conn:
         version = (await conn.execute(text("SELECT version_num FROM alembic_version"))).scalar_one()
-    assert version == "006_ambiguity_json"
+    assert version == "007_trust_level"
 
 
 @pytest.mark.asyncio

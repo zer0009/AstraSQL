@@ -16,6 +16,8 @@ import ContextPage from "./pages/ContextPage";
 import HistoryPage from "./pages/HistoryPage";
 import LoginPage from "./pages/LoginPage";
 import SettingsPage from "./pages/SettingsPage";
+import SemanticLayerPage from "./pages/SemanticLayerPage";
+import AgentGraphPage from "./pages/AgentGraphPage";
 import { userPrefs } from "./lib/userPrefs";
 import "./index.css";
 
@@ -64,7 +66,9 @@ createRoot(document.getElementById("root")!).render(
               <Route index element={<ChatPage />} />
               <Route path="connections" element={<ConnectionsPage />} />
               <Route path="context" element={<ContextPage />} />
+              <Route path="schema" element={<SemanticLayerPage />} />
               <Route path="history" element={<HistoryPage />} />
+              <Route path="agent" element={<AgentGraphPage />} />
               <Route path="settings" element={<SettingsPage />} />
             </Route>
           </Routes>

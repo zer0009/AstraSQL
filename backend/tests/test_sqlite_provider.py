@@ -99,7 +99,9 @@ def test_query_only_blocks_writes(sqlite_file: Path):
 
     async def _run():
         try:
-            with pytest.raises(Exception):
+            from sqlalchemy.exc import SQLAlchemyError
+
+            with pytest.raises((ValueError, RuntimeError, SQLAlchemyError)):
                 await provider.execute_readonly(
                     'INSERT INTO "singer info" (Singer_ID, Name) VALUES (99, \'Z\')'
                 )

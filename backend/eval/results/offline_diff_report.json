@@ -1,0 +1,969 @@
+{
+  "kind": "offline_sql_diff",
+  "inputs": [
+    "D:\\Projects\\2026\\AstraSQL_V2\\backend\\eval\\results\\held_out_baseline20.json",
+    "D:\\Projects\\2026\\AstraSQL_V2\\backend\\eval\\results\\held_out_baseline20_v2.json",
+    "D:\\Projects\\2026\\AstraSQL_V2\\backend\\eval\\results\\held_out_merged20.json",
+    "D:\\Projects\\2026\\AstraSQL_V2\\backend\\eval\\results\\held_out_merged20_v2.json",
+    "D:\\Projects\\2026\\AstraSQL_V2\\backend\\eval\\results\\held_out_merged20_v3.json",
+    "D:\\Projects\\2026\\AstraSQL_V2\\backend\\eval\\results\\bird150-baseline.json",
+    "D:\\Projects\\2026\\AstraSQL_V2\\backend\\eval\\results\\bird24-baseline.json"
+  ],
+  "counts": {
+    "missing_join": 27,
+    "wrong_aggregate": 27,
+    "wrong_literal": 31,
+    "extra_filter": 6,
+    "integer_division": 0,
+    "order_limit_mismatch": 2,
+    "cte_overengineering": 4,
+    "other": 17
+  },
+  "ranked": [
+    {
+      "label": "wrong_literal",
+      "count": 31
+    },
+    {
+      "label": "missing_join",
+      "count": 27
+    },
+    {
+      "label": "wrong_aggregate",
+      "count": 27
+    },
+    {
+      "label": "other",
+      "count": 17
+    },
+    {
+      "label": "extra_filter",
+      "count": 6
+    },
+    {
+      "label": "cte_overengineering",
+      "count": 4
+    },
+    {
+      "label": "order_limit_mismatch",
+      "count": 2
+    }
+  ],
+  "skipped_equal_or_match": 146,
+  "skipped_missing_sql": 14,
+  "n_classified": 114,
+  "details": [
+    {
+      "source": "held_out_baseline20.json",
+      "id": "course_teach:a498dc046efd",
+      "db_id": "course_teach",
+      "label": "other",
+      "gold_sql": "SELECT T2.Name ,  COUNT(*) FROM course_arrange AS T1 JOIN teacher AS T2 ON T1.Teacher_ID  =  T2.Teacher_ID GROUP BY T2.Name",
+      "generated_sql": "SELECT t.Name, COUNT(DISTINCT ca.Course_ID) AS course_count\nFROM teacher AS t\nLEFT JOIN course_arrange AS ca\n  ON t.Teacher_ID = ca.Teacher_ID\nGROUP BY t.Teacher_ID, t.Name;"
+    },
+    {
+      "source": "held_out_baseline20_v2.json",
+      "id": "voter_1:cd5dfe31c8c7",
+      "db_id": "voter_1",
+      "label": "missing_join",
+      "gold_sql": "SELECT T3.area_code FROM contestants AS T1 JOIN votes AS T2 ON T1.contestant_number  =  T2.contestant_number JOIN area_code_state AS T3 ON T2.state  =  T3.state WHERE T1.contestant_name  =  'Tabatha Gehling' INTERSECT SELECT T3.area_code FROM contestants AS T1 JOIN votes AS T2 ON T1.contestant_number  =  T2.contestant_number JOIN area_code_state AS T3 ON T2.state  =  T3.state WHERE T1.contestant_name  =  'Kelly Clauss'",
+      "generated_sql": "WITH contestant_area_codes AS (\n  SELECT\n    v.phone_number / 10000000 AS area_code,\n    c.contestant_name\n  FROM VOTES AS v\n  JOIN CONTESTANTS AS c\n    ON v.contestant_number = c.contestant_number\n  WHERE c.contestant_name IN ('Tabatha Gehling', 'Kelly Clauss')\n  GROUP BY area_code, c.contestant_name\n)\nSELECT cac.area_code\nFROM contestant_area_codes AS cac\nGROUP BY cac.area_code\nHAVING COUNT(DISTINCT cac.contestant_name) = 2;"
+    },
+    {
+      "source": "held_out_baseline20_v2.json",
+      "id": "world_1:fe63888e6d15",
+      "db_id": "world_1",
+      "label": "wrong_aggregate",
+      "gold_sql": "SELECT Name FROM country WHERE Continent  =  \"Africa\"  AND population  <  (SELECT max(population) FROM country WHERE Continent  =  \"Asia\")",
+      "generated_sql": "SELECT c.Name\nFROM country AS c\nWHERE c.Continent = 'Africa'\n  AND c.Population < (\n    SELECT MIN(a.Population)\n    FROM country AS a\n    WHERE a.Continent = 'Asia'\n  );"
+    },
+    {
+      "source": "held_out_baseline20_v2.json",
+      "id": "world_1:07be62d2462c",
+      "db_id": "world_1",
+      "label": "other",
+      "gold_sql": "SELECT DISTINCT T2.Name FROM country AS T1 JOIN city AS T2 ON T2.CountryCode  =  T1.Code WHERE T1.Continent  =  'Europe' AND T1.Name NOT IN (SELECT T3.Name FROM country AS T3 JOIN countrylanguage AS T4 ON T3.Code  =  T4.CountryCode WHERE T4.IsOfficial  =  'T' AND T4.Language  =  'English')",
+      "generated_sql": "SELECT DISTINCT city.Name\nFROM city\nJOIN country ON city.CountryCode = country.Code\nJOIN countrylanguage ON countrylanguage.CountryCode = country.Code\nWHERE country.Continent = 'Europe'\n  AND countrylanguage.Language = 'English'\n  AND countrylanguage.IsOfficial <> 'T';"
+    },
+    {
+      "source": "held_out_baseline20_v2.json",
+      "id": "real_estate_properties:9c13804a70d0",
+      "db_id": "real_estate_properties",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT property_name FROM Properties WHERE property_type_code  =  \"House\" UNION SELECT property_name FROM Properties WHERE property_type_code  =  \"Apartment\" AND room_count  >  1",
+      "generated_sql": "SELECT p.property_name\nFROM Properties AS p\nJOIN Ref_Property_Types AS rpt\n  ON p.property_type_code = rpt.property_type_code\nWHERE p.property_type_code IN ('House', 'Apartment')\n  AND p.room_count > 1;"
+    },
+    {
+      "source": "held_out_baseline20_v2.json",
+      "id": "course_teach:a498dc046efd",
+      "db_id": "course_teach",
+      "label": "other",
+      "gold_sql": "SELECT T2.Name ,  COUNT(*) FROM course_arrange AS T1 JOIN teacher AS T2 ON T1.Teacher_ID  =  T2.Teacher_ID GROUP BY T2.Name",
+      "generated_sql": "SELECT t.Name, COUNT(DISTINCT ca.Course_ID) AS course_count\nFROM teacher AS t\nLEFT JOIN course_arrange AS ca\n  ON t.Teacher_ID = ca.Teacher_ID\nGROUP BY t.Teacher_ID, t.Name;"
+    },
+    {
+      "source": "held_out_merged20.json",
+      "id": "voter_1:cd5dfe31c8c7",
+      "db_id": "voter_1",
+      "label": "missing_join",
+      "gold_sql": "SELECT T3.area_code FROM contestants AS T1 JOIN votes AS T2 ON T1.contestant_number  =  T2.contestant_number JOIN area_code_state AS T3 ON T2.state  =  T3.state WHERE T1.contestant_name  =  'Tabatha Gehling' INTERSECT SELECT T3.area_code FROM contestants AS T1 JOIN votes AS T2 ON T1.contestant_number  =  T2.contestant_number JOIN area_code_state AS T3 ON T2.state  =  T3.state WHERE T1.contestant_name  =  'Kelly Clauss'",
+      "generated_sql": "SELECT AREA_CODE_STATE.area_code\nFROM VOTES\nJOIN CONTESTANTS\n  ON VOTES.contestant_number = CONTESTANTS.contestant_number\nJOIN AREA_CODE_STATE\n  ON AREA_CODE_STATE.area_code = CAST(substr(CAST(VOTES.phone_number AS TEXT), 1, 3) AS INTEGER)\nWHERE CONTESTANTS.contestant_name IN ('Tabatha Gehling', 'Kelly Clauss')\nGROUP BY AREA_CODE_STATE.area_code\nHAVING COUNT(DISTINCT CONTESTANTS.contestant_name) = 2;"
+    },
+    {
+      "source": "held_out_merged20.json",
+      "id": "world_1:fe63888e6d15",
+      "db_id": "world_1",
+      "label": "wrong_aggregate",
+      "gold_sql": "SELECT Name FROM country WHERE Continent  =  \"Africa\"  AND population  <  (SELECT max(population) FROM country WHERE Continent  =  \"Asia\")",
+      "generated_sql": "SELECT african.Name\nFROM country AS african\nWHERE african.Continent = 'Africa'\n  AND african.Population < (\n    SELECT MIN(asian.Population)\n    FROM country AS asian\n    WHERE asian.Continent = 'Asia'\n  );"
+    },
+    {
+      "source": "held_out_merged20.json",
+      "id": "world_1:07be62d2462c",
+      "db_id": "world_1",
+      "label": "missing_join",
+      "gold_sql": "SELECT DISTINCT T2.Name FROM country AS T1 JOIN city AS T2 ON T2.CountryCode  =  T1.Code WHERE T1.Continent  =  'Europe' AND T1.Name NOT IN (SELECT T3.Name FROM country AS T3 JOIN countrylanguage AS T4 ON T3.Code  =  T4.CountryCode WHERE T4.IsOfficial  =  'T' AND T4.Language  =  'English')",
+      "generated_sql": "SELECT DISTINCT ci.Name\nFROM city AS ci\nJOIN country AS co ON ci.CountryCode = co.Code\nWHERE co.Continent = 'Europe'\n  AND NOT EXISTS (\n    SELECT 1\n    FROM countrylanguage AS cl\n    WHERE cl.CountryCode = co.Code\n      AND cl.Language = 'English'\n      AND cl.IsOfficial = 'T'\n  )\nORDER BY ci.Name;"
+    },
+    {
+      "source": "held_out_merged20.json",
+      "id": "real_estate_properties:9c13804a70d0",
+      "db_id": "real_estate_properties",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT property_name FROM Properties WHERE property_type_code  =  \"House\" UNION SELECT property_name FROM Properties WHERE property_type_code  =  \"Apartment\" AND room_count  >  1",
+      "generated_sql": "SELECT p.property_name\nFROM Properties AS p\nJOIN Ref_Property_Types AS rpt\n  ON p.property_type_code = rpt.property_type_code\nWHERE p.property_type_code IN ('House', 'Apartment')\n  AND p.room_count > 1;"
+    },
+    {
+      "source": "held_out_merged20.json",
+      "id": "course_teach:a498dc046efd",
+      "db_id": "course_teach",
+      "label": "other",
+      "gold_sql": "SELECT T2.Name ,  COUNT(*) FROM course_arrange AS T1 JOIN teacher AS T2 ON T1.Teacher_ID  =  T2.Teacher_ID GROUP BY T2.Name",
+      "generated_sql": "SELECT t.Name, COUNT(DISTINCT ca.Course_ID) AS course_count\nFROM teacher AS t\nLEFT JOIN course_arrange AS ca\n  ON t.Teacher_ID = ca.Teacher_ID\nGROUP BY t.Teacher_ID, t.Name;"
+    },
+    {
+      "source": "held_out_merged20_v2.json",
+      "id": "voter_1:cd5dfe31c8c7",
+      "db_id": "voter_1",
+      "label": "missing_join",
+      "gold_sql": "SELECT T3.area_code FROM contestants AS T1 JOIN votes AS T2 ON T1.contestant_number  =  T2.contestant_number JOIN area_code_state AS T3 ON T2.state  =  T3.state WHERE T1.contestant_name  =  'Tabatha Gehling' INTERSECT SELECT T3.area_code FROM contestants AS T1 JOIN votes AS T2 ON T1.contestant_number  =  T2.contestant_number JOIN area_code_state AS T3 ON T2.state  =  T3.state WHERE T1.contestant_name  =  'Kelly Clauss'",
+      "generated_sql": "WITH contestant_votes AS (\n  SELECT\n    CAST(SUBSTR(CAST(v.phone_number AS TEXT), 1, 3) AS INTEGER) AS area_code,\n    LOWER(TRIM(c.contestant_name)) AS contestant_name\n  FROM VOTES AS v\n  JOIN CONTESTANTS AS c\n    ON v.contestant_number = c.contestant_number\n  WHERE LOWER(TRIM(c.contestant_name)) IN ('tabatha gehling', 'kelly clauss')\n)\nSELECT area_code\nFROM contestant_votes\nGROUP BY area_code\nHAVING COUNT(DISTINCT contestant_name) = 2;"
+    },
+    {
+      "source": "held_out_merged20_v2.json",
+      "id": "world_1:fe63888e6d15",
+      "db_id": "world_1",
+      "label": "wrong_aggregate",
+      "gold_sql": "SELECT Name FROM country WHERE Continent  =  \"Africa\"  AND population  <  (SELECT max(population) FROM country WHERE Continent  =  \"Asia\")",
+      "generated_sql": "SELECT c.Name\nFROM country AS c\nWHERE c.Continent = 'Africa'\n  AND c.Population < (\n    SELECT MIN(a.Population)\n    FROM country AS a\n    WHERE a.Continent = 'Asia'\n  );"
+    },
+    {
+      "source": "held_out_merged20_v2.json",
+      "id": "real_estate_properties:9c13804a70d0",
+      "db_id": "real_estate_properties",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT property_name FROM Properties WHERE property_type_code  =  \"House\" UNION SELECT property_name FROM Properties WHERE property_type_code  =  \"Apartment\" AND room_count  >  1",
+      "generated_sql": "SELECT p.property_name\nFROM Properties AS p\nJOIN Ref_Property_Types AS rpt\n  ON p.property_type_code = rpt.property_type_code\nWHERE p.property_type_code IN ('House', 'Apartment')\n  AND p.room_count > 1;"
+    },
+    {
+      "source": "held_out_merged20_v2.json",
+      "id": "course_teach:a498dc046efd",
+      "db_id": "course_teach",
+      "label": "other",
+      "gold_sql": "SELECT T2.Name ,  COUNT(*) FROM course_arrange AS T1 JOIN teacher AS T2 ON T1.Teacher_ID  =  T2.Teacher_ID GROUP BY T2.Name",
+      "generated_sql": "SELECT t.Name, COUNT(DISTINCT ca.Course_ID) AS course_count\nFROM teacher AS t\nLEFT JOIN course_arrange AS ca\n  ON t.Teacher_ID = ca.Teacher_ID\nGROUP BY t.Teacher_ID, t.Name;"
+    },
+    {
+      "source": "held_out_merged20_v3.json",
+      "id": "voter_1:cd5dfe31c8c7",
+      "db_id": "voter_1",
+      "label": "missing_join",
+      "gold_sql": "SELECT T3.area_code FROM contestants AS T1 JOIN votes AS T2 ON T1.contestant_number  =  T2.contestant_number JOIN area_code_state AS T3 ON T2.state  =  T3.state WHERE T1.contestant_name  =  'Tabatha Gehling' INTERSECT SELECT T3.area_code FROM contestants AS T1 JOIN votes AS T2 ON T1.contestant_number  =  T2.contestant_number JOIN area_code_state AS T3 ON T2.state  =  T3.state WHERE T1.contestant_name  =  'Kelly Clauss'",
+      "generated_sql": "WITH contestant_area_codes AS (\n  SELECT\n    CAST(substr(CAST(v.phone_number AS TEXT), 1, 3) AS INTEGER) AS area_code,\n    c.contestant_name\n  FROM VOTES AS v\n  JOIN CONTESTANTS AS c\n    ON v.contestant_number = c.contestant_number\n  WHERE c.contestant_name IN ('Tabatha Gehling', 'Kelly Clauss')\n)\nSELECT area_code\nFROM contestant_area_codes\nGROUP BY area_code\nHAVING COUNT(DISTINCT contestant_name) = 2\nORDER BY area_code;"
+    },
+    {
+      "source": "held_out_merged20_v3.json",
+      "id": "world_1:fe63888e6d15",
+      "db_id": "world_1",
+      "label": "wrong_aggregate",
+      "gold_sql": "SELECT Name FROM country WHERE Continent  =  \"Africa\"  AND population  <  (SELECT max(population) FROM country WHERE Continent  =  \"Asia\")",
+      "generated_sql": "SELECT african.Name\nFROM country AS african\nWHERE african.Continent = 'Africa'\n  AND NOT EXISTS (\n      SELECT 1\n      FROM country AS asian\n      WHERE asian.Continent = 'Asia'\n        AND asian.Population <= african.Population\n  );"
+    },
+    {
+      "source": "held_out_merged20_v3.json",
+      "id": "real_estate_properties:9c13804a70d0",
+      "db_id": "real_estate_properties",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT property_name FROM Properties WHERE property_type_code  =  \"House\" UNION SELECT property_name FROM Properties WHERE property_type_code  =  \"Apartment\" AND room_count  >  1",
+      "generated_sql": "SELECT property_name\nFROM Properties\nWHERE property_type_code IN ('House', 'Apartment')\n  AND room_count > 1;"
+    },
+    {
+      "source": "held_out_merged20_v3.json",
+      "id": "course_teach:a498dc046efd",
+      "db_id": "course_teach",
+      "label": "other",
+      "gold_sql": "SELECT T2.Name ,  COUNT(*) FROM course_arrange AS T1 JOIN teacher AS T2 ON T1.Teacher_ID  =  T2.Teacher_ID GROUP BY T2.Name",
+      "generated_sql": "SELECT t.Name, COUNT(DISTINCT ca.Course_ID) AS course_count\nFROM teacher AS t\nLEFT JOIN course_arrange AS ca\n  ON t.Teacher_ID = ca.Teacher_ID\nGROUP BY t.Teacher_ID, t.Name;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "california_schools:5cff86437dbd",
+      "db_id": "california_schools",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT T2.City, COUNT(T2.CDSCode) FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode WHERE T2.Magnet = 1 AND T2.GSoffered = 'K-8' AND T1.`NSLP Provision Status` = 'Multiple Provision Types' GROUP BY T2.City",
+      "generated_sql": "WITH qualifying_schools AS (SELECT DISTINCT s.CDSCode, s.City, f.\"NSLP Provision Status\" FROM schools AS s JOIN frpm AS f ON f.CDSCode = s.CDSCode WHERE s.Magnet = 1 AND f.\"Low Grade\" = 'K' AND f.\"High Grade\" = '8'), city_counts AS (SELECT City, COUNT(*) AS school_count FROM qualifying_schools GROUP BY City) SELECT City, school_count, (SELECT COUNT(*) FROM city_counts) AS number_of_cities, (SELECT COUNT(*) FROM qualifying_schools WHERE \"NSLP Provision Status\" = 'Multiple Provision Types') AS multiple_provision_types_count FROM city_counts ORDER BY City;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "california_schools:96127c62964e",
+      "db_id": "california_schools",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT T1.`School Name`, T2.Street, T2.City, T2.State, T2.Zip FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode WHERE T2.County = 'Monterey' AND T1.`Free Meal Count (Ages 5-17)` > 800 AND T1.`School Type` = 'High Schools (Public)'",
+      "generated_sql": "SELECT s.School, s.Street, s.City, s.State, s.Zip FROM frpm AS f INNER JOIN schools AS s ON f.CDSCode = s.CDSCode WHERE s.County = 'Monterey' AND s.EILName = 'High School' AND f.\"FRPM Count (Ages 5-17)\" > 800;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "california_schools:28354ec30491",
+      "db_id": "california_schools",
+      "label": "wrong_aggregate",
+      "gold_sql": "SELECT T2.School FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode WHERE T2.DOC = 31 ORDER BY T1.`Enrollment (K-12)` DESC LIMIT 1",
+      "generated_sql": "WITH state_special_schools AS (\n    SELECT s.School, f.\"Enrollment (K-12)\" AS enrollment\n    FROM schools AS s\n    JOIN frpm AS f\n      ON f.CDSCode = s.CDSCode\n    WHERE s.DOC = '31'\n      AND f.\"Enrollment (K-12)\" IS NOT NULL\n), max_enrollment AS (\n    SELECT MAX(enrollment) AS max_enrollment\n    FROM state_special_schools\n)\nSELECT School, enrollment\nFROM state_special_schools\nWHERE enrollment = (SELECT max_enrollment FROM max_enrollment)\nORDER BY School;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "card_games:d62130934b28",
+      "db_id": "card_games",
+      "label": "wrong_aggregate",
+      "gold_sql": "SELECT DISTINCT T2.name , CASE WHEN T1.status = 'Legal' THEN T1.format ELSE NULL END FROM legalities AS T1 INNER JOIN cards AS T2 ON T2.uuid = T1.uuid WHERE T2.setCode IN ( SELECT code FROM sets WHERE name = 'Hour of Devastation' )",
+      "generated_sql": "SELECT c.name, GROUP_CONCAT(l.format, ', ') AS legal_formats\nFROM cards AS c\nJOIN sets AS s ON s.code = c.setCode\nLEFT JOIN legalities AS l\n  ON l.uuid = c.uuid\n AND l.status = 'Legal'\nWHERE s.name = 'Hour of Devastation'\nGROUP BY c.uuid, c.name\nORDER BY c.name;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "card_games:4f1e520d6989",
+      "db_id": "card_games",
+      "label": "order_limit_mismatch",
+      "gold_sql": "SELECT DISTINCT T1.id FROM cards AS T1 INNER JOIN legalities AS T2 ON T1.uuid = T2.uuid WHERE T2.format = 'gladiator' AND T2.status = 'Banned' AND T1.rarity = 'mythic'",
+      "generated_sql": "SELECT DISTINCT c.name\nFROM cards AS c\nJOIN legalities AS l ON l.uuid = c.uuid\nWHERE c.rarity = 'mythic'\n  AND l.format = 'gladiator'\n  AND l.status = 'Banned'\nORDER BY c.name;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "card_games:d1c2ebc72864",
+      "db_id": "card_games",
+      "label": "missing_join",
+      "gold_sql": "SELECT T2.format FROM cards AS T1 INNER JOIN legalities AS T2 ON T1.uuid = T2.uuid WHERE T1.name = 'Benalish Knight'",
+      "generated_sql": "SELECT text FROM cards WHERE name = 'Benalish Knight';"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "codebase_community:f926ceb1c1b4",
+      "db_id": "codebase_community",
+      "label": "order_limit_mismatch",
+      "gold_sql": "SELECT T2.UserId FROM users AS T1 INNER JOIN postHistory AS T2 ON T1.Id = T2.UserId INNER JOIN posts AS T3 ON T2.PostId = T3.Id WHERE T3.ViewCount >= 1000 GROUP BY T2.UserId HAVING COUNT(DISTINCT T2.PostHistoryTypeId) = 1",
+      "generated_sql": "SELECT DISTINCT u.Id, u.DisplayName\nFROM postHistory AS ph\nJOIN posts AS p ON p.Id = ph.PostId\nJOIN users AS u ON u.Id = ph.UserId\nWHERE p.ViewCount >= 1000\nGROUP BY u.Id, u.DisplayName, ph.PostId\nHAVING COUNT(*) = 1\nORDER BY u.Id;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "debit_card_specializing:cc86ad0a4d81",
+      "db_id": "debit_card_specializing",
+      "label": "wrong_aggregate",
+      "gold_sql": "SELECT CAST(SUM(IIF(T1.Segment = 'SME', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID) - CAST(SUM(IIF(T1.Segment = 'LAM', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID) , CAST(SUM(IIF(T1.Segment = 'LAM', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID) - CAST(SUM(IIF(T1.Segment = 'KAM', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID) , CAST(SUM(IIF(T1.Segment = 'KAM', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID) - CAST(SUM(IIF(T1.Segment = 'SME', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID) FROM customers AS T1 INNER JOIN yearmonth AS T2 ON T1.CustomerID = T2.CustomerID WHERE T1.Currency = 'CZK' AND T2.Consumption = ( SELECT MIN(Consumption) FROM yearmonth ) AND T2.Date BETWEEN 201301 AND 201312",
+      "generated_sql": "WITH annual_consumption AS (\n    SELECT\n        c.CustomerID,\n        c.Segment,\n        SUM(y.Consumption) AS annual_consumption\n    FROM customers AS c\n    JOIN yearmonth AS y\n      ON y.CustomerID = c.CustomerID\n    WHERE c.Currency = 'CZK'\n      AND y.Date BETWEEN '201301' AND '201312'\n      AND c.Segment IN ('SME', 'LAM', 'KAM')\n    GROUP BY c.CustomerID, c.Segment\n), segment_minima AS (\n    SELECT\n        Segment,\n        MIN(annual_consumption) AS minimum_consumption\n    FROM annual_consumption\n    GROUP BY Segment\n), lowest_customer_averages AS (\n    SELECT\n        a.Segment,\n        AVG(a.annual_consumption) AS annual_average\n    FROM annual_consumption AS a\n    JOIN segment_minima AS m\n      ON m.Segment = a.Segment\n     AND m.minimum_consumption = a.annual_consumption\n    GROUP BY a.Segment\n)\nSELECT\n    MAX(CASE WHEN Segment = 'SME' THEN annual_average END)\n      - MAX(CASE WHEN Segment = 'LAM' THEN annual_average END) AS sme_minus_lam,\n    MAX(CASE WHEN Segment = 'LAM' THEN annual_average END)\n      - MAX(CASE WHEN Segment = 'KAM' THEN annual_average END) AS lam_minus_kam,\n    MAX(CASE WHEN Segment = 'KAM' THEN annual_average END)\n      - MAX(CASE WHEN Segment = 'SME' THEN annual_average END) AS kam_minus_sme\nFROM lowest_customer_averages;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "european_football_2:d6b88aeaee9c",
+      "db_id": "european_football_2",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT DISTINCT DATETIME() - T2.birthday age FROM Player_Attributes AS t1 INNER JOIN Player AS t2 ON t1.player_api_id = t2.player_api_id WHERE STRFTIME('%Y',t1.`date`) >= '2013' AND STRFTIME('%Y',t1.`date`) <= '2015' AND t1.sprint_speed >= 97",
+      "generated_sql": "WITH qualifying_players AS (SELECT DISTINCT p.player_api_id, p.player_name, p.birthday FROM Player AS p JOIN Player_Attributes AS pa ON pa.player_api_id = p.player_api_id WHERE pa.sprint_speed >= 97 AND CAST(strftime('%Y', pa.date) AS INTEGER) BETWEEN 2013 AND 2015) SELECT player_name, CAST(strftime('%Y', '2026-10-01') AS INTEGER) - CAST(strftime('%Y', birthday) AS INTEGER) - CASE WHEN strftime('%m-%d', '2026-10-01') < strftime('%m-%d', birthday) THEN 1 ELSE 0 END AS age FROM qualifying_players ORDER BY player_name;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "european_football_2:15c5aed5e41c",
+      "db_id": "european_football_2",
+      "label": "wrong_aggregate",
+      "gold_sql": "SELECT t1.player_name FROM Player AS t1 INNER JOIN Player_Attributes AS t2 ON t1.player_api_id = t2.player_api_id WHERE t1.height > 180 GROUP BY t1.id ORDER BY CAST(SUM(t2.heading_accuracy) AS REAL) / COUNT(t2.`player_fifa_api_id`) DESC LIMIT 10",
+      "generated_sql": "SELECT p.player_name\nFROM Player AS p\nJOIN Player_Attributes AS pa\n  ON pa.player_api_id = p.player_api_id\nWHERE p.height > 180\nGROUP BY p.player_api_id, p.player_name\nORDER BY AVG(pa.heading_accuracy) DESC\nLIMIT 10;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "financial:9cad2ccd5b24",
+      "db_id": "financial",
+      "label": "extra_filter",
+      "gold_sql": "SELECT T3.type FROM district AS T1 INNER JOIN account AS T2 ON T1.district_id = T2.district_id INNER JOIN disp AS T3 ON T2.account_id = T3.account_id WHERE T3.type != 'OWNER' AND T1.A11 BETWEEN 8000 AND 9000",
+      "generated_sql": "SELECT DISTINCT d.type AS account_type, dr.A11 AS entrepreneurs_per_1000\nFROM disp AS d\nJOIN account AS a ON d.account_id = a.account_id\nJOIN district AS dr ON a.district_id = dr.district_id\nWHERE d.type <> 'OWNER'\n  AND dr.A11 > 8000\n  AND dr.A11 <= 9000;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "formula_1:3fa64cb37606",
+      "db_id": "formula_1",
+      "label": "wrong_aggregate",
+      "gold_sql": "SELECT CAST(SUM(IIF(STRFTIME('%Y', T3.dob) < '1985' AND T1.laps > 50, 1, 0)) AS REAL) * 100 / COUNT(*) FROM results AS T1 INNER JOIN races AS T2 on T1.raceId = T2.raceId INNER JOIN drivers AS T3 on T1.driverId = T3.driverId WHERE T2.year BETWEEN 2000 AND 2005",
+      "generated_sql": "WITH eligible_drivers AS (\n    SELECT DISTINCT r.driverId\n    FROM results AS r\n    JOIN races AS ra\n        ON r.raceId = ra.raceId\n    JOIN drivers AS d\n        ON r.driverId = d.driverId\n    WHERE ra.year BETWEEN 2000 AND 2005\n      AND strftime('%Y', d.dob) < '1985'\n      AND r.laps > 50\n), all_drivers AS (\n    SELECT DISTINCT r.driverId\n    FROM results AS r\n    JOIN races AS ra\n        ON r.raceId = ra.raceId\n    WHERE ra.year BETWEEN 2000 AND 2005\n)\nSELECT 100.0 * (SELECT COUNT(*) FROM eligible_drivers) / NULLIF((SELECT COUNT(*) FROM all_drivers), 0) AS percentage;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "formula_1:1f50a28ce614",
+      "db_id": "formula_1",
+      "label": "other",
+      "gold_sql": "SELECT T3.forename, T3.surname, T3.driverRef FROM races AS T1 INNER JOIN results AS T2 ON T2.raceId = T1.raceId INNER JOIN drivers AS T3 ON T3.driverId = T2.driverId WHERE T1.name = 'Canadian Grand Prix' AND T2.rank = 1 AND T1.year = 2007",
+      "generated_sql": "SELECT d.driverRef FROM races AS r JOIN results AS res ON res.raceId = r.raceId JOIN drivers AS d ON d.driverId = res.driverId WHERE r.year = 2007 AND r.name = 'Canadian Grand Prix' AND res.position = 1;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "formula_1:922b3bfa1d65",
+      "db_id": "formula_1",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT T1.fastestLap FROM results AS T1 INNER JOIN races AS T2 on T1.raceId = T2.raceId WHERE T2.year = 2009 AND T1.time LIKE '_:%:__.___'",
+      "generated_sql": "WITH final_race AS (\n    SELECT raceId\n    FROM races\n    WHERE year = 2009\n    ORDER BY round DESC\n    LIMIT 1\n), champion AS (\n    SELECT driverId\n    FROM driverStandings\n    WHERE raceId = (SELECT raceId FROM final_race)\n      AND position = 1\n)\nSELECT r.fastestLap\nFROM results AS r\nJOIN champion AS c\n  ON c.driverId = r.driverId\nJOIN final_race AS fr\n  ON fr.raceId = r.raceId;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "student_club:a93399d99ac6",
+      "db_id": "student_club",
+      "label": "missing_join",
+      "gold_sql": "SELECT DISTINCT T3.first_name, T3.last_name, T3.phone FROM expense AS T1 INNER JOIN budget AS T2 ON T1.link_to_budget = T2.budget_id INNER JOIN member AS T3 ON T3.member_id = T1.link_to_member WHERE T1.cost > ( SELECT AVG(T1.cost) FROM expense AS T1 INNER JOIN budget AS T2 ON T1.link_to_budget = T2.budget_id INNER JOIN member AS T3 ON T3.member_id = T1.link_to_member )",
+      "generated_sql": "WITH average_expense AS (\n    SELECT AVG(e.cost) AS avg_cost\n    FROM expense AS e\n)\nSELECT DISTINCT\n    m.first_name || ' ' || m.last_name AS full_name,\n    m.phone AS contact_number\nFROM expense AS e\nJOIN member AS m\n    ON e.link_to_member = m.member_id\nCROSS JOIN average_expense AS a\nWHERE e.cost > a.avg_cost;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "student_club:bcc1cc5329a9",
+      "db_id": "student_club",
+      "label": "cte_overengineering",
+      "gold_sql": "SELECT T2.category, SUM(T2.amount) FROM event AS T1 JOIN budget AS T2 ON T1.event_id = T2.link_to_event WHERE T1.event_name = 'April Speaker' GROUP BY T2.category ORDER BY SUM(T2.amount) ASC",
+      "generated_sql": "WITH april_speaker_budget AS (\n    SELECT b.category, b.amount\n    FROM budget AS b\n    JOIN event AS e ON b.link_to_event = e.event_id\n    WHERE e.event_name = 'April Speaker'\n)\nSELECT category, amount,\n       (SELECT SUM(amount) FROM april_speaker_budget) AS total_amount_budgeted\nFROM april_speaker_budget\nORDER BY amount ASC;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "thrombosis_prediction:b9d363403f2b",
+      "db_id": "thrombosis_prediction",
+      "label": "other",
+      "gold_sql": "SELECT COUNT(DISTINCT T1.ID) FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID WHERE T2.FG <= 150 OR T2.FG >= 450 AND T2.WBC > 3.5 AND T2.WBC < 9.0 AND T1.SEX = 'M'",
+      "generated_sql": "SELECT COUNT(DISTINCT l.ID) AS patient_count\nFROM Laboratory AS l\nJOIN Patient AS p ON p.ID = l.ID\nWHERE p.SEX = 'M'\n  AND l.WBC > 3.5\n  AND l.WBC < 9.0\n  AND (l.FG <= 150 OR l.FG >= 450);"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "thrombosis_prediction:059480ffe756",
+      "db_id": "thrombosis_prediction",
+      "label": "cte_overengineering",
+      "gold_sql": "SELECT STRFTIME('%Y', T2.Date) - STRFTIME('%Y', T1.Birthday), T1.Diagnosis FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID ORDER BY T2.HGB DESC LIMIT 1",
+      "generated_sql": "WITH highest_hgb AS (SELECT ID, Date, HGB FROM Laboratory WHERE HGB IS NOT NULL ORDER BY HGB DESC LIMIT 1) SELECT (CAST(strftime('%Y', e.\"Examination Date\") AS INTEGER) - CAST(strftime('%Y', p.Birthday) AS INTEGER)) AS age, e.Diagnosis AS diagnosis FROM highest_hgb h JOIN Examination e ON e.ID = h.ID AND e.\"Examination Date\" = h.Date JOIN Patient p ON p.ID = e.ID;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "toxicology:f9d359fafe23",
+      "db_id": "toxicology",
+      "label": "other",
+      "gold_sql": "SELECT T2.atom_id, T2.atom_id2 FROM atom AS T1 INNER JOIN connected AS T2 ON T1.atom_id = T2.atom_id INNER JOIN bond AS T3 ON T2.bond_id = T3.bond_id WHERE T3.bond_type = '#' AND T3.molecule_id = 'TR041'",
+      "generated_sql": "SELECT DISTINCT a1.element AS atom1, a2.element AS atom2\nFROM connected AS c\nJOIN atom AS a1 ON a1.atom_id = c.atom_id\nJOIN atom AS a2 ON a2.atom_id = c.atom_id2\nJOIN bond AS b ON b.bond_id = c.bond_id\nWHERE b.molecule_id = 'TR041'\n  AND b.bond_type = '#';"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "california_schools:fa93cf7ac3e3",
+      "db_id": "california_schools",
+      "label": "cte_overengineering",
+      "gold_sql": "SELECT T2.School, T2.DOC FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode WHERE T2.FundingType = 'Locally funded' AND (T1.`Enrollment (K-12)` - T1.`Enrollment (Ages 5-17)`) > (SELECT AVG(T3.`Enrollment (K-12)` - T3.`Enrollment (Ages 5-17)`) FROM frpm AS T3 INNER JOIN schools AS T4 ON T3.CDSCode = T4.CDSCode WHERE T4.FundingType = 'Locally funded')",
+      "generated_sql": "WITH school_differences AS (\n    SELECT\n        s.School,\n        s.DOCType,\n        f.\"Enrollment (K-12)\" - f.\"Enrollment (Ages 5-17)\" AS enrollment_difference\n    FROM frpm AS f\n    JOIN schools AS s\n        ON f.CDSCode = s.CDSCode\n    WHERE s.FundingType = 'Locally funded'\n      AND f.\"Enrollment (K-12)\" IS NOT NULL\n      AND f.\"Enrollment (Ages 5-17)\" IS NOT NULL\n), average_difference AS (\n    SELECT AVG(enrollment_difference) AS avg_enrollment_difference\n    FROM school_differences\n)\nSELECT\n    sd.School,\n    sd.DOCType\nFROM school_differences AS sd\nCROSS JOIN average_difference AS ad\nWHERE sd.enrollment_difference > ad.avg_enrollment_difference;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "california_schools:e5484218efd1",
+      "db_id": "california_schools",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT CAST(T1.`FRPM Count (K-12)` AS REAL) / T1.`Enrollment (K-12)` FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode WHERE T2.SOC = 66 ORDER BY T1.`FRPM Count (K-12)` DESC LIMIT 5",
+      "generated_sql": "SELECT s.School, f.\"FRPM Count (K-12)\" / f.\"Enrollment (K-12)\" AS eligible_frpm_rate\nFROM schools AS s\nJOIN frpm AS f ON s.CDSCode = f.CDSCode\nWHERE s.SOC = '66'\n  AND f.\"Enrollment (K-12)\" > 0\nORDER BY f.\"FRPM Count (K-12)\" DESC\nLIMIT 5;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "california_schools:8698f6ae720f",
+      "db_id": "california_schools",
+      "label": "missing_join",
+      "gold_sql": "SELECT T2.CDSCode FROM schools AS T1 INNER JOIN frpm AS T2 ON T1.CDSCode = T2.CDSCode WHERE T2.`Enrollment (K-12)` + T2.`Enrollment (Ages 5-17)` > 500",
+      "generated_sql": "SELECT \"CDSCode\" FROM frpm WHERE \"Enrollment (K-12)\" > 500;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "card_games:fd9ad369584f",
+      "db_id": "card_games",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT CAST(SUM(CASE WHEN T1.cardKingdomFoilId IS NOT NULL AND T1.cardKingdomId IS NOT NULL THEN 1 ELSE 0 END) AS REAL) * 100 / COUNT(T1.id) FROM cards AS T1 INNER JOIN sets AS T2 ON T2.code = T1.setCode WHERE T2.name = 'Coldsnap'",
+      "generated_sql": "SELECT 100.0 * SUM(CASE WHEN c.power = '\u221e' THEN 1 ELSE 0 END) / COUNT(*) AS percentage\nFROM cards AS c\nJOIN sets AS s ON c.setCode = s.code\nWHERE s.name = 'Coldsnap';"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "card_games:e56d496079fb",
+      "db_id": "card_games",
+      "label": "missing_join",
+      "gold_sql": "WITH MaxBanned AS (SELECT format, COUNT(*) AS count_banned FROM legalities WHERE status = 'Banned' GROUP BY format ORDER BY COUNT(*) DESC LIMIT 1) SELECT T2.format, T1.name FROM cards AS T1 INNER JOIN legalities AS T2 ON T2.uuid = T1.uuid INNER JOIN MaxBanned MB ON MB.format = T2.format WHERE T2.status = 'Banned'",
+      "generated_sql": "WITH banned_counts AS (SELECT format, COUNT(*) AS banned_count FROM legalities WHERE status = 'Banned' GROUP BY format), max_count AS (SELECT MAX(banned_count) AS max_banned_count FROM banned_counts) SELECT l.format, c.name FROM legalities AS l JOIN cards AS c ON c.uuid = l.uuid JOIN banned_counts AS bc ON bc.format = l.format JOIN max_count AS mc ON bc.banned_count = mc.max_banned_count WHERE l.status = 'Banned' ORDER BY l.format, c.name;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "card_games:862c24a184a0",
+      "db_id": "card_games",
+      "label": "other",
+      "gold_sql": "SELECT DISTINCT borderColor FROM cards WHERE name = 'Ancestor''s Chosen'",
+      "generated_sql": "SELECT borderColor FROM cards WHERE name = 'Ancestor''s Chosen';"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "codebase_community:0dc8ab7d3173",
+      "db_id": "codebase_community",
+      "label": "other",
+      "gold_sql": "SELECT T3.DisplayName, T1.Title FROM posts AS T1 INNER JOIN votes AS T2 ON T1.Id = T2.PostId INNER JOIN users AS T3 ON T3.Id = T2.UserId WHERE T2.BountyAmount = 50 AND T1.Title LIKE '%variance%'",
+      "generated_sql": "SELECT DISTINCT u.DisplayName FROM users AS u JOIN votes AS v ON v.UserId = u.Id JOIN posts AS p ON p.Id = v.PostId WHERE v.BountyAmount = 50 AND lower(p.Title) LIKE '%variance%';"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "codebase_community:77d160048808",
+      "db_id": "codebase_community",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT CAST(SUM(IIF(T2.Age > 65, 1, 0)) AS REAL) * 100 / COUNT(T1.Id) FROM posts AS T1 INNER JOIN users AS T2 ON T1.OwnerUserId = T2.Id WHERE T1.Score > 5",
+      "generated_sql": "SELECT 100.0 * SUM(CASE WHEN u.Age > 65 THEN 1 ELSE 0 END) / COUNT(*) AS percentage FROM posts AS p LEFT JOIN users AS u ON p.OwnerUserId = u.Id WHERE p.Score > 5;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "debit_card_specializing:398a7b846ff7",
+      "db_id": "debit_card_specializing",
+      "label": "missing_join",
+      "gold_sql": "SELECT CAST(SUM(IIF(SUBSTRING(Date, 1, 4) = '2012', Consumption, 0)) - SUM(IIF(SUBSTRING(Date, 1, 4) = '2013', Consumption, 0)) AS FLOAT) / SUM(IIF(SUBSTRING(Date, 1, 4) = '2012', Consumption, 0)) FROM yearmonth WHERE CustomerID = ( SELECT T1.CustomerID FROM transactions_1k AS T1 INNER JOIN gasstations AS T2 ON T1.GasStationID = T2.GasStationID WHERE T1.Date = '2012-08-25' AND T1.Price  = 1513.12 )",
+      "generated_sql": "WITH matching_customer AS (\n    SELECT DISTINCT CustomerID\n    FROM transactions_1k\n    WHERE Date = '2012-08-25'\n      AND Price = 634.8\n), annual_consumption AS (\n    SELECT\n        ym.CustomerID,\n        SUM(CASE WHEN substr(ym.Date, 1, 4) = '2012' THEN ym.Consumption ELSE 0 END) AS consumption_2012,\n        SUM(CASE WHEN substr(ym.Date, 1, 4) = '2013' THEN ym.Consumption ELSE 0 END) AS consumption_2013\n    FROM yearmonth AS ym\n    JOIN matching_customer AS mc\n      ON mc.CustomerID = ym.CustomerID\n    GROUP BY ym.CustomerID\n)\nSELECT\n    (consumption_2012 - consumption_2013) / NULLIF(consumption_2012, 0) AS consumption_decrease_rate\nFROM annual_consumption;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "debit_card_specializing:95dedac7bdb1",
+      "db_id": "debit_card_specializing",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT T2.Consumption FROM transactions_1k AS T1 INNER JOIN yearmonth AS T2 ON T1.CustomerID = T2.CustomerID WHERE T1.Price / T1.Amount > 29.00 AND T1.ProductID = 5 AND T2.Date = '201208'",
+      "generated_sql": "WITH qualifying_customers AS (\n    SELECT DISTINCT CustomerID\n    FROM transactions_1k\n    WHERE ProductID = 5\n      AND Amount <> 0\n      AND Price / Amount > 29.00\n)\nSELECT\n    q.CustomerID,\n    y.Consumption\nFROM qualifying_customers AS q\nLEFT JOIN yearmonth AS y\n    ON y.CustomerID = q.CustomerID\n   AND y.Date = '201208';"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "european_football_2:1b96ededda6b",
+      "db_id": "european_football_2",
+      "label": "wrong_aggregate",
+      "gold_sql": "SELECT SUM(CASE WHEN t1.id = 6 THEN t1.jumping ELSE 0 END) - SUM(CASE WHEN t1.id = 23 THEN t1.jumping ELSE 0 END) FROM Player_Attributes AS t1",
+      "generated_sql": "WITH latest_attributes AS (\n    SELECT\n        p.id AS player_id,\n        pa.jumping,\n        ROW_NUMBER() OVER (\n            PARTITION BY p.id\n            ORDER BY pa.date DESC, pa.id DESC\n        ) AS rn\n    FROM Player AS p\n    JOIN Player_Attributes AS pa\n        ON pa.player_api_id = p.player_api_id\n    WHERE p.id IN (6, 23)\n)\nSELECT\n    MAX(CASE WHEN player_id = 6 THEN jumping END)\n    - MAX(CASE WHEN player_id = 23 THEN jumping END) AS jumping_difference\nFROM latest_attributes\nWHERE rn = 1;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "financial:3736017ec324",
+      "db_id": "financial",
+      "label": "wrong_aggregate",
+      "gold_sql": "SELECT CAST((SUM(IIF(T3.date = '1998-12-27', T3.balance, 0)) - SUM(IIF(T3.date = '1993-03-22', T3.balance, 0))) AS REAL) * 100 / SUM(IIF(T3.date = '1993-03-22', T3.balance, 0)) FROM loan AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id INNER JOIN trans AS T3 ON T3.account_id = T2.account_id WHERE T1.date = '1993-07-05'",
+      "generated_sql": "WITH target_loan AS (\n    SELECT\n        l.account_id\n    FROM loan AS l\n    WHERE l.date = '1993-07-05'\n      AND l.status = 'A'\n    ORDER BY l.loan_id\n    LIMIT 1\n), target_owner AS (\n    SELECT\n        c.client_id,\n        ta.account_id\n    FROM target_loan AS ta\n    JOIN account AS a\n      ON a.account_id = ta.account_id\n    JOIN disp AS d\n      ON d.account_id = a.account_id\n     AND d.type = 'OWNER'\n    JOIN client AS c\n      ON c.client_id = d.client_id\n), dated_balances AS (\n    SELECT\n        o.client_id,\n        o.account_id,\n        '1993-03-22' AS balance_date,\n        t.balance,\n        ROW_NUMBER() OVER (\n            PARTITION BY o.account_id\n            ORDER BY t.date DESC, t.trans_id DESC\n        ) AS rn\n    FROM target_owner AS o\n    JOIN trans AS t\n      ON t.account_id = o.account_id\n    WHERE t.date <= '1993-03-22'\n\n    UNION ALL\n\n    SELECT\n        o.client_id,\n        o.account_id,\n        '1998-12-27' AS balance_date,\n        t.balance,\n        ROW_NUMBER() OVER (\n            PARTITION BY o.account_id\n            ORDER BY t.date DESC, t.trans_id DESC\n        ) AS rn\n    FROM target_owner AS o\n    JOIN trans AS t\n      ON t.account_id = o.account_id\n    WHERE t.date <= '1998-12-27'\n), balances AS (\n    SELECT\n        client_id,\n        MAX(CASE WHEN balance_date = '1993-03-22' AND rn = 1 THEN balance END) AS starting_balance,\n        MAX(CASE WHEN balance_date = '1998-12-27' AND rn = 1 THEN balance END) AS ending_balance\n    FROM dated_balances\n    GROUP BY client_id\n)\nSELECT\n    client_id,\n    ((ending_balance - starting_balance) * 100.0 / NULLIF(starting_balance, 0)) AS increase_rate\nFROM balances\nWHERE starting_balance IS NOT NULL\n  AND ending_balance IS NOT NULL;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "financial:3c75558996d1",
+      "db_id": "financial",
+      "label": "cte_overengineering",
+      "gold_sql": "SELECT AVG(T1.A15) FROM district AS T1 INNER JOIN account AS T2 ON T1.district_id = T2.district_id WHERE STRFTIME('%Y', T2.date) >= '1997' AND T1.A15 > 4000",
+      "generated_sql": "WITH qualifying_regions AS (\n    SELECT DISTINCT d.A3\n    FROM district AS d\n    JOIN account AS a\n      ON a.district_id = d.district_id\n    WHERE CAST(strftime('%Y', a.date) AS INTEGER) >= 1997\n), qualifying_districts AS (\n    SELECT CAST(d.A15 AS REAL) AS crimes_1995\n    FROM district AS d\n    JOIN qualifying_regions AS qr\n      ON qr.A3 = d.A3\n    WHERE CAST(d.A15 AS REAL) > 4000\n)\nSELECT AVG(crimes_1995) AS average_crimes_1995\nFROM qualifying_districts;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "formula_1:edd3ce73e28e",
+      "db_id": "formula_1",
+      "label": "missing_join",
+      "gold_sql": "SELECT CAST(COUNT(CASE WHEN T2.position <> 1 THEN T2.position END) AS REAL) * 100 / COUNT(T2.driverStandingsId) FROM races AS T1 INNER JOIN driverStandings AS T2 ON T2.raceId = T1.raceId INNER JOIN drivers AS T3 ON T3.driverId = T2.driverId WHERE T3.surname = 'Hamilton' AND T1.year >= 2010",
+      "generated_sql": "SELECT 100.0 * SUM(CASE WHEN res.position IS NULL OR res.position <> 1 THEN 1 ELSE 0 END) / COUNT(*) AS percentage_not_first\nFROM results AS res\nJOIN drivers AS d ON res.driverId = d.driverId\nJOIN races AS r ON res.raceId = r.raceId\nWHERE d.surname = 'Hamilton'\n  AND r.year >= 2010;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "formula_1:d407d87c6e26",
+      "db_id": "formula_1",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT T2.driverRef FROM qualifying AS T1 INNER JOIN drivers AS T2 ON T2.driverId = T1.driverId WHERE T1.raceId = 20 ORDER BY T1.q1 DESC LIMIT 5",
+      "generated_sql": "SELECT d.driverRef\nFROM qualifying AS q\nJOIN drivers AS d ON d.driverId = q.driverId\nWHERE q.raceId = 20\n  AND q.q1 IS NOT NULL\n  AND q.q2 IS NULL\nORDER BY q.q1 DESC;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "student_club:d9da2ece44d9",
+      "db_id": "student_club",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT T3.approved FROM event AS T1 INNER JOIN budget AS T2 ON T1.event_id = T2.link_to_event INNER JOIN expense AS T3 ON T2.budget_id = T3.link_to_budget WHERE T1.event_name = 'October Meeting' AND T1.event_date LIKE '2019-10-08%'",
+      "generated_sql": "SELECT e.expense_description, e.cost, e.expense_date, e.approved FROM expense AS e JOIN budget AS b ON e.link_to_budget = b.budget_id JOIN event AS ev ON b.link_to_event = ev.event_id WHERE ev.event_name = 'October Meeting' AND ev.event_date = '2019-10-08T12:00:00';"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "thrombosis_prediction:c20143fa2f7c",
+      "db_id": "thrombosis_prediction",
+      "label": "missing_join",
+      "gold_sql": "SELECT COUNT(DISTINCT T1.ID) FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID INNER JOIN Examination AS T3 ON T3.ID = T2.ID WHERE (T2.SC170 = 'negative' OR T2.SC170 = '0') AND T1.SEX = 'F' AND T3.Symptoms IS NULL",
+      "generated_sql": "SELECT COUNT(*) AS patient_count\nFROM Patient AS p\nWHERE p.SEX = 'F'\n  AND EXISTS (\n      SELECT 1\n      FROM Laboratory AS l\n      WHERE l.ID = p.ID\n        AND l.SC170 IN ('negative', '0')\n  )\n  AND NOT EXISTS (\n      SELECT 1\n      FROM Examination AS e\n      WHERE e.ID = p.ID\n        AND NULLIF(TRIM(e.Symptoms), '') IS NOT NULL\n  );"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "thrombosis_prediction:fb0bb69d09ad",
+      "db_id": "thrombosis_prediction",
+      "label": "missing_join",
+      "gold_sql": "SELECT T1.Diagnosis FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID WHERE T2.IGM NOT BETWEEN 40 AND 400 GROUP BY T1.Diagnosis ORDER BY COUNT(T1.Diagnosis) DESC LIMIT 1",
+      "generated_sql": "SELECT p.Diagnosis\nFROM Patient AS p\nWHERE p.Diagnosis IS NOT NULL\n  AND EXISTS (\n      SELECT 1\n      FROM Laboratory AS l\n      WHERE l.ID = p.ID\n        AND (l.IGM <= 40 OR l.IGM >= 400)\n  )\nGROUP BY p.Diagnosis\nORDER BY COUNT(*) DESC\nLIMIT 1;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "toxicology:8e95352b7d8f",
+      "db_id": "toxicology",
+      "label": "extra_filter",
+      "gold_sql": "SELECT DISTINCT T3.element FROM bond AS T1 INNER JOIN connected AS T2 ON T1.bond_id = T2.bond_id INNER JOIN atom AS T3 ON T2.atom_id = T3.atom_id WHERE T1.bond_type = '#'",
+      "generated_sql": "SELECT a1.element AS element1, a2.element AS element2\nFROM connected AS c\nJOIN bond AS b ON b.bond_id = c.bond_id\nJOIN atom AS a1 ON a1.atom_id = c.atom_id\nJOIN atom AS a2 ON a2.atom_id = c.atom_id2\nWHERE b.bond_type = '#'\n  AND c.atom_id < c.atom_id2;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "toxicology:17667e3b63d2",
+      "db_id": "toxicology",
+      "label": "extra_filter",
+      "gold_sql": "SELECT T1.bond_type, T2.atom_id, T2.atom_id2 FROM bond AS T1 INNER JOIN connected AS T2 ON T1.bond_id = T2.bond_id WHERE T2.bond_id = 'TR001_6_9'",
+      "generated_sql": "SELECT b.bond_type, c.atom_id, c.atom_id2\nFROM bond AS b\nJOIN connected AS c ON c.bond_id = b.bond_id\nWHERE b.bond_id = 'TR001_6_9'\n  AND c.atom_id < c.atom_id2;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "toxicology:319273e47ef9",
+      "db_id": "toxicology",
+      "label": "other",
+      "gold_sql": "SELECT DISTINCT T2.molecule_id FROM bond AS T1 INNER JOIN molecule AS T2 ON T1.molecule_id = T2.molecule_id WHERE T1.bond_type = '#' AND T2.label = '+'",
+      "generated_sql": "SELECT DISTINCT m.molecule_id, m.label FROM molecule AS m JOIN bond AS b ON b.molecule_id = m.molecule_id WHERE b.bond_type = '#' AND m.label = '+';"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "california_schools:c4b9e193839f",
+      "db_id": "california_schools",
+      "label": "wrong_aggregate",
+      "gold_sql": "SELECT T2.AdmFName1, T2.AdmLName1, T2.AdmFName2, T2.AdmLName2, T2.AdmFName3, T2.AdmLName3 FROM satscores AS T1 INNER JOIN schools AS T2 ON T1.cds = T2.CDSCode ORDER BY T1.NumGE1500 DESC LIMIT 1",
+      "generated_sql": "WITH max_score AS (\n    SELECT MAX(NumGE1500) AS max_num\n    FROM satscores\n    WHERE rtype = 'S'\n), administrators AS (\n    SELECT s.CDSCode, TRIM(COALESCE(s.AdmFName1, '') || ' ' || COALESCE(s.AdmLName1, '')) AS full_name\n    FROM schools AS s\n    UNION ALL\n    SELECT s.CDSCode, TRIM(COALESCE(s.AdmFName2, '') || ' ' || COALESCE(s.AdmLName2, '')) AS full_name\n    FROM schools AS s\n    UNION ALL\n    SELECT s.CDSCode, TRIM(COALESCE(s.AdmFName3, '') || ' ' || COALESCE(s.AdmLName3, '')) AS full_name\n    FROM schools AS s\n)\nSELECT DISTINCT a.full_name\nFROM satscores AS sat\nJOIN max_score AS m\n  ON sat.NumGE1500 = m.max_num\nJOIN schools AS s\n  ON sat.cds = s.CDSCode\nJOIN administrators AS a\n  ON a.CDSCode = s.CDSCode\nWHERE sat.rtype = 'S'\n  AND a.full_name <> ''\nORDER BY a.full_name;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "california_schools:6a1ca16b301e",
+      "db_id": "california_schools",
+      "label": "wrong_aggregate",
+      "gold_sql": "SELECT T1.`Enrollment (Ages 5-17)` FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode WHERE T2.EdOpsCode = 'SSS' AND T2.City = 'Fremont' AND T1.`Academic Year` BETWEEN 2014 AND 2015",
+      "generated_sql": "SELECT SUM(f.\"Enrollment (Ages 5-17)\") AS total_enrollment FROM frpm AS f JOIN schools AS s ON f.CDSCode = s.CDSCode WHERE f.\"Academic Year\" = '2014-2015' AND s.City = 'Fremont' AND s.EdOpsCode = 'SSS';"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "california_schools:1c5437a7deee",
+      "db_id": "california_schools",
+      "label": "other",
+      "gold_sql": "SELECT GSoffered FROM schools ORDER BY ABS(longitude) DESC LIMIT 1",
+      "generated_sql": "SELECT GSoffered\nFROM schools\nWHERE Longitude IS NOT NULL\nORDER BY Longitude DESC, CDSCode\nLIMIT 1;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "debit_card_specializing:2040aab17922",
+      "db_id": "debit_card_specializing",
+      "label": "wrong_aggregate",
+      "gold_sql": "SELECT CAST((SUM(IIF(T1.Segment = 'SME' AND T2.Date LIKE '2013%', T2.Consumption, 0)) - SUM(IIF(T1.Segment = 'SME' AND T2.Date LIKE '2012%', T2.Consumption, 0))) AS FLOAT) * 100 / SUM(IIF(T1.Segment = 'SME' AND T2.Date LIKE '2012%', T2.Consumption, 0)), CAST(SUM(IIF(T1.Segment = 'LAM' AND T2.Date LIKE '2013%', T2.Consumption, 0)) - SUM(IIF(T1.Segment = 'LAM' AND T2.Date LIKE '2012%', T2.Consumption, 0)) AS FLOAT) * 100 / SUM(IIF(T1.Segment = 'LAM' AND T2.Date LIKE '2012%', T2.Consumption, 0)) , CAST(SUM(IIF(T1.Segment = 'KAM' AND T2.Date LIKE '2013%', T2.Consumption, 0)) - SUM(IIF(T1.Segment = 'KAM' AND T2.Date LIKE '2012%', T2.Consumption, 0)) AS FLOAT) * 100 / SUM(IIF(T1.Segment = 'KAM' AND T2.Date LIKE '2012%', T2.Consumption, 0)) FROM customers AS T1 INNER JOIN yearmonth AS T2 ON T1.CustomerID = T2.CustomerID",
+      "generated_sql": "WITH segment_consumption AS (\n    SELECT\n        c.Segment,\n        SUM(CASE WHEN substr(y.Date, 1, 4) = '2012' THEN y.Consumption ELSE 0 END) AS consumption_2012,\n        SUM(CASE WHEN substr(y.Date, 1, 4) = '2013' THEN y.Consumption ELSE 0 END) AS consumption_2013\n    FROM yearmonth AS y\n    JOIN customers AS c\n      ON c.CustomerID = y.CustomerID\n    WHERE c.Currency = 'EUR'\n      AND c.Segment IN ('SME', 'LAM', 'KAM')\n      AND substr(y.Date, 1, 4) IN ('2012', '2013')\n    GROUP BY c.Segment\n), percentages AS (\n    SELECT\n        Segment,\n        (consumption_2013 - consumption_2012) * 100.0\n            / NULLIF(consumption_2012, 0) AS percentage_increase\n    FROM segment_consumption\n), ranked AS (\n    SELECT\n        Segment,\n        percentage_increase,\n        RANK() OVER (ORDER BY percentage_increase DESC) AS highest_rank,\n        RANK() OVER (ORDER BY percentage_increase ASC) AS lowest_rank\n    FROM percentages\n)\nSELECT\n    Segment,\n    percentage_increase,\n    'biggest' AS result\nFROM ranked\nWHERE highest_rank = 1\nUNION ALL\nSELECT\n    Segment,\n    percentage_increase,\n    'lowest' AS result\nFROM ranked\nWHERE lowest_rank = 1\nORDER BY result ASC;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "debit_card_specializing:f18794d1e67e",
+      "db_id": "debit_card_specializing",
+      "label": "wrong_aggregate",
+      "gold_sql": "SELECT AVG(T2.Consumption) / 12 FROM customers AS T1 INNER JOIN yearmonth AS T2 ON T1.CustomerID = T2.CustomerID WHERE SUBSTR(T2.Date, 1, 4) = '2013' AND T1.Segment = 'SME'",
+      "generated_sql": "SELECT SUM(y.Consumption) / 12.0 AS average_monthly_consumption\nFROM yearmonth AS y\nJOIN customers AS c ON c.CustomerID = y.CustomerID\nWHERE c.Segment = 'SME'\n  AND y.Date BETWEEN '201301' AND '201312';"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "european_football_2:106f5a721dc8",
+      "db_id": "european_football_2",
+      "label": "wrong_aggregate",
+      "gold_sql": "SELECT `date` FROM ( SELECT t2.crossing, t2.`date` FROM Player AS t1 INNER JOIN Player_Attributes AS t2 ON t1.player_fifa_api_id = t2.player_fifa_api_id WHERE t1.player_name = 'Kevin Constant' ORDER BY t2.crossing DESC) ORDER BY date DESC LIMIT 1",
+      "generated_sql": "WITH kevin_attributes AS (SELECT pa.date, pa.crossing FROM Player AS p JOIN Player_Attributes AS pa ON pa.player_api_id = p.player_api_id WHERE p.player_name = 'Kevin Constant'), max_crossing AS (SELECT MAX(crossing) AS highest_crossing FROM kevin_attributes) SELECT MIN(date) AS date FROM kevin_attributes, max_crossing WHERE kevin_attributes.crossing = max_crossing.highest_crossing;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "financial:93b0acdcb99f",
+      "db_id": "financial",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT T1.account_id , ( SELECT MAX(A11) - MIN(A11) FROM district ) FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id INNER JOIN disp AS T3 ON T1.account_id = T3.account_id INNER JOIN client AS T4 ON T3.client_id = T4.client_id WHERE T2.district_id = ( SELECT district_id FROM client WHERE gender = 'F' ORDER BY birth_date ASC LIMIT 1 ) ORDER BY T2.A11 DESC LIMIT 1",
+      "generated_sql": "WITH female_district_metric AS (\n    SELECT MIN(d.A11) AS lowest_metric\n    FROM client AS c\n    JOIN district AS d\n        ON c.district_id = d.district_id\n    WHERE c.gender = 'F'\n),\noldest_qualifying_female AS (\n    SELECT MIN(c.birth_date) AS oldest_birth_date\n    FROM client AS c\n    JOIN district AS d\n        ON c.district_id = d.district_id\n    CROSS JOIN female_district_metric AS fdm\n    WHERE c.gender = 'F'\n      AND d.A11 = fdm.lowest_metric\n),\nmetric_gap AS (\n    SELECT MAX(d.A11) - fdm.lowest_metric AS metric_gap\n    FROM district AS d\n    CROSS JOIN female_district_metric AS fdm\n),\nqualifying_clients AS (\n    SELECT c.client_id\n    FROM client AS c\n    JOIN district AS d\n        ON c.district_id = d.district_id\n    CROSS JOIN female_district_metric AS fdm\n    CROSS JOIN oldest_qualifying_female AS oqf\n    WHERE c.gender = 'F'\n      AND d.A11 = fdm.lowest_metric\n      AND c.birth_date = oqf.oldest_birth_date\n)\nSELECT DISTINCT\n    a.account_id AS account_number,\n    mg.metric_gap\nFROM qualifying_clients AS qc\nJOIN disp AS dp\n    ON qc.client_id = dp.client_id\nJOIN account AS a\n    ON dp.account_id = a.account_id\nCROSS JOIN metric_gap AS mg\nWHERE dp.type = 'OWNER';"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "financial:87d4f04400bd",
+      "db_id": "financial",
+      "label": "missing_join",
+      "gold_sql": "SELECT T4.trans_id FROM client AS T1 INNER JOIN disp AS T2 ON T1.client_id = T2.client_id INNER JOIN account AS T3 ON T2.account_id = T3.account_id INNER JOIN trans AS T4 ON T3.account_id = T4.account_id WHERE T1.client_id = 3356 AND T4.operation = 'VYBER'",
+      "generated_sql": "SELECT t.*\nFROM trans AS t\nWHERE t.operation = 'VYBER'\n  AND EXISTS (\n    SELECT 1\n    FROM disp AS d\n    WHERE d.account_id = t.account_id\n      AND d.client_id = 3356\n  );"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "formula_1:affdb9fe5f0f",
+      "db_id": "formula_1",
+      "label": "missing_join",
+      "gold_sql": "SELECT T1.name FROM races AS T1 INNER JOIN driverStandings AS T2 ON T2.raceId = T1.raceId INNER JOIN drivers AS T3 ON T3.driverId = T2.driverId WHERE T3.forename = 'Alex' AND T3.surname = 'Yoong' AND T2.position < 20",
+      "generated_sql": "SELECT r.year, r.name, r.date FROM results AS res JOIN drivers AS d ON res.driverId = d.driverId JOIN races AS r ON res.raceId = r.raceId WHERE lower(d.forename || ' ' || d.surname) = 'alex yoong' AND res.position < 20 ORDER BY r.date;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "student_club:ac79e09aa893",
+      "db_id": "student_club",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT T2.first_name, T2.last_name, T1.cost FROM expense AS T1 INNER JOIN member AS T2 ON T1.link_to_member = T2.member_id WHERE T1.expense_description = 'Water, Veggie tray, supplies'",
+      "generated_sql": "SELECT m.first_name || ' ' || m.last_name AS full_name, e.cost FROM expense AS e JOIN member AS m ON e.link_to_member = m.member_id WHERE e.expense_description = 'Water, Veggie tray, supplies';"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "superhero:e803fda95445",
+      "db_id": "superhero",
+      "label": "wrong_aggregate",
+      "gold_sql": "SELECT CAST(COUNT(CASE WHEN T3.colour = 'Blue' THEN T1.id ELSE NULL END) AS REAL) * 100 / COUNT(T1.id) FROM superhero AS T1 INNER JOIN gender AS T2 ON T1.gender_id = T2.id INNER JOIN colour AS T3 ON T1.skin_colour_id = T3.id WHERE T2.gender = 'Female'",
+      "generated_sql": "SELECT 100.0 * SUM(CASE WHEN c.colour = 'Blue' THEN 1 ELSE 0 END) / COUNT(*) AS percentage\nFROM superhero AS s\nJOIN gender AS g ON s.gender_id = g.id\nLEFT JOIN colour AS c ON s.eye_colour_id = c.id\nWHERE g.gender = 'Female';"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "thrombosis_prediction:2ffb616122e2",
+      "db_id": "thrombosis_prediction",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT DISTINCT T1.ID FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID WHERE T2.PLT BETWEEN 100 AND 400 AND STRFTIME('%Y', T2.Date) - STRFTIME('%Y', T1.Birthday) < 50 AND STRFTIME('%Y', T2.Date) = '1984'",
+      "generated_sql": "SELECT DISTINCT p.ID, p.SEX, p.Birthday, p.Diagnosis FROM Laboratory AS l JOIN Patient AS p ON p.ID = l.ID WHERE strftime('%Y', l.Date) = '1984' AND l.PLT BETWEEN 100 AND 400 AND (CAST(strftime('%Y', l.Date) AS INTEGER) - CAST(strftime('%Y', p.Birthday) AS INTEGER) - (strftime('%m-%d', l.Date) < strftime('%m-%d', p.Birthday))) < 50;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "thrombosis_prediction:f95fe33f81d0",
+      "db_id": "thrombosis_prediction",
+      "label": "wrong_aggregate",
+      "gold_sql": "SELECT DISTINCT ID FROM Laboratory WHERE Date BETWEEN '1987-07-06' AND '1996-01-31' AND GPT > 30 AND ALB < 4",
+      "generated_sql": "WITH qualifying_patients AS (SELECT DISTINCT ID FROM Laboratory WHERE Date BETWEEN '1987-07-06' AND '1996-01-31' AND GPT > 30 AND ALB < 4) SELECT ID, (SELECT COUNT(*) FROM qualifying_patients) AS patient_count FROM qualifying_patients ORDER BY ID;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "thrombosis_prediction:8aa70f6bd680",
+      "db_id": "thrombosis_prediction",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT DISTINCT T1.ID, T1.SEX, T1.Diagnosis FROM Patient AS T1 INNER JOIN Examination AS T2 ON T1.ID = T2.ID WHERE T2.Thrombosis = 2",
+      "generated_sql": "SELECT DISTINCT p.ID, p.SEX, p.Diagnosis FROM Patient AS p JOIN Examination AS e ON e.ID = p.ID WHERE e.Thrombosis = 1;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "toxicology:642324cb78c1",
+      "db_id": "toxicology",
+      "label": "missing_join",
+      "gold_sql": "SELECT AVG(single_bond_count) FROM (SELECT T3.molecule_id, COUNT(T1.bond_type) AS single_bond_count FROM bond AS T1  INNER JOIN atom AS T2 ON T1.molecule_id = T2.molecule_id INNER JOIN molecule AS T3 ON T3.molecule_id = T2.molecule_id WHERE T1.bond_type = '-' AND T3.label = '+' GROUP BY T3.molecule_id) AS subquery",
+      "generated_sql": "SELECT AVG(COALESCE(sb.single_bond_count, 0.0)) AS average_single_bonds_per_carcinogenic_molecule\nFROM molecule AS m\nLEFT JOIN (\n    SELECT molecule_id,\n           COUNT(CASE WHEN bond_type = '-' THEN 1 END) AS single_bond_count\n    FROM bond\n    GROUP BY molecule_id\n) AS sb ON sb.molecule_id = m.molecule_id\nWHERE m.label = '+';"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "toxicology:7b2ba70e9986",
+      "db_id": "toxicology",
+      "label": "wrong_aggregate",
+      "gold_sql": "SELECT ROUND(CAST(COUNT(CASE WHEN T.label = '+' THEN T.molecule_id ELSE NULL END) AS REAL) * 100 / COUNT(T.molecule_id),3) FROM molecule t",
+      "generated_sql": "SELECT printf('%.3f%%', 100.0 * SUM(CASE WHEN label = '+' THEN 1 ELSE 0 END) / NULLIF(COUNT(molecule_id), 0)) AS carcinogenic_percentage FROM molecule;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "california_schools:df569d4cf70d",
+      "db_id": "california_schools",
+      "label": "missing_join",
+      "gold_sql": "SELECT T2.AdmEmail1, T2.AdmEmail2 FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode WHERE T2.County = 'San Bernardino' AND T2.City = 'San Bernardino' AND T2.DOC = 54 AND strftime('%Y', T2.OpenDate) BETWEEN '2009' AND '2010' AND T2.SOC = 62",
+      "generated_sql": "WITH eligible_schools AS (\n    SELECT\n        s.AdmEmail1,\n        s.AdmEmail2,\n        s.AdmEmail3\n    FROM schools AS s\n    WHERE s.County = 'San Bernardino'\n      AND lower(s.District) LIKE '%san bernardino city unified%'\n      AND s.SOCType = 'Intermediate/Middle Schools (Public)'\n      AND s.DOCType = 'Unified School District'\n      AND date(s.OpenDate) BETWEEN date('2009-01-01') AND date('2010-12-31')\n), administrator_emails AS (\n    SELECT trim(AdmEmail1) AS email FROM eligible_schools\n    UNION ALL\n    SELECT trim(AdmEmail2) AS email FROM eligible_schools\n    UNION ALL\n    SELECT trim(AdmEmail3) AS email FROM eligible_schools\n)\nSELECT DISTINCT email\nFROM administrator_emails\nWHERE email <> ''\n  AND email LIKE '%@%'\nORDER BY email;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "california_schools:fc6f4c84924f",
+      "db_id": "california_schools",
+      "label": "extra_filter",
+      "gold_sql": "SELECT T2.`School Name` FROM satscores AS T1 INNER JOIN frpm AS T2 ON T1.cds = T2.CDSCode WHERE CAST(T2.`Free Meal Count (K-12)` AS REAL) / T2.`Enrollment (K-12)` > 0.1 AND T1.NumGE1500 > 0",
+      "generated_sql": "SELECT DISTINCT s.\"School\"\nFROM schools AS s\nJOIN frpm AS f ON f.\"CDSCode\" = s.\"CDSCode\"\nJOIN satscores AS sat ON sat.cds = s.\"CDSCode\"\nWHERE f.\"Enrollment (K-12)\" > 0\n  AND f.\"Free Meal Count (K-12)\" / f.\"Enrollment (K-12)\" > 0.1\n  AND sat.\"NumGE1500\" > 0\n  AND s.\"School\" IS NOT NULL;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "codebase_community:a4a85b8df41b",
+      "db_id": "codebase_community",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT CAST(SUM(IIF(STRFTIME('%Y', T2.CreaionDate) = '2011' AND T1.Reputation > 1000, 1, 0)) AS REAL) * 100 / COUNT(T1.Id) FROM users AS T1 INNER JOIN posts AS T2 ON T1.Id = T2.OwnerUserId",
+      "generated_sql": "SELECT 100.0 * SUM(CASE WHEN u.Reputation > 1000 THEN 1 ELSE 0 END) / COUNT(*) AS percentage FROM posts AS p JOIN users AS u ON u.Id = p.OwnerUserId WHERE strftime('%Y', p.CreaionDate) = '2011';"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "debit_card_specializing:17c7dd483a14",
+      "db_id": "debit_card_specializing",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT SUBSTR(T2.Date, 5, 2) FROM customers AS T1 INNER JOIN yearmonth AS T2 ON T1.CustomerID = T2.CustomerID WHERE SUBSTR(T2.Date, 1, 4) = '2013' AND T1.Segment = 'SME' GROUP BY SUBSTR(T2.Date, 5, 2) ORDER BY SUM(T2.Consumption) DESC LIMIT 1",
+      "generated_sql": "SELECT ym.Date AS peak_month\nFROM yearmonth AS ym\nJOIN customers AS c ON c.CustomerID = ym.CustomerID\nWHERE c.Segment = 'SME'\n  AND ym.Date BETWEEN '201301' AND '201312'\nGROUP BY ym.Date\nORDER BY SUM(ym.Consumption) DESC\nLIMIT 1;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "european_football_2:abbac62a6b3a",
+      "db_id": "european_football_2",
+      "label": "wrong_aggregate",
+      "gold_sql": "SELECT DISTINCT t4.team_long_name FROM Team_Attributes AS t3 INNER JOIN Team AS t4 ON t3.team_api_id = t4.team_api_id WHERE SUBSTR(t3.`date`, 1, 4) = '2012' AND t3.buildUpPlayPassing > ( SELECT CAST(SUM(t2.buildUpPlayPassing) AS REAL) / COUNT(t1.id) FROM Team AS t1 INNER JOIN Team_Attributes AS t2 ON t1.team_api_id = t2.team_api_id WHERE STRFTIME('%Y',t2.`date`) = '2012')",
+      "generated_sql": "WITH passing_2012 AS (SELECT t.team_long_name, ta.buildUpPlayPassing FROM Team_Attributes AS ta JOIN Team AS t ON t.team_api_id = ta.team_api_id WHERE strftime('%Y', ta.date) = '2012' AND ta.buildUpPlayPassing IS NOT NULL), average_passing AS (SELECT AVG(buildUpPlayPassing) AS avg_passing FROM passing_2012) SELECT team_long_name FROM passing_2012 CROSS JOIN average_passing WHERE buildUpPlayPassing > avg_passing;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "european_football_2:98640e556abe",
+      "db_id": "european_football_2",
+      "label": "other",
+      "gold_sql": "SELECT t1.name FROM League AS t1 INNER JOIN Match AS t2 ON t1.id = t2.league_id WHERE t2.season = '2015/2016' GROUP BY t1.name ORDER BY COUNT(t2.id) DESC LIMIT 4",
+      "generated_sql": "SELECT l.name, COUNT(m.id) AS game_count\nFROM Match AS m\nJOIN League AS l ON l.id = m.league_id\nWHERE m.season = '2015/2016'\nGROUP BY l.id, l.name\nORDER BY game_count DESC, l.name\nLIMIT 4;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "financial:bae6ad132a0e",
+      "db_id": "financial",
+      "label": "missing_join",
+      "gold_sql": "SELECT T1.frequency, T2.k_symbol FROM account AS T1 INNER JOIN (SELECT account_id, k_symbol, SUM(amount) AS total_amount FROM `order` GROUP BY account_id, k_symbol) AS T2 ON T1.account_id = T2.account_id WHERE T1.account_id = 3 AND T2.total_amount = 3539",
+      "generated_sql": "SELECT a.frequency, t.k_symbol FROM account AS a LEFT JOIN trans AS t ON t.account_id = a.account_id AND t.amount = 3539 AND t.type IN ('VYDAJ', 'VYBER') WHERE a.account_id = 3;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "financial:57f9c853bbc8",
+      "db_id": "financial",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT COUNT(T1.account_id) FROM account AS T1 INNER JOIN loan AS T2 ON T1.account_id = T2.account_id WHERE T2.date BETWEEN '1995-01-01' AND '1997-12-31' AND T1.frequency = 'POPLATEK MESICNE' AND T2.amount >= 250000",
+      "generated_sql": "SELECT account.account_id, COUNT(*) AS approved_loan_count\nFROM loan\nJOIN account ON loan.account_id = account.account_id\nWHERE loan.date >= '1995-01-01'\n  AND loan.date <= '1997-12-31'\n  AND loan.amount >= 250000\n  AND account.frequency = 'POPLATEK MESICNE'\n  AND loan.status = 'A'\nGROUP BY account.account_id;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "formula_1:617e29561178",
+      "db_id": "formula_1",
+      "label": "wrong_aggregate",
+      "gold_sql": "SELECT T1.forename, T1.surname, T1.nationality, MAX(T2.points) FROM drivers AS T1 INNER JOIN driverStandings AS T2 ON T2.driverId = T1.driverId WHERE T2.wins >= 1 GROUP BY T1.forename, T1.surname, T1.nationality ORDER BY COUNT(T2.wins) DESC LIMIT 1",
+      "generated_sql": "WITH driver_stats AS (\n    SELECT\n        ds.driverId,\n        MAX(ds.wins) AS max_wins,\n        MAX(ds.points) AS max_points\n    FROM driverStandings AS ds\n    GROUP BY ds.driverId\n), most_winning AS (\n    SELECT MAX(max_wins) AS highest_wins\n    FROM driver_stats\n)\nSELECT\n    d.forename || ' ' || d.surname AS full_name,\n    d.nationality,\n    s.max_points\nFROM driver_stats AS s\nJOIN most_winning AS mw\n    ON s.max_wins = mw.highest_wins\nJOIN drivers AS d\n    ON d.driverId = s.driverId\nORDER BY full_name;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "formula_1:02ece05e36d9",
+      "db_id": "formula_1",
+      "label": "missing_join",
+      "gold_sql": "SELECT COUNT(T1.raceId) FROM constructorStandings AS T1 INNER JOIN constructors AS T2 on T1.constructorId = T2.constructorId WHERE T1.points = 0 AND T2.nationality = 'Japanese' GROUP BY T1.constructorId HAVING COUNT(raceId) = 2",
+      "generated_sql": "SELECT COUNT(*) AS constructor_count\nFROM (\n    SELECT cr.constructorId\n    FROM constructorResults AS cr\n    JOIN constructors AS c\n      ON c.constructorId = cr.constructorId\n    WHERE c.nationality = 'Japanese'\n    GROUP BY cr.constructorId\n    HAVING COUNT(DISTINCT CASE WHEN cr.points = 0 THEN cr.raceId END) = 2\n);"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "student_club:b7b8fddecbcc",
+      "db_id": "student_club",
+      "label": "missing_join",
+      "gold_sql": "SELECT DISTINCT T3.first_name, T3.last_name, T4.amount FROM event AS T1 INNER JOIN attendance AS T2 ON T1.event_id = T2.link_to_event INNER JOIN member AS T3 ON T3.member_id = T2.link_to_member INNER JOIN income AS T4 ON T4.link_to_member = T3.member_id WHERE T4.date_received = '2019-09-09'",
+      "generated_sql": "SELECT m.first_name || ' ' || m.last_name AS full_name, i.amount FROM income AS i JOIN member AS m ON i.link_to_member = m.member_id WHERE i.date_received = '2019-09-09';"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "superhero:d03ddb955a2c",
+      "db_id": "superhero",
+      "label": "wrong_aggregate",
+      "gold_sql": "SELECT SUM(CASE WHEN T2.publisher_name = 'DC Comics' THEN 1 ELSE 0 END) - SUM(CASE WHEN T2.publisher_name = 'Marvel Comics' THEN 1 ELSE 0 END) FROM superhero AS T1 INNER JOIN publisher AS T2 ON T1.publisher_id = T2.id",
+      "generated_sql": "WITH publisher_counts AS (SELECT p.publisher_name, COUNT(s.id) AS superhero_count FROM superhero AS s JOIN publisher AS p ON s.publisher_id = p.id WHERE p.publisher_name IN ('DC Comics', 'Marvel Comics') GROUP BY p.publisher_name), counts AS (SELECT COALESCE(MAX(CASE WHEN publisher_name = 'DC Comics' THEN superhero_count END), 0) AS dc_count, COALESCE(MAX(CASE WHEN publisher_name = 'Marvel Comics' THEN superhero_count END), 0) AS marvel_count FROM publisher_counts) SELECT CASE WHEN dc_count > marvel_count THEN 'DC Comics' WHEN marvel_count > dc_count THEN 'Marvel Comics' ELSE 'Tie' END AS publisher_with_more_superheroes, dc_count - marvel_count AS difference FROM counts;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "superhero:c7a09b57aa57",
+      "db_id": "superhero",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT T2.publisher_name FROM superhero AS T1 INNER JOIN publisher AS T2 ON T1.publisher_id = T2.id WHERE T1.superhero_name IN ('Hawkman', 'Karate Kid', 'Speedy')",
+      "generated_sql": "SELECT s.superhero_name, p.publisher_name FROM superhero AS s LEFT JOIN publisher AS p ON s.publisher_id = p.id WHERE s.superhero_name IN ('Hawkman', 'Karate Kid', 'Speedy') ORDER BY CASE s.superhero_name WHEN 'Hawkman' THEN 1 WHEN 'Karate Kid' THEN 2 WHEN 'Speedy' THEN 3 END;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "thrombosis_prediction:85f072f7ecd8",
+      "db_id": "thrombosis_prediction",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT DISTINCT T1.ID, T1.SEX , STRFTIME('%Y', CURRENT_TIMESTAMP) - STRFTIME('%Y', T1.Birthday) FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID WHERE T2.GLU >= 180 AND T2.`T-CHO` < 250",
+      "generated_sql": "SELECT DISTINCT p.ID, p.SEX, CAST(strftime('%Y', '2026-10-01') AS INTEGER) - CAST(strftime('%Y', p.Birthday) AS INTEGER) - (strftime('%m-%d', '2026-10-01') < strftime('%m-%d', p.Birthday)) AS age FROM Patient AS p JOIN Laboratory AS l ON l.ID = p.ID WHERE l.GLU >= 180 AND l.\"T-CHO\" < 250;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "thrombosis_prediction:e1392e576ab9",
+      "db_id": "thrombosis_prediction",
+      "label": "other",
+      "gold_sql": "SELECT COUNT(T1.ID) FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID WHERE (T2.CRP = '+' ) AND T1.Description IS NULL",
+      "generated_sql": "SELECT COUNT(DISTINCT p.ID) AS patient_count\nFROM Patient AS p\nJOIN Laboratory AS l ON l.ID = p.ID\nWHERE l.\"CRP\" = '+'\n  AND p.\"Description\" IS NULL;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "thrombosis_prediction:87e3d4cdd0b3",
+      "db_id": "thrombosis_prediction",
+      "label": "missing_join",
+      "gold_sql": "SELECT COUNT(DISTINCT T1.ID) FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID INNER JOIN Examination AS T3 ON T3.ID = T2.ID WHERE T2.IGG >= 2000",
+      "generated_sql": "SELECT COUNT(DISTINCT ID) AS patient_count\nFROM Laboratory\nWHERE IGG > 2000;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "toxicology:9dbe37207028",
+      "db_id": "toxicology",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT COUNT(T2.bond_id) FROM bond AS T1 INNER JOIN connected AS T2 ON T1.bond_id = T2.bond_id WHERE T1.molecule_id = 'TR009' AND T2.atom_id = T1.molecule_id || '_1' OR T2.atom_id2 = T1.molecule_id || '_2'",
+      "generated_sql": "SELECT COUNT(DISTINCT c.bond_id) AS bond_count\nFROM connected AS c\nJOIN atom AS a1 ON a1.atom_id = c.atom_id\nJOIN atom AS a2 ON a2.atom_id = c.atom_id2\nJOIN bond AS b ON b.bond_id = c.bond_id\nWHERE (c.atom_id = 'TR009_12' OR c.atom_id2 = 'TR009_12')\n  AND a1.molecule_id = 'TR009'\n  AND a2.molecule_id = 'TR009'\n  AND b.molecule_id = 'TR009';"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "toxicology:7178e2839ad4",
+      "db_id": "toxicology",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT COUNT(T.bond_id) FROM connected AS T WHERE SUBSTR(T.atom_id, -2) = '19'",
+      "generated_sql": "SELECT COUNT(DISTINCT bond_id) AS connection_count\nFROM connected\nWHERE atom_id LIKE 'TR%\\_19' ESCAPE '\\'\n   OR atom_id2 LIKE 'TR%\\_19' ESCAPE '\\';"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "card_games:65c2e0940bf8",
+      "db_id": "card_games",
+      "label": "wrong_aggregate",
+      "gold_sql": "SELECT CAST(SUM(CASE WHEN T2.language = 'French' THEN 1 ELSE 0 END) AS REAL) * 100 / COUNT(T1.id) FROM cards AS T1 INNER JOIN foreign_data AS T2 ON T1.uuid = T2.uuid WHERE T1.power IS NULL OR T1.power = '*'",
+      "generated_sql": "SELECT 100.0 * COUNT(DISTINCT CASE WHEN fd.language = 'French' THEN c.uuid END) / COUNT(DISTINCT c.uuid) AS percentage FROM cards AS c LEFT JOIN foreign_data AS fd ON fd.uuid = c.uuid WHERE c.power IS NULL OR c.power = '*';"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "card_games:e12482c324c2",
+      "db_id": "card_games",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT T1.id, T2.text, T1.hasContentWarning FROM cards AS T1 INNER JOIN rulings AS T2 ON T1.uuid = T2.uuid WHERE T1.artist = 'Stephen Daniele'",
+      "generated_sql": "SELECT c.id, c.name, r.text AS ruling_text, 'not determinable: hasContentWarning is not present in the provided schema' AS missing_or_degraded_status FROM cards AS c LEFT JOIN rulings AS r ON r.uuid = c.uuid WHERE lower(c.artist) = 'stephen daniele' ORDER BY c.id, r.date, r.id;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "card_games:a2e0dbf3e568",
+      "db_id": "card_games",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT CAST(SUM(CASE WHEN isTextless = 1 AND layout = 'normal' THEN 1 ELSE 0 END) AS REAL) * 100 / COUNT(*) FROM cards",
+      "generated_sql": "SELECT 100.0 * SUM(CASE WHEN layout = 'normal' THEN 1 ELSE 0 END) / COUNT(*) AS proportion FROM cards WHERE text IS NULL OR text = '';"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "codebase_community:a6b1b112ca06",
+      "db_id": "codebase_community",
+      "label": "missing_join",
+      "gold_sql": "SELECT CAST(SUM(IIF(T3.TagName = 'r', 1, 0)) AS REAL) * 100 / COUNT(T1.Id) FROM users AS T1 INNER JOIN postHistory AS T2 ON T1.Id = T2.UserId INNER JOIN tags AS T3 ON T3.ExcerptPostId = T2.PostId WHERE T1.DisplayName = 'Community'",
+      "generated_sql": "SELECT 100.0 * SUM(CASE WHEN instr(p.Tags, '<r>') > 0 THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0) AS percentage_r_posts\nFROM posts AS p\nJOIN users AS u ON u.Id = p.OwnerUserId\nWHERE u.DisplayName = 'Community';"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "debit_card_specializing:7ecd22010292",
+      "db_id": "debit_card_specializing",
+      "label": "wrong_aggregate",
+      "gold_sql": "SELECT SUM(Currency = 'CZK') - SUM(Currency = 'EUR') FROM customers WHERE Segment = 'SME'",
+      "generated_sql": "SELECT\n    COUNT(DISTINCT CASE WHEN c.Currency = 'CZK' THEN c.CustomerID END) >\n    COUNT(DISTINCT CASE WHEN c.Currency = 'EUR' THEN c.CustomerID END) AS more_czk,\n    COUNT(DISTINCT CASE WHEN c.Currency = 'CZK' THEN c.CustomerID END) -\n    COUNT(DISTINCT CASE WHEN c.Currency = 'EUR' THEN c.CustomerID END) AS amount_more\nFROM transactions_1k AS t\nJOIN customers AS c\n    ON c.CustomerID = t.CustomerID\nWHERE c.Segment = 'SME';"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "european_football_2:32f367a77edb",
+      "db_id": "european_football_2",
+      "label": "extra_filter",
+      "gold_sql": "SELECT COUNT(DISTINCT t1.player_name) FROM Player AS t1 INNER JOIN Player_Attributes AS t2 ON t1.player_api_id = t2.player_api_id WHERE STRFTIME('%Y',t1.birthday) < '1986' AND t2.defensive_work_rate = 'high'",
+      "generated_sql": "SELECT COUNT(DISTINCT p.player_api_id) AS player_count\nFROM Player AS p\nJOIN Player_Attributes AS pa\n  ON pa.player_api_id = p.player_api_id\nWHERE strftime('%Y', p.birthday) < '1986'\n  AND pa.attacking_work_rate = 'high'\n  AND pa.defensive_work_rate = 'high';"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "european_football_2:28d8b38710d3",
+      "db_id": "european_football_2",
+      "label": "wrong_aggregate",
+      "gold_sql": "SELECT t1.buildUpPlaySpeed FROM Team_Attributes AS t1 INNER JOIN Team AS t2 ON t1.team_api_id = t2.team_api_id ORDER BY t1.buildUpPlaySpeed ASC LIMIT 4",
+      "generated_sql": "SELECT t.team_long_name, MAX(ta.buildUpPlaySpeed) AS buildUpPlaySpeed\nFROM Team AS t\nJOIN Team_Attributes AS ta\n  ON ta.team_api_id = t.team_api_id\nGROUP BY t.id, t.team_long_name\nORDER BY buildUpPlaySpeed DESC\nLIMIT 4;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "european_football_2:079559524669",
+      "db_id": "european_football_2",
+      "label": "other",
+      "gold_sql": "SELECT DISTINCT t1.player_name FROM Player AS t1 INNER JOIN Player_Attributes AS t2 ON t1.player_api_id = t2.player_api_id WHERE t2.overall_rating = (SELECT MAX(overall_rating) FROM Player_Attributes)",
+      "generated_sql": "SELECT DISTINCT p.player_name\nFROM Player AS p\nJOIN Player_Attributes AS pa\n  ON pa.player_api_id = p.player_api_id\nWHERE pa.strength = (\n  SELECT MAX(pa2.strength)\n  FROM Player_Attributes AS pa2\n);"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "financial:60ab4f0075a4",
+      "db_id": "financial",
+      "label": "missing_join",
+      "gold_sql": "SELECT CAST((SUM(CASE WHEN STRFTIME('%Y', T1.date) = '1997' THEN T1.amount ELSE 0 END) - SUM(CASE WHEN STRFTIME('%Y', T1.date) = '1996' THEN T1.amount ELSE 0 END)) AS REAL) * 100 / SUM(CASE WHEN STRFTIME('%Y', T1.date) = '1996' THEN T1.amount ELSE 0 END) FROM loan AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id INNER JOIN disp AS T3 ON T3.account_id = T2.account_id INNER JOIN client AS T4 ON T4.client_id = T3.client_id WHERE T4.gender = 'M' AND T3.type = 'OWNER'",
+      "generated_sql": "WITH yearly_loans AS (\n    SELECT\n        strftime('%Y', l.date) AS loan_year,\n        SUM(l.amount) AS total_amount\n    FROM loan AS l\n    WHERE strftime('%Y', l.date) IN ('1996', '1997')\n      AND EXISTS (\n          SELECT 1\n          FROM disp AS d\n          JOIN client AS c\n            ON d.client_id = c.client_id\n          WHERE d.account_id = l.account_id\n            AND c.gender = 'M'\n      )\n    GROUP BY strftime('%Y', l.date)\n), totals AS (\n    SELECT\n        COALESCE(MAX(CASE WHEN loan_year = '1996' THEN total_amount END), 0) AS amount_1996,\n        COALESCE(MAX(CASE WHEN loan_year = '1997' THEN total_amount END), 0) AS amount_1997\n    FROM yearly_loans\n)\nSELECT\n    (amount_1997 - amount_1996) * 100.0 / NULLIF(amount_1996, 0) AS growth_rate\nFROM totals;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "formula_1:49d7fa2170ca",
+      "db_id": "formula_1",
+      "label": "missing_join",
+      "gold_sql": "WITH time_in_seconds AS ( SELECT T2.year, T2.raceId, T1.positionOrder, CASE WHEN T1.positionOrder = 1 THEN (CAST(SUBSTR(T1.time, 1, 1) AS REAL) * 3600) + (CAST(SUBSTR(T1.time, 3, 2) AS REAL) * 60) + CAST(SUBSTR(T1.time, 6,2) AS REAL )   + CAST(SUBSTR(T1.time, 9) AS REAL)/1000 ELSE 0 END AS time_seconds FROM results AS T1 INNER JOIN races AS T2 ON T1.raceId = T2.raceId WHERE T1.time IS NOT NULL ), champion_time AS ( SELECT year, raceId, time_seconds FROM time_in_seconds WHERE positionOrder = 1 ) SELECT year, AVG(time_seconds) FROM champion_time WHERE year < 1975 GROUP BY year HAVING AVG(time_seconds) IS NOT NULL",
+      "generated_sql": "SELECT r.year, AVG(3600 * CAST(substr(res.time, 1, 2) AS INTEGER) + 60 * CAST(substr(res.time, 4, 2) AS INTEGER) + CAST(substr(res.time, 7) AS REAL)) AS average_time_seconds FROM results AS res JOIN races AS r ON r.raceId = res.raceId WHERE r.year < 1975 AND res.position = 1 AND res.time IS NOT NULL GROUP BY r.year ORDER BY r.year;"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "formula_1:13883b7d2c5a",
+      "db_id": "formula_1",
+      "label": "wrong_aggregate",
+      "gold_sql": "SELECT T2.milliseconds, T1.forename, T1.surname, T3.name FROM drivers AS T1 INNER JOIN lapTimes AS T2 ON T1.driverId = T2.driverId INNER JOIN races AS T3 ON T2.raceId = T3.raceId ORDER BY T2.milliseconds ASC LIMIT 1",
+      "generated_sql": "SELECT lt.time, d.forename || ' ' || d.surname AS driver, r.name AS race FROM lapTimes AS lt JOIN drivers AS d ON d.driverId = lt.driverId JOIN races AS r ON r.raceId = lt.raceId WHERE lt.milliseconds = (SELECT MIN(milliseconds) FROM lapTimes);"
+    },
+    {
+      "source": "bird150-baseline.json",
+      "id": "formula_1:dfdaddc2d3a3",
+      "db_id": "formula_1",
+      "label": "missing_join",
+      "gold_sql": "SELECT T2.name FROM constructorStandings AS T1 INNER JOIN constructors AS T2 on T1.constructorId = T2.constructorId WHERE T1.points = 0 AND T1.raceId = 291",
+      "generated_sql": "SELECT c.name FROM constructorResults AS cr JOIN constructors AS c ON c.constructorId = cr.constructorId WHERE cr.raceId = 291 AND cr.points = 0;"
+    },
+    {
+      "source": "bird24-baseline.json",
+      "id": "debit_card_specializing:cc86ad0a4d81",
+      "db_id": "debit_card_specializing",
+      "label": "wrong_aggregate",
+      "gold_sql": "SELECT CAST(SUM(IIF(T1.Segment = 'SME', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID) - CAST(SUM(IIF(T1.Segment = 'LAM', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID) , CAST(SUM(IIF(T1.Segment = 'LAM', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID) - CAST(SUM(IIF(T1.Segment = 'KAM', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID) , CAST(SUM(IIF(T1.Segment = 'KAM', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID) - CAST(SUM(IIF(T1.Segment = 'SME', T2.Consumption, 0)) AS REAL) / COUNT(T1.CustomerID) FROM customers AS T1 INNER JOIN yearmonth AS T2 ON T1.CustomerID = T2.CustomerID WHERE T1.Currency = 'CZK' AND T2.Consumption = ( SELECT MIN(Consumption) FROM yearmonth ) AND T2.Date BETWEEN 201301 AND 201312",
+      "generated_sql": "WITH annual_customer AS (\n    SELECT\n        c.CustomerID,\n        c.Segment,\n        SUM(y.Consumption) AS annual_consumption\n    FROM customers AS c\n    JOIN yearmonth AS y\n      ON y.CustomerID = c.CustomerID\n    WHERE c.Currency = 'CZK'\n      AND substr(y.Date, 1, 4) = '2013'\n      AND c.Segment IN ('SME', 'LAM', 'KAM')\n    GROUP BY c.CustomerID, c.Segment\n), segment_minimums AS (\n    SELECT\n        Segment,\n        MIN(annual_consumption) AS minimum_consumption\n    FROM annual_customer\n    GROUP BY Segment\n), segment_averages AS (\n    SELECT\n        a.Segment,\n        AVG(a.annual_consumption) AS annual_average\n    FROM annual_customer AS a\n    JOIN segment_minimums AS m\n      ON m.Segment = a.Segment\n     AND m.minimum_consumption = a.annual_consumption\n    GROUP BY a.Segment\n)\nSELECT\n    'SME - LAM' AS comparison,\n    sme.annual_average - lam.annual_average AS difference\nFROM segment_averages AS sme\nJOIN segment_averages AS lam\n  ON lam.Segment = 'LAM'\nWHERE sme.Segment = 'SME'\nUNION ALL\nSELECT\n    'LAM - KAM' AS comparison,\n    lam.annual_average - kam.annual_average AS difference\nFROM segment_averages AS lam\nJOIN segment_averages AS kam\n  ON kam.Segment = 'KAM'\nWHERE lam.Segment = 'LAM'\nUNION ALL\nSELECT\n    'KAM - SME' AS comparison,\n    kam.annual_average - sme.annual_average AS difference\nFROM segment_averages AS kam\nJOIN segment_averages AS sme\n  ON sme.Segment = 'SME'\nWHERE kam.Segment = 'KAM';"
+    },
+    {
+      "source": "bird24-baseline.json",
+      "id": "student_club:a93399d99ac6",
+      "db_id": "student_club",
+      "label": "missing_join",
+      "gold_sql": "SELECT DISTINCT T3.first_name, T3.last_name, T3.phone FROM expense AS T1 INNER JOIN budget AS T2 ON T1.link_to_budget = T2.budget_id INNER JOIN member AS T3 ON T3.member_id = T1.link_to_member WHERE T1.cost > ( SELECT AVG(T1.cost) FROM expense AS T1 INNER JOIN budget AS T2 ON T1.link_to_budget = T2.budget_id INNER JOIN member AS T3 ON T3.member_id = T1.link_to_member )",
+      "generated_sql": "SELECT DISTINCT m.first_name || ' ' || m.last_name AS full_name, m.phone AS contact_number\nFROM member AS m\nJOIN expense AS e\n  ON e.link_to_member = m.member_id\nWHERE e.cost > (SELECT AVG(cost) FROM expense);"
+    },
+    {
+      "source": "bird24-baseline.json",
+      "id": "superhero:66b54793d540",
+      "db_id": "superhero",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT (CAST(COUNT(*) AS REAL) * 100 / (SELECT COUNT(*) FROM superhero)), CAST(SUM(CASE WHEN T2.publisher_name = 'Marvel Comics' THEN 1 ELSE 0 END) AS REAL) FROM superhero AS T1 INNER JOIN publisher AS T2 ON T1.publisher_id = T2.id INNER JOIN alignment AS T3 ON T3.id = T1.alignment_id WHERE T3.alignment = 'Bad'",
+      "generated_sql": "SELECT ROUND(100.0 * SUM(CASE WHEN a.alignment = 'Bad' THEN 1 ELSE 0 END) / COUNT(s.id), 2) AS bad_alignment_percentage, SUM(CASE WHEN a.alignment = 'Bad' AND p.publisher_name = 'Marvel Comics' THEN 1 ELSE 0 END) AS bad_aligned_marvel_count FROM superhero AS s LEFT JOIN alignment AS a ON s.alignment_id = a.id LEFT JOIN publisher AS p ON s.publisher_id = p.id;"
+    },
+    {
+      "source": "bird24-baseline.json",
+      "id": "thrombosis_prediction:b9d363403f2b",
+      "db_id": "thrombosis_prediction",
+      "label": "other",
+      "gold_sql": "SELECT COUNT(DISTINCT T1.ID) FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID WHERE T2.FG <= 150 OR T2.FG >= 450 AND T2.WBC > 3.5 AND T2.WBC < 9.0 AND T1.SEX = 'M'",
+      "generated_sql": "SELECT COUNT(DISTINCT p.ID) AS patient_count\nFROM Patient AS p\nJOIN Laboratory AS l ON l.ID = p.ID\nWHERE p.SEX = 'M'\n  AND l.WBC > 3.5\n  AND l.WBC < 9.0\n  AND (l.FG <= 150 OR l.FG >= 450);"
+    },
+    {
+      "source": "bird24-baseline.json",
+      "id": "thrombosis_prediction:059480ffe756",
+      "db_id": "thrombosis_prediction",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT STRFTIME('%Y', T2.Date) - STRFTIME('%Y', T1.Birthday), T1.Diagnosis FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID ORDER BY T2.HGB DESC LIMIT 1",
+      "generated_sql": "SELECT (CAST(strftime('%Y', e.\"Examination Date\") AS INTEGER) - CAST(strftime('%Y', p.Birthday) AS INTEGER) - CASE WHEN strftime('%m-%d', e.\"Examination Date\") < strftime('%m-%d', p.Birthday) THEN 1 ELSE 0 END) AS age, e.Diagnosis AS diagnosis FROM Laboratory AS l JOIN Patient AS p ON l.ID = p.ID JOIN Examination AS e ON e.ID = p.ID AND e.\"Examination Date\" = l.\"Date\" WHERE l.HGB IS NOT NULL ORDER BY l.HGB DESC LIMIT 1;"
+    },
+    {
+      "source": "bird24-baseline.json",
+      "id": "debit_card_specializing:398a7b846ff7",
+      "db_id": "debit_card_specializing",
+      "label": "missing_join",
+      "gold_sql": "SELECT CAST(SUM(IIF(SUBSTRING(Date, 1, 4) = '2012', Consumption, 0)) - SUM(IIF(SUBSTRING(Date, 1, 4) = '2013', Consumption, 0)) AS FLOAT) / SUM(IIF(SUBSTRING(Date, 1, 4) = '2012', Consumption, 0)) FROM yearmonth WHERE CustomerID = ( SELECT T1.CustomerID FROM transactions_1k AS T1 INNER JOIN gasstations AS T2 ON T1.GasStationID = T2.GasStationID WHERE T1.Date = '2012-08-25' AND T1.Price  = 1513.12 )",
+      "generated_sql": "WITH matched_customers AS (\n    SELECT DISTINCT CustomerID\n    FROM transactions_1k\n    WHERE Date = '2012-08-25'\n      AND Price = 634.8\n), annual_consumption AS (\n    SELECT\n        ym.CustomerID,\n        SUM(CASE WHEN ym.Date LIKE '2012%' THEN ym.Consumption ELSE 0 END) AS consumption_2012,\n        SUM(CASE WHEN ym.Date LIKE '2013%' THEN ym.Consumption ELSE 0 END) AS consumption_2013\n    FROM yearmonth AS ym\n    JOIN matched_customers AS mc\n      ON mc.CustomerID = ym.CustomerID\n    GROUP BY ym.CustomerID\n)\nSELECT\n    (consumption_2012 - consumption_2013) / NULLIF(consumption_2012, 0) AS consumption_decrease_rate\nFROM annual_consumption;"
+    },
+    {
+      "source": "bird24-baseline.json",
+      "id": "debit_card_specializing:95dedac7bdb1",
+      "db_id": "debit_card_specializing",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT T2.Consumption FROM transactions_1k AS T1 INNER JOIN yearmonth AS T2 ON T1.CustomerID = T2.CustomerID WHERE T1.Price / T1.Amount > 29.00 AND T1.ProductID = 5 AND T2.Date = '201208'",
+      "generated_sql": "WITH qualifying_customers AS (\n    SELECT DISTINCT CustomerID\n    FROM transactions_1k\n    WHERE ProductID = 5\n      AND Amount <> 0\n      AND Price / Amount > 29.00\n)\nSELECT q.CustomerID, y.Consumption\nFROM qualifying_customers AS q\nJOIN yearmonth AS y\n  ON y.CustomerID = q.CustomerID\n AND y.Date = '201208';"
+    },
+    {
+      "source": "bird24-baseline.json",
+      "id": "student_club:d9da2ece44d9",
+      "db_id": "student_club",
+      "label": "wrong_literal",
+      "gold_sql": "SELECT T3.approved FROM event AS T1 INNER JOIN budget AS T2 ON T1.event_id = T2.link_to_event INNER JOIN expense AS T3 ON T2.budget_id = T3.link_to_budget WHERE T1.event_name = 'October Meeting' AND T1.event_date LIKE '2019-10-08%'",
+      "generated_sql": "SELECT e.expense_description, e.cost, e.approved FROM expense AS e JOIN budget AS b ON e.link_to_budget = b.budget_id JOIN event AS ev ON b.link_to_event = ev.event_id WHERE ev.event_name = 'October Meeting' AND date(ev.event_date) = '2019-10-08';"
+    },
+    {
+      "source": "bird24-baseline.json",
+      "id": "thrombosis_prediction:fb0bb69d09ad",
+      "db_id": "thrombosis_prediction",
+      "label": "extra_filter",
+      "gold_sql": "SELECT T1.Diagnosis FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID WHERE T2.IGM NOT BETWEEN 40 AND 400 GROUP BY T1.Diagnosis ORDER BY COUNT(T1.Diagnosis) DESC LIMIT 1",
+      "generated_sql": "SELECT p.Diagnosis, COUNT(DISTINCT p.ID) AS patient_count\nFROM Patient AS p\nJOIN Laboratory AS l ON l.ID = p.ID\nWHERE l.IGM <= 40 OR l.IGM >= 400\nGROUP BY p.Diagnosis\nORDER BY patient_count DESC, p.Diagnosis\nLIMIT 1;"
+    }
+  ]
+}

@@ -5,6 +5,7 @@ from src.providers.database.postgresql import PostgreSQLProvider
 from src.providers.database.registry import (
     get_database_provider,
     list_database_types,
+    normalize_db_type,
     provider_from_connection,
     register_database_provider,
 )
@@ -18,6 +19,7 @@ __all__ = [
     "SQLiteProvider",
     "get_database_provider",
     "list_database_types",
+    "normalize_db_type",
     "provider_from_connection",
     "register_database_provider",
 ]

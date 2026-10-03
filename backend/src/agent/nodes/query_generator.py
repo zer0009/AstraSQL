@@ -87,7 +87,7 @@ async def query_generator(
     # Difficulty router: escalate candidate count / disable merge on hard Qs.
     from src.agent.difficulty_router import route_generation_plan
 
-    table_count = len(list((context.get("selected_tables") or [])))
+    table_count = len(list(context.get("selected_tables") or []))
     plan = route_generation_plan(
         question,
         table_count=table_count,

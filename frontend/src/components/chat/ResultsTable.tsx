@@ -65,6 +65,7 @@ export function ResultsTable({ results }: ResultsTableProps) {
   const [sortDir, setSortDir] = useState<SortDir>(null);
   const [exportOpen, setExportOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   const sortedRows = useMemo(() => {
     if (!sortCol || !sortDir) return rows;
@@ -105,6 +106,7 @@ export function ResultsTable({ results }: ResultsTableProps) {
   const handleExport = async (format: "csv" | "json" | "xlsx") => {
     setExportOpen(false);
     setExporting(true);
+    setExportError(null);
     try {
       const blob = await exportData({
         columns,
@@ -113,8 +115,10 @@ export function ResultsTable({ results }: ResultsTableProps) {
         filename: `astrasql-results.${format}`,
       });
       downloadBlob(blob, `astrasql-results.${format}`);
-    } catch {
-      // export failures are non-fatal in UI
+    } catch (err) {
+      setExportError(
+        err instanceof Error ? err.message : "Export failed. Try again.",
+      );
     } finally {
       setExporting(false);
     }
@@ -130,7 +134,9 @@ export function ResultsTable({ results }: ResultsTableProps) {
     <div className="overflow-hidden rounded-md border border-zinc-200">
       <div className="flex items-center justify-between gap-2 border-b border-zinc-200 bg-zinc-50 px-3 py-1.5">
         <span className="text-xs text-zinc-500">
-          {results.row_count} row{results.row_count === 1 ? "" : "s"}
+          {results.truncated
+            ? `Showing first ${rows.length} of ${results.row_count} rows`
+            : `${results.row_count} row${results.row_count === 1 ? "" : "s"}`}
         </span>
         <div className="relative">
           <Button
@@ -167,6 +173,23 @@ export function ResultsTable({ results }: ResultsTableProps) {
           ) : null}
         </div>
       </div>
+
+      {results.truncated ? (
+        <div className="border-b border-amber-200 bg-amber-50 px-3 py-1.5 text-xs text-amber-900">
+          Preview only — showing the first {rows.length} of {results.row_count}{" "}
+          rows. Export downloads this preview; re-run SQL or raise the server
+          row limit for the full set.
+        </div>
+      ) : null}
+
+      {exportError ? (
+        <div
+          className="border-b border-red-200 bg-red-50 px-3 py-1.5 text-xs text-red-700"
+          role="alert"
+        >
+          {exportError}
+        </div>
+      ) : null}
 
       <Table>
         <TableHeader>

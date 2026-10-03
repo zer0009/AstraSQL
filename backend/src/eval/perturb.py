@@ -301,7 +301,7 @@ def inflate_schema(
                         cols = _column_info(dconn, table)
                         col_defs = []
                         col_names = []
-                        for _cid, name, ctype, notnull, dflt, pk in cols:
+                        for _cid, name, ctype, notnull, _dflt, pk in cols:
                             col_names.append(name)
                             parts = [f"{_quote_ident(name)} {_sql_type(ctype)}"]
                             if pk:

@@ -14,8 +14,9 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections.abc import Awaitable, Callable
 from pathlib import Path
-from typing import Any, Awaitable, Callable, Optional
+from typing import Any
 
 _BACKEND = Path(__file__).resolve().parents[2]
 DEFAULT_MUST_CLARIFY = _BACKEND / "eval" / "benchmarks" / "must_clarify.json"
@@ -173,7 +174,7 @@ async def run_ambiguity_suite(
     *,
     connection: Any,
     session: Any = None,
-    run_query_fn: Optional[RunQueryFn] = None,
+    run_query_fn: RunQueryFn | None = None,
 ) -> dict[str, Any]:
     """Run clarify/answer items through ``run_query`` (mockable).
 

@@ -17,9 +17,9 @@ import sys
 import time
 import uuid
 from collections import Counter, defaultdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import select
 
@@ -68,14 +68,19 @@ def _pin_models(
     interpretation_mode: str = "",
     validator_mode: str = "",
     schema_link_mode: str = "",
-    format_response: Optional[bool] = None,
-    sql_candidate_count: Optional[int] = None,
-    execution_evidence_gate: Optional[bool] = None,
-    merge_interpret_generate: Optional[bool] = None,
+    format_response: bool | None = None,
+    sql_candidate_count: int | None = None,
+    execution_evidence_gate: bool | None = None,
+    merge_interpret_generate: bool | None = None,
 ) -> dict[str, Any]:
-    os.environ["OPENAI_MODEL"] = model
-    os.environ["ENRICHMENT_MODEL"] = model
-    os.environ["INTERPRETATION_MODEL"] = model
+    from src.config.settings import clear_settings_cache, override_settings_env
+
+    override_settings_env(
+        LLM_MODEL=model,
+        OPENAI_MODEL=model,
+        ENRICHMENT_MODEL=model,
+        INTERPRETATION_MODEL=model,
+    )
     if reasoning_effort:
         os.environ["LLM_REASONING_EFFORT"] = reasoning_effort
     if interpretation_mode:
@@ -99,14 +104,14 @@ def _pin_models(
     # Eval runs skip NL formatter by default for speed unless overridden.
     if format_response is None and "FORMAT_RESPONSE" not in os.environ:
         os.environ["FORMAT_RESPONSE"] = "false"
-    get_settings.cache_clear()
+    clear_settings_cache()
     settings = get_settings()
     return {
-        "openai_model": settings.openai_model,
+        "openai_model": settings.llm_model,
         "enrichment_model": settings.enrichment_model,
         "interpretation_model": settings.interpretation_model or settings.enrichment_model,
         "llm_reasoning_effort": settings.llm_reasoning_effort,
-        "embedding_model": settings.openai_embedding_model,
+        "embedding_model": settings.embedding_model,
         "interpretation_mode": settings.interpretation_mode,
         "validator_mode": settings.validator_mode,
         "schema_link_mode": settings.schema_link_mode,
@@ -124,7 +129,7 @@ def _resolve_path(path: str | Path) -> Path:
     return p
 
 
-def _preview_result(payload: Optional[dict], *, max_rows: int = _RESULT_PREVIEW_ROWS) -> Optional[dict]:
+def _preview_result(payload: dict | None, *, max_rows: int = _RESULT_PREVIEW_ROWS) -> dict | None:
     if not payload:
         return None
     rows = list(payload.get("rows") or [])
@@ -217,7 +222,7 @@ async def _ensure_scanned(session, connection: Connection, tracker: UsageTracker
 
 def _schema_linking_recall(
     selected_tables: list[str],
-    gold_sql: Optional[str],
+    gold_sql: str | None,
 ) -> dict[str, Any]:
     gold = extract_tables(gold_sql, dialect="sqlite")
     selected = {str(t).lower() for t in (selected_tables or [])}
@@ -241,12 +246,12 @@ def _schema_linking_recall(
 async def _execute_pair(
     provider: Any,
     *,
-    generated_sql: Optional[str],
-    gold_sql: Optional[str],
-) -> tuple[Optional[dict], Optional[dict], Optional[str]]:
-    gold_rows: Optional[dict] = None
-    gen_rows: Optional[dict] = None
-    err: Optional[str] = None
+    generated_sql: str | None,
+    gold_sql: str | None,
+) -> tuple[dict | None, dict | None, str | None]:
+    gold_rows: dict | None = None
+    gen_rows: dict | None = None
+    err: str | None = None
     if gold_sql:
         try:
             gold_rows = await provider.execute_readonly(gold_sql, max_rows=500)
@@ -289,13 +294,13 @@ async def _score_one(
     selected_tables = list(ctx.get("selected_tables") or [])
     linking = _schema_linking_recall(selected_tables, item.gold_sql)
 
-    sql_match: Optional[bool] = None
-    result_match: Optional[bool] = None
-    result_match_values: Optional[bool] = None
-    result_match_lenient: Optional[bool] = None
-    gold_result: Optional[dict] = None
-    gen_result: Optional[dict] = None
-    exec_error: Optional[str] = None
+    sql_match: bool | None = None
+    result_match: bool | None = None
+    result_match_values: bool | None = None
+    result_match_lenient: bool | None = None
+    gold_result: dict | None = None
+    gen_result: dict | None = None
+    exec_error: str | None = None
 
     if item.expect == "answer" and item.gold_sql:
         sql_match = sql_equal(sql, item.gold_sql, dialect=dialect)
@@ -319,7 +324,7 @@ async def _score_one(
                 result_match_lenient = False
 
     error = state.get("error") or exec_error
-    failure_label: Optional[str] = None
+    failure_label: str | None = None
     if result_match_values is True and result_match is False:
         failure_label = "scorer_only"
     elif result_match_values is not True:
@@ -647,13 +652,13 @@ async def _rescore_report(path: Path) -> dict[str, Any]:
     out = {
         "kind": "spider-rescore",
         "source": str(path),
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(UTC).isoformat(),
         "n": len(rescored),
         "questions": rescored,
         "accuracy": accuracy,
         "original_totals": data.get("totals"),
     }
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     out_path = path.parent / f"rescore-{stamp}.json"
     out_path.write_text(json.dumps(out, indent=2, default=str), encoding="utf-8")
     out["out_path"] = str(out_path)
@@ -773,7 +778,7 @@ def _convention_adjusted(question_rows: list[dict[str, Any]]) -> dict[str, Any]:
             convention_ok += 1
             continue
         label = str(r.get("failure_label") or "").lower()
-        why = str(((r.get("ambiguity") or {}).get("decision_why") or "")).lower()
+        why = str((r.get("ambiguity") or {}).get("decision_why") or "").lower()
         assumption = str(r.get("assumption") or "").lower()
         if any(x in label for x in convention_labels) or any(
             x in why or x in assumption
@@ -820,8 +825,8 @@ async def _run(args: argparse.Namespace) -> dict[str, Any]:
         merge_interpret_generate=getattr(args, "merge_interpret_generate", None),
     )
     settings = get_settings()
-    if not (settings.openai_api_key or "").strip():
-        raise SystemExit("OPENAI_API_KEY is not set")
+    if not (settings.llm_api_key or "").strip():
+        raise SystemExit("LLM_API_KEY / OPENAI_API_KEY is not set")
 
     include_evidence = True
     if str(getattr(args, "evidence", "true") or "true").lower() in {
@@ -1082,7 +1087,7 @@ async def _run(args: argparse.Namespace) -> dict[str, Any]:
         "kind": f"{dataset}-pilot",
         "dataset": dataset,
         "include_evidence": include_evidence if dataset == "bird" else None,
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(UTC).isoformat(),
         "models": model_info,
         "rate_card": {
             "gpt-5.6-luna": {"input": 0.20, "output": 1.20, "cached_input": 0.02},
@@ -1120,7 +1125,7 @@ async def _run(args: argparse.Namespace) -> dict[str, Any]:
         "usage": tracker.to_dict(),
     }
 
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     default_name = (
         f"run{len(question_rows)}-{stamp}.json"
         if len(db_ids) > 1
@@ -1161,14 +1166,14 @@ def _compare_reports_cli(path_a: Path, path_b: Path) -> dict[str, Any]:
         for f in result["flips"][:20]:
             print(f"  {f['id']}: A={f['a']} -> B={f['b']}")
     print("===================================\n")
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     out = path_b.parent / f"compare-{stamp}.json"
     out.write_text(json.dumps(result, indent=2, default=str), encoding="utf-8")
     print(f"Wrote {out}")
     return result
 
 
-def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     argv = list(argv) if argv is not None else sys.argv[1:]
 
     # Subcommand: rescore <path>
@@ -1316,7 +1321,7 @@ def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
     return ns
 
 
-def main(argv: Optional[list[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     cmd = getattr(args, "command", "run")
     if cmd == "rescore":

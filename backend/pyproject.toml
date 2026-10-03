@@ -27,7 +27,16 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0.0", "pytest-asyncio>=0.24.0", "ruff>=0.8.0"]
+# Eval runners (src/eval, scripts/) use the same core deps; install [dev] for pytest.
+# Runtime images exclude eval/ via .dockerignore — agent result_compare is under src/agent/.
+dev = [
+  "pytest>=8.0.0",
+  "pytest-asyncio>=0.24.0",
+  "ruff>=0.8.0",
+  "mypy>=1.13.0",
+  "types-openpyxl>=3.1.0",
+]
+eval = []  # marker only; eval code ships with the package, no extra deps yet
 
 [build-system]
 requires = ["hatchling"]
@@ -39,11 +48,36 @@ packages = ["src"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 pythonpath = ["."]
+markers = [
+  "postgres: integration tests that need a live Postgres (set ASTRASQL_PG_DSN)",
+]
 
-# Keep CI focused on correctness; broader style cleanup can come later.
 [tool.ruff]
 target-version = "py311"
 line-length = 100
 
 [tool.ruff.lint]
-select = ["E9", "F63", "F7", "F82", "F401", "F811"]
+select = [
+  "E9",
+  "F63",
+  "F7",
+  "F82",
+  "F401",
+  "F811",
+  "I",
+  "B",
+  "UP",
+]
+ignore = [
+  # FastAPI dependency defaults are intentional; B008 also flags File()/Form().
+  "B008",
+]
+
+[tool.mypy]
+python_version = "3.11"
+warn_unused_configs = true
+ignore_missing_imports = true
+check_untyped_defs = false
+disallow_untyped_defs = false
+follow_imports = "silent"
+packages = ["src.providers", "src.config", "src.api", "src.storage"]

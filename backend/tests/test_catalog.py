@@ -5,7 +5,6 @@ from src.agent.catalog import (
     serialize_keys,
 )
 
-
 LEAVE_TABLES = [
     {
         "table_name": "employees",

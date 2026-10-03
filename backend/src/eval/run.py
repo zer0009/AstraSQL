@@ -9,13 +9,12 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
-import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
-from src.config.settings import get_settings
+from src.config.settings import clear_settings_cache, get_settings, override_settings_env
 from src.eval.compare import results_equal, sql_equal
 from src.eval.models import CaseResult, EvalReport, GoldItem
 from src.storage.database import get_session_factory
@@ -58,21 +57,26 @@ async def _score_case(
     clarified = _is_clarified(state)
     silent_wrong = item.expect == "clarify" and bool(sql) and not clarified
 
-    sql_match: Optional[bool] = None
-    result_match: Optional[bool] = None
+    sql_match: bool | None = None
+    result_match: bool | None = None
     if item.expect == "answer" and item.gold_sql:
-        sql_match = sql_equal(sql, item.gold_sql)
+        dialect = (
+            provider.sqlglot_dialect()
+            if provider is not None and hasattr(provider, "sqlglot_dialect")
+            else "sqlite"
+        )
+        sql_match = sql_equal(sql, item.gold_sql, dialect=dialect)
         if sql and provider is not None:
             try:
                 generated_rows = await provider.execute_readonly(sql, max_rows=500)
                 gold_rows = await provider.execute_readonly(item.gold_sql, max_rows=500)
                 result_match = results_equal(generated_rows, gold_rows)
-            except Exception:
+            except (ValueError, RuntimeError, OSError):
                 generated = state.get("results") or {}
                 try:
                     gold_rows = await provider.execute_readonly(item.gold_sql, max_rows=500)
                     result_match = results_equal(generated, gold_rows)
-                except Exception:
+                except (ValueError, RuntimeError, OSError):
                     result_match = False
 
     return CaseResult(
@@ -91,7 +95,7 @@ async def _score_case(
     )
 
 
-def _rate(values: list[bool]) -> Optional[float]:
+def _rate(values: list[bool]) -> float | None:
     if not values:
         return None
     return round(sum(1 for v in values if v) / len(values), 4)
@@ -103,7 +107,7 @@ def build_report(
     model: str,
     gold_path: str,
     connection_id: str,
-    extra: Optional[dict[str, Any]] = None,
+    extra: dict[str, Any] | None = None,
 ) -> EvalReport:
     answer_ex = [c.result_match for c in cases if c.expect == "answer" and c.result_match is not None]
     answer_sql = [c.sql_match for c in cases if c.expect == "answer" and c.sql_match is not None]
@@ -130,11 +134,11 @@ async def _run(args: argparse.Namespace) -> EvalReport:
     items = _load_gold(gold_path)
 
     if args.model:
-        os.environ["OPENAI_MODEL"] = args.model
-        get_settings.cache_clear()
+        override_settings_env(LLM_MODEL=args.model, OPENAI_MODEL=args.model)
+        clear_settings_cache()
 
     settings = get_settings()
-    model = args.model or settings.openai_model
+    model = args.model or settings.llm_model
 
     factory = get_session_factory()
     async with factory() as session:
@@ -180,7 +184,7 @@ async def _run(args: argparse.Namespace) -> EvalReport:
     return report
 
 
-def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="AstraSQL gold-file eval runner")
     parser.add_argument("--gold", required=True, help="Path to gold.json")
     parser.add_argument("--connection-id", required=True, help="Existing AstraSQL connection id")
@@ -198,10 +202,10 @@ def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def main(argv: Optional[list[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     report = asyncio.run(_run(args))
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     model_slug = (args.model or report.model or "model").replace("/", "-")
     out = Path(args.out) if args.out else _BACKEND / "eval" / "results" / f"{stamp}-{model_slug}.json"
     if not out.is_absolute():

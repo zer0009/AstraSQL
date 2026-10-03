@@ -75,7 +75,7 @@ async def get_session(session_id: str, db: DbSession) -> SessionDetailOut:
         title=session.title,
         created_at=session.created_at,
         updated_at=session.updated_at,
-        queries=queries,
+        queries=queries,  # type: ignore[arg-type]
     )
 
 

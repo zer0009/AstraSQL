@@ -32,6 +32,9 @@ class MSSQLProvider(BaseDatabaseProvider):
     def supports_timeout(self) -> bool:
         return True
 
+    def supports_execute_gate(self) -> bool:
+        return False
+
     def quote_ident(self, name: str) -> str:
         text_name = (name or "").replace("]", "]]")
         if not text_name:

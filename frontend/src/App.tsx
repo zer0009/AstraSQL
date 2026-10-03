@@ -5,17 +5,22 @@ import {
   Layers,
   History,
   Settings,
+  GitBranch,
+  Network,
 } from "lucide-react";
 import { cn } from "./lib/utils";
 import { AstraLogo } from "./components/brand";
 import { UserMenu } from "./components/layout/UserMenu";
 import { ScanStatusBanner } from "./components/ScanStatusBanner";
+import { OnboardingBanner } from "./components/OnboardingBanner";
 
 const navItems = [
   { to: "/", label: "Chat", icon: MessageSquare, end: true },
   { to: "/connections", label: "Connections", icon: Database, end: false },
   { to: "/context", label: "Context", icon: Layers, end: false },
+  { to: "/schema", label: "Schema", icon: Network, end: false },
   { to: "/history", label: "History", icon: History, end: false },
+  { to: "/agent", label: "Agent", icon: GitBranch, end: false },
   { to: "/settings", label: "Settings", icon: Settings, end: false },
 ];
 
@@ -61,6 +66,7 @@ export default function App() {
 
       <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <ScanStatusBanner />
+        <OnboardingBanner />
         <Outlet />
       </main>
     </div>

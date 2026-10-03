@@ -37,7 +37,7 @@ import json
 import logging
 import re
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -64,7 +64,7 @@ def question_skeleton(question: str) -> str:
     )
 
 
-def find_spider_train_path() -> Optional[Path]:
+def find_spider_train_path() -> Path | None:
     """Locate train.json under the Spider data tree without downloading."""
     candidates = [
         DATA_DIR / "spider_data" / "train.json",
@@ -85,7 +85,7 @@ def find_spider_train_path() -> Optional[Path]:
     return None
 
 
-def ensure_spider_train() -> Optional[Path]:
+def ensure_spider_train() -> Path | None:
     """Return path to train.json if present; never download. None if missing."""
     return find_spider_train_path()
 

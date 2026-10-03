@@ -15,6 +15,7 @@ from src.api.schemas import (
     ScanJobStatus,
 )
 from src.providers.database import list_database_types, provider_from_connection
+from src.providers.database.registry import normalize_db_type
 from src.services.scan_jobs import (
     create_job,
     get_job,
@@ -31,14 +32,7 @@ router = APIRouter(tags=["connections"])
 
 def _validate_db_type(db_type: str) -> str:
     available = list_database_types()
-    key = db_type.lower().strip()
-    aliases = {
-        "postgres": "postgresql",
-        "pg": "postgresql",
-        "sqlserver": "mssql",
-        "sql_server": "mssql",
-    }
-    key = aliases.get(key, key)
+    key = normalize_db_type(db_type)
     if key not in available:
         raise HTTPException(
             status_code=400,

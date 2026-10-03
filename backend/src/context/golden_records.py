@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pickle
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import faiss
 import numpy as np
@@ -44,7 +44,7 @@ class GoldenRecordsStore:
 
     def _load_index(
         self, connection_id: str
-    ) -> tuple[Optional[faiss.Index], list[str]]:
+    ) -> tuple[faiss.Index | None, list[str]]:
         index_path = self._index_path(connection_id)
         ids_path = self._ids_path(connection_id)
         if not index_path.exists() or not ids_path.exists():
@@ -125,7 +125,7 @@ class GoldenRecordsStore:
         session: AsyncSession,
         connection_id: str,
         question: str,
-        top_k: Optional[int] = None,
+        top_k: int | None = None,
     ) -> list[dict[str, str]]:
         if top_k is None:
             top_k = self._settings.golden_records_top_k

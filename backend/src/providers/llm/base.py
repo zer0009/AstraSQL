@@ -5,6 +5,11 @@ from langchain_core.language_models import BaseChatModel
 
 
 class BaseLLMProvider(ABC):
+    @property
+    def default_model(self) -> str:
+        """Provider default chat model id (empty when unset)."""
+        return ""
+
     @abstractmethod
     def get_chat_model(
         self,

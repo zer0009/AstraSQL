@@ -12,6 +12,7 @@ import type {
   ConnectionUpdate,
   ContextPackDocument,
   ContextPackImportResult,
+  DictionaryImportResult,
   Enrichment,
   EnrichmentCreate,
   EnrichmentUpdate,
@@ -29,6 +30,7 @@ import type {
   QueryHistoryItem,
   QueryRequest,
   ScanJobStatus,
+  SemanticLayerOut,
   StreamQueryEvent,
 } from "../types/api";
 
@@ -403,6 +405,13 @@ interface PublicSettingsRaw {
   model: string;
   max_rows: number;
   database_types: string[];
+  execution_evidence_gate?: boolean;
+  merge_interpret_generate?: boolean;
+  ambiguity_policy?: string;
+  relationship_discovery_enabled?: boolean;
+  relationship_auto_approve?: boolean;
+  learning_loop_enabled?: boolean;
+  sse_row_preview_limit?: number;
 }
 
 export async function getPublicSettings(): Promise<PublicSettings> {
@@ -413,7 +422,63 @@ export async function getPublicSettings(): Promise<PublicSettings> {
     openai_model: data.model,
     max_result_rows: data.max_rows,
     database_types: data.database_types,
+    execution_evidence_gate: data.execution_evidence_gate,
+    merge_interpret_generate: data.merge_interpret_generate,
+    ambiguity_policy: data.ambiguity_policy,
+    relationship_discovery_enabled: data.relationship_discovery_enabled,
+    relationship_auto_approve: data.relationship_auto_approve,
+    learning_loop_enabled: data.learning_loop_enabled,
+    sse_row_preview_limit: data.sse_row_preview_limit,
   };
+}
+
+export async function getAgentGraph(): Promise<{
+  mermaid: string;
+  nodes: string[];
+  merge_interpret_generate: boolean;
+  execution_evidence_gate: boolean;
+}> {
+  const { data } = await api.get("/api/settings/agent-graph");
+  return data;
+}
+
+export async function getSemanticLayer(
+  connectionId: string,
+): Promise<SemanticLayerOut> {
+  const { data } = await api.get<SemanticLayerOut>(
+    `/api/connections/${connectionId}/semantic-layer`,
+  );
+  return data;
+}
+
+export async function updateRelationshipStatus(
+  connectionId: string,
+  fromTable: string,
+  fromCol: string,
+  toTable: string,
+  toCol: string,
+  status: "approved" | "proposed" | "rejected",
+): Promise<SemanticLayerOut> {
+  const { data } = await api.patch<SemanticLayerOut>(
+    `/api/connections/${connectionId}/relationships/${encodeURIComponent(fromTable)}/${encodeURIComponent(fromCol)}/${encodeURIComponent(toTable)}/${encodeURIComponent(toCol)}`,
+    { status },
+  );
+  return data;
+}
+
+export async function importDictionary(
+  connectionId: string,
+  body: {
+    format: "json" | "csv" | "bird_csv";
+    content: string;
+    table_name?: string;
+  },
+): Promise<DictionaryImportResult> {
+  const { data } = await api.post<DictionaryImportResult>(
+    `/api/connections/${connectionId}/dictionary-import`,
+    body,
+  );
+  return data;
 }
 
 // --- Query (direct SQL execute — no LLM) ---

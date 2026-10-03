@@ -6,8 +6,8 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from sse_starlette.sse import EventSourceResponse
 
-from src.agent.nodes.query_validator import validate_syntax
 from src.agent.runner import run_query, stream_query
+from src.agent.sql_guards import validate_syntax
 from src.api.deps import DbSession
 from src.api.schemas import (
     AgentStateOut,
@@ -95,7 +95,7 @@ async def execute_sql(body: ExecuteSqlRequest, db: DbSession) -> ExecuteSqlOut:
 
 
 @router.post("/sync", response_model=AgentStateOut)
-async def query_sync(body: QueryRequest, db: DbSession) -> dict[str, Any]:
+async def query_sync(body: QueryRequest, db: DbSession) -> Any:
     connection = await _ensure_connection(db, body.connection_id)
     if not body.question.strip():
         raise HTTPException(status_code=400, detail="question must not be empty")
@@ -108,10 +108,9 @@ async def query_sync(body: QueryRequest, db: DbSession) -> dict[str, Any]:
             body.question,
             conversation_history=history,
             session_id=session_id,
+            evidence=(body.evidence or "").strip(),
         )
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    except Exception as exc:
+    except (ValueError, RuntimeError, OSError) as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     if isinstance(result, dict):
@@ -130,6 +129,7 @@ async def query_stream(body: QueryRequest, db: DbSession) -> EventSourceResponse
         raise HTTPException(status_code=400, detail="question must not be empty")
     session_id = await _ensure_session(db, body.session_id, body.connection_id)
     history = [t.model_dump() for t in body.conversation_history]
+    evidence = (body.evidence or "").strip()
 
     async def event_generator():
         try:
@@ -139,6 +139,7 @@ async def query_stream(body: QueryRequest, db: DbSession) -> EventSourceResponse
                 body.question,
                 conversation_history=history,
                 session_id=session_id,
+                evidence=evidence,
             ):
                 yield _normalize_sse_item(item if isinstance(item, dict) else {"data": item})
         except Exception as exc:

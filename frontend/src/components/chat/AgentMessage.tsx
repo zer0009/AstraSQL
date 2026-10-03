@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { Badge, Spinner } from "../ui";
+import { Badge, Button, Spinner } from "../ui";
 import type { ChatMessage } from "../../hooks/useStreamQuery";
+import { formatConfidence } from "../../lib/confidence";
+import { statusCopy } from "../../lib/ambiguity";
 import { AgentSteps } from "./AgentSteps.tsx";
 import { FeedbackBar } from "./FeedbackBar.tsx";
 import { ResultTabs } from "./ResultTabs.tsx";
@@ -18,34 +20,17 @@ export interface AgentMessageProps {
   onAskAgain?: () => void;
   /** Re-execute SQL directly (no LLM). Optional override for edited SQL. */
   onRerunSql?: (sql?: string) => void;
-}
-
-function formatConfidence(value: string | number | undefined): string | null {
-  if (value === undefined || value === null || value === "") return null;
-  if (typeof value === "number") {
-    if (value >= 0.8) return "HIGH";
-    if (value >= 0.4) return "MEDIUM";
-    return "LOW";
-  }
-  return String(value).toUpperCase();
+  /** Retry the same user question after an error. */
+  onRetry?: () => void;
 }
 
 function tablesFromSteps(message: ChatMessage): string[] {
   const steps = message.steps ?? [];
   for (let i = steps.length - 1; i >= 0; i--) {
     const step = steps[i];
-    if (
-      (step.name === "context_retrieved" || step.name === "schema_link") &&
-      step.tables &&
-      step.tables.length > 0
-    ) {
+    if (step.tables && step.tables.length > 0) {
       return step.tables;
     }
-  }
-  // Fallback: any step that carried tables
-  for (let i = steps.length - 1; i >= 0; i--) {
-    const tables = steps[i].tables;
-    if (tables && tables.length > 0) return tables;
   }
   return [];
 }
@@ -57,16 +42,26 @@ export function AgentMessage({
   onFollowUp,
   onAskAgain,
   onRerunSql,
+  onRetry,
 }: AgentMessageProps) {
   const confidence = formatConfidence(message.confidence);
   const hasSql = Boolean(message.sql);
   const hasSteps = Boolean(message.steps && message.steps.length > 0);
   const tablesUsed = useMemo(() => tablesFromSteps(message), [message]);
   const hasTables = tablesUsed.length > 0;
-  const hasTrust = hasSql || hasSteps || hasTables;
+  const ambiguityStatus = message.ambiguity?.status;
+  const statusInfo = statusCopy(ambiguityStatus);
+  const isClarifying =
+    message.trustLevel === "clarifying" ||
+    Boolean(message.ambiguity?.should_clarify) ||
+    ambiguityStatus === "ambiguous";
+  const isNonSql =
+    ambiguityStatus === "not_a_data_question" ||
+    ambiguityStatus === "unanswerable";
+  const hasTrust =
+    !isNonSql && (hasSql || hasSteps || hasTables || Boolean(message.assumption));
   const [trustOpen, setTrustOpen] = useState(false);
 
-  // Auto-open trust panel while the agent is actively working so progress is visible.
   useEffect(() => {
     if (isStreaming && hasSteps) {
       setTrustOpen(true);
@@ -78,7 +73,15 @@ export function AgentMessage({
     Boolean(message.sql) ||
     Boolean(message.results) ||
     Boolean(message.error) ||
-    hasSteps;
+    hasSteps ||
+    Boolean(message.clarificationOptions?.length);
+
+  const clarificationOptions = message.clarificationOptions ?? [];
+  const showClarifications =
+    !isRerunning && clarificationOptions.length > 0 && Boolean(onFollowUp);
+  // Show clarification options as soon as they arrive (including late in stream).
+  const showClarificationsNow =
+    showClarifications && (!isStreaming || clarificationOptions.length > 0);
 
   return (
     <div className="flex justify-start">
@@ -100,13 +103,43 @@ export function AgentMessage({
               {confidence}
             </Badge>
           ) : null}
-          <TrustBadge level={message.trustLevel} />
+          <TrustBadge
+            level={message.trustLevel}
+            usedGolden={message.usedGolden}
+            ambiguityStatus={ambiguityStatus}
+          />
           {isStreaming || isRerunning ? <Spinner size="sm" /> : null}
         </div>
 
         {message.error ? (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {message.error}
+          <div className="space-y-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <p>{message.error}</p>
+            {onRetry && !isStreaming ? (
+              <Button type="button" size="sm" variant="outline" onClick={onRetry}>
+                Retry
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
+
+        {statusInfo && ambiguityStatus !== "clear" ? (
+          <div
+            className={
+              isClarifying
+                ? "rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900"
+                : "rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-700"
+            }
+            role={isClarifying ? "status" : undefined}
+          >
+            <p className="font-medium">{statusInfo.title}</p>
+            {statusInfo.body ? (
+              <p className="mt-0.5 text-xs opacity-90">{statusInfo.body}</p>
+            ) : null}
+            {message.ambiguity?.decision_why ? (
+              <p className="mt-1 text-[11px] text-zinc-500">
+                Why: {message.ambiguity.decision_why}
+              </p>
+            ) : null}
           </div>
         ) : null}
 
@@ -115,13 +148,25 @@ export function AgentMessage({
             {message.content}
           </p>
         ) : isStreaming && !showBody ? (
-          <p className="text-sm text-zinc-500">Working…</p>
+          <p className="text-sm text-zinc-500" aria-live="polite">
+            Working…
+          </p>
         ) : null}
 
-        {!isStreaming ? (
+        {!isStreaming || message.assumption || message.keyFinding ? (
           <TrustCard
             assumption={message.assumption}
             keyFinding={message.keyFinding}
+            decisionWhy={message.ambiguity?.decision_why}
+            usedGolden={message.usedGolden}
+            onChangeAssumption={
+              ambiguityStatus === "assumed" && onFollowUp
+                ? () =>
+                    onFollowUp(
+                      "Please ask me which interpretation to use instead of assuming.",
+                    )
+                : undefined
+            }
           />
         ) : null}
 
@@ -137,6 +182,7 @@ export function AgentMessage({
           <div className="overflow-hidden rounded-lg border border-zinc-200 bg-zinc-50/60">
             <button
               type="button"
+              aria-expanded={trustOpen}
               onClick={() => setTrustOpen((v) => !v)}
               className="flex w-full items-center gap-1.5 px-3 py-2 text-left text-xs font-medium text-zinc-600 hover:bg-zinc-100/80"
             >
@@ -148,8 +194,14 @@ export function AgentMessage({
               How this was answered
               {hasTables && !trustOpen ? (
                 <span className="ml-1 font-normal text-zinc-400">
-                  · {tablesUsed.length} table{tablesUsed.length === 1 ? "" : "s"}
+                  · {tablesUsed.length} table
+                  {tablesUsed.length === 1 ? "" : "s"}
                 </span>
+              ) : null}
+              {message.usedGolden ? (
+                <Badge variant="warning" className="ml-auto">
+                  Used saved answer
+                </Badge>
               ) : null}
             </button>
             {trustOpen ? (
@@ -186,6 +238,15 @@ export function AgentMessage({
                     isStreaming={isStreaming}
                   />
                 ) : null}
+                {message.usage?.total_cost_usd != null ? (
+                  <p className="text-[11px] text-zinc-400">
+                    Est. cost $
+                    {Number(message.usage.total_cost_usd).toFixed(4)}
+                    {message.usage.total_latency_ms != null
+                      ? ` · ${Math.round(Number(message.usage.total_latency_ms))} ms`
+                      : ""}
+                  </p>
+                ) : null}
               </div>
             ) : null}
           </div>
@@ -195,15 +256,12 @@ export function AgentMessage({
           <FeedbackBar historyId={message.historyId} sql={message.sql} />
         ) : null}
 
-        {!isStreaming &&
-        !isRerunning &&
-        message.clarificationOptions &&
-        message.clarificationOptions.length > 0 &&
-        onFollowUp ? (
+        {showClarificationsNow ? (
           <SuggestedFollowUps
-            label="Did you mean?"
-            questions={message.clarificationOptions}
-            onSelect={onFollowUp}
+            label={isClarifying ? "Choose one:" : "Did you mean?"}
+            questions={clarificationOptions}
+            onSelect={onFollowUp!}
+            variant={isClarifying ? "clarify" : "default"}
           />
         ) : null}
 
@@ -213,6 +271,7 @@ export function AgentMessage({
         message.followUps.length > 0 &&
         onFollowUp ? (
           <SuggestedFollowUps
+            label="Suggested follow-ups"
             questions={message.followUps}
             onSelect={onFollowUp}
           />

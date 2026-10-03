@@ -57,9 +57,9 @@ Target dialect: {dialect_name}
 6. If a required filter value is not in the question, conversation history, or a business rule, omit that identity filter or write the query for every matching row. Do not invent a literal or a bind placeholder.
 6b. This runner binds no parameters and maps no login to a database row.
 7. Prefer CTEs (WITH clause) over nested subqueries for complex queries — they are more readable and debuggable.
-8. PROJECT ONLY the columns the question asks for. Do not add helpful extra columns (counts, ids, timestamps, etc.) unless the question asks for names/labels of IDs or otherwise needs them to answer.
+8. PROJECT ONLY the columns needed to answer. Do not add unrelated extras (timestamps, internal audit columns). Dimension columns that users will read MUST be human-readable labels, not opaque ids (see rule 10).
 9. For "most" / "top" / "largest" / "highest" without an explicit request for "all ties": use ORDER BY … LIMIT 1 (or dialect equivalent). Do not use MAX/MIN in a way that returns every tied row unless the question asks for all ties.
-10. HUMAN-READABLE RESULTS: When the question references named entities (states, countries, categories, products, vendors, customers) and asks for names/labels, JOIN the lookup/reference table and SELECT its name or display_name column alongside or instead of the raw *_id. If the question only asks for an id or a metric, do not expand to extra label columns. If the schema contains a lookup/reference table for a dimension (identifiable by having a name, title, label, code, or display_name column and being referenced by FK from fact tables), JOIN it when the question needs the dimension name — never group by the raw FK ID as a substitute for the dimension name when a name was requested.
+10. HUMAN-READABLE DIMENSIONS (default): When SELECT or GROUP BY would use a foreign-key / *_id column and the referenced table has a label-like column (name, title, label, code, display_name, or *_name), JOIN that table and project/group by the label instead of the raw id. Schema FK comments may say "prefer JOIN … SELECT name". Only keep the raw id when the user explicitly asks for the id/key/code-as-identifier. Never return a result table of bare numeric ids for dimensions a person would read.
 
 ━━━ TASK ━━━
 Let's think step by step to build the SQL query.
@@ -144,9 +144,14 @@ Target dialect: {dialect_name}
 1. Use ONLY the dialect declared above.
 2. Use only tables/columns in the schema. Do not invent names.
 3. Do NOT generate INSERT/UPDATE/DELETE/DDL.
-4. PROJECT ONLY columns the question asks for.
+4. PROJECT ONLY columns needed to answer — but dimensions must be human-readable.
 5. Prefer CTEs for complex queries.
-6. Flag decision_points ONLY when the question is genuinely underspecified
+6. HUMAN-READABLE DIMENSIONS (default): If SELECT/GROUP BY would use a foreign-key
+   / *_id column and the referenced table has name/title/label/code/display_name
+   (see FK comments "prefer JOIN …"), JOIN that table and use the label column
+   instead of the raw id. Only keep raw ids when the user explicitly asks for ids.
+   Never return a result of bare numeric dimension ids for end-user reading.
+7. Flag decision_points ONLY when the question is genuinely underspecified
    (missing formula, vague entity, or multiple schema-grounded readings that
    would change the answer). Do NOT invent ambiguity for clear questions.
 

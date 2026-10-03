@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Optional
+from typing import Any
 
 
 def parse_semantic_layer(raw: str | dict | None) -> dict[str, Any]:
@@ -180,7 +180,7 @@ def format_semantic_layer(layer: dict[str, Any] | str | None) -> str:
 
 def append_semantic_to_rules(
     business_rules: str,
-    semantic_layer_json: Optional[str],
+    semantic_layer_json: str | None,
 ) -> str:
     """Append formatted semantic layer under business rules text."""
     formatted = format_semantic_layer(semantic_layer_json)

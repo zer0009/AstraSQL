@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ChatInput, MessageList } from "../components/chat";
 import { SessionSidebar } from "../components/layout/SessionSidebar";
 import { UserMenu } from "../components/layout/UserMenu";
@@ -30,6 +30,8 @@ export default function ChatPage() {
     }
   });
   const [draft, setDraft] = useState("");
+  const [evidence, setEvidence] = useState("");
+  const [showEvidence, setShowEvidence] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState("");
 
@@ -46,6 +48,7 @@ export default function ChatPage() {
     rerunningMessageId,
     clear,
     newChat,
+    cancel,
     rename,
     switchTo,
     resetSession,
@@ -69,7 +72,6 @@ export default function ChatPage() {
     setConnectionId(list[0].id);
   }, [connectionsQuery.data, connectionId]);
 
-  // Prefill + auto-send from History "Re-run"
   useEffect(() => {
     const state = location.state as RerunLocationState | null;
     if (!state?.question) return;
@@ -92,7 +94,6 @@ export default function ChatPage() {
     setEditingTitle(false);
   }, [session?.id, session?.title]);
 
-  // Keep sidebar session list in sync when sessions are created / renamed.
   useEffect(() => {
     if (!connectionId || !session?.id) return;
     void queryClient.invalidateQueries({
@@ -118,6 +119,12 @@ export default function ChatPage() {
     if (session?.id === id) {
       resetSession();
     }
+  };
+
+  const handleSend = (q: string) => {
+    const note = evidence.trim();
+    setEvidence("");
+    void send(q, note || undefined);
   };
 
   return (
@@ -172,15 +179,33 @@ export default function ChatPage() {
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
+            {isStreaming ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => cancel()}
+              >
+                Cancel
+              </Button>
+            ) : null}
             {messages.length > 0 ? (
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => void clear()}
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      "Delete this chat session? Query history rows are kept.",
+                    )
+                  ) {
+                    void clear();
+                  }
+                }}
                 disabled={isStreaming}
               >
-                Clear chat
+                Delete chat
               </Button>
             ) : null}
             <UserMenu />
@@ -188,12 +213,20 @@ export default function ChatPage() {
         </header>
 
         {!hasConnection ? (
-          <div className="flex flex-1 items-center justify-center p-6">
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6">
             <p className="text-sm text-zinc-500">
               {connections.length === 0
-                ? "Add a connection under Connections to start querying."
+                ? "Add a connection to start querying."
                 : "Select a connection in the sidebar to start querying."}
             </p>
+            {connections.length === 0 ? (
+              <Link
+                to="/connections"
+                className="inline-flex h-8 items-center justify-center rounded-md bg-zinc-900 px-3 text-xs font-medium text-white hover:bg-zinc-800"
+              >
+                Add connection
+              </Link>
+            ) : null}
           </div>
         ) : isLoadingSession ? (
           <div className="flex flex-1 items-center justify-center gap-2 p-6 text-sm text-zinc-500">
@@ -209,14 +242,19 @@ export default function ChatPage() {
               onFollowUp={(q) => void send(q)}
               onAskAgain={(q) => void send(q)}
               onRerunSql={(id, sql) => void rerunSql(id, sql)}
+              onRetry={(q) => void send(q)}
             />
             <ChatInput
               value={draft}
               onChange={setDraft}
-              onSend={(q) => void send(q)}
+              onSend={handleSend}
               disabled={
                 !hasConnection || isStreaming || Boolean(rerunningMessageId)
               }
+              evidence={evidence}
+              onEvidenceChange={setEvidence}
+              showEvidence={showEvidence}
+              onToggleEvidence={() => setShowEvidence((v) => !v)}
               placeholder={
                 isStreaming
                   ? "Waiting for response…"

@@ -94,9 +94,15 @@ async def ambiguity_gate(
     configured = max(1, min(configured, 5))
     initial_k = min(2, configured) if configured >= 2 else configured
 
+    # sqlglot needs the short dialect key (postgres/sqlite/mysql), not the
+    # human-readable prompt name ("PostgreSQL 16"). Wrong dialect → parse
+    # failures → generic "Different SQL implementations" options.
     dialect = ""
     try:
-        dialect = db_provider.dialect_name()
+        if hasattr(db_provider, "sqlglot_dialect"):
+            dialect = str(db_provider.sqlglot_dialect() or "")
+        elif hasattr(db_provider, "dialect_name"):
+            dialect = str(db_provider.dialect_name() or "")
     except Exception:
         dialect = ""
 

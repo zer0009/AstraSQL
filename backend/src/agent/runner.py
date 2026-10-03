@@ -3,19 +3,18 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from datetime import datetime
-from typing import Any, AsyncIterator, Optional
+from collections.abc import AsyncIterator
+from typing import Any
 
-from sqlalchemy import func, select
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.agent.graph import build_graph, get_graph
 from src.agent.state import AgentState
-from src.agent.utils import confidence_to_float
 from src.config.settings import get_settings
 from src.providers.database.registry import provider_from_connection
-from src.storage.models import ChatSession, Connection, QueryHistory
+from src.storage.models import Connection, QueryHistory
+from src.storage.repositories.history import persist_query_history
 
 logger = logging.getLogger(__name__)
 
@@ -133,81 +132,16 @@ def _compact_update(update: dict[str, Any]) -> dict[str, Any]:
     return {k: v for k, v in update.items() if k not in skip and k != "steps"}
 
 
-def _ambiguity_json(state: AgentState) -> str | None:
-    """Serialize ambiguity diagnostics for QueryHistory."""
-    ambiguity = state.get("ambiguity")
-    if not isinstance(ambiguity, dict) or not ambiguity:
-        return None
-    try:
-        return json.dumps(ambiguity, default=str)
-    except (TypeError, ValueError):
-        return None
-
-
 async def _persist_history(
     session: AsyncSession,
     connection: Connection,
     state: AgentState,
     session_id: str | None = None,
-) -> Optional[QueryHistory]:
+) -> QueryHistory | None:
     """Persist a QueryHistory row when SQL was produced or clarification asked."""
-    sql = (state.get("corrected_sql") or state.get("sql") or "").strip()
-    ambiguity = state.get("ambiguity") if isinstance(state.get("ambiguity"), dict) else {}
-    clarifying = bool(ambiguity.get("should_clarify")) or (
-        str(state.get("intent") or "").upper() == "CLARIFICATION_NEEDED"
+    return await persist_query_history(
+        session, connection, state, session_id=session_id
     )
-    # Persist clarify turns (empty SQL) so diagnostics survive; skip empty no-ops.
-    if not sql and not clarifying:
-        return None
-
-    results = state.get("results") or {}
-    row_count = results.get("row_count")
-    follow_ups = state.get("follow_ups") or []
-    ambiguity_text = _ambiguity_json(state)
-
-    turn_index: int | None = None
-    chat_session: ChatSession | None = None
-    if session_id:
-        chat_session = await session.get(ChatSession, session_id)
-        if chat_session is None:
-            raise ValueError(f"Session not found: {session_id}")
-        if chat_session.connection_id != connection.id:
-            raise ValueError("Session does not belong to this connection")
-        count_result = await session.execute(
-            select(func.count())
-            .select_from(QueryHistory)
-            .where(QueryHistory.session_id == session_id)
-        )
-        turn_index = int(count_result.scalar_one() or 0)
-
-    record = QueryHistory(
-        connection_id=connection.id,
-        session_id=session_id,
-        turn_index=turn_index,
-        question=state.get("question") or "",
-        sql=sql or "",
-        result_row_count=int(row_count) if row_count is not None else None,
-        confidence=confidence_to_float(state.get("confidence")),
-        explanation=state.get("answer"),
-        follow_ups=json.dumps(follow_ups) if follow_ups else None,
-        ambiguity_json=ambiguity_text,
-    )
-    session.add(record)
-
-    if chat_session is not None:
-        chat_session.updated_at = datetime.utcnow()
-        if not chat_session.title:
-            question = (state.get("question") or "").strip()
-            if question:
-                chat_session.title = question[:60]
-
-    try:
-        await session.commit()
-        await session.refresh(record)
-    except Exception:
-        await session.rollback()
-        raise
-    return record
 
 
 async def run_query(
@@ -261,45 +195,50 @@ async def stream_query(
     question: str,
     conversation_history: list[dict[str, Any]] | None = None,
     session_id: str | None = None,
+    evidence: str = "",
 ) -> AsyncIterator[dict[str, Any]]:
     """Stream SSE-friendly events for each graph node / agent step."""
+    from src.observability.usage import UsageTracker, track_usage
+
     provider = provider_from_connection(connection)
     final_state: AgentState = dict(
-        _initial_state(connection, question, conversation_history)
+        _initial_state(connection, question, conversation_history, evidence=evidence)
     )
+    tracker = UsageTracker()
     try:
-        graph = get_graph()
-        config = _run_config(session, connection, provider)
-        yield {
-            "event": "start",
-            "connection_id": connection.id,
-            "question": question,
-        }
+        with track_usage(tracker):
+            graph = get_graph()
+            config = _run_config(session, connection, provider)
+            yield {
+                "event": "start",
+                "connection_id": connection.id,
+                "question": question,
+            }
 
-        async for chunk in graph.astream(
-            final_state,
-            config=config,
-            stream_mode="updates",
-        ):
-            if not isinstance(chunk, dict):
-                continue
-            for node_name, update in chunk.items():
-                if not isinstance(update, dict):
+            async for chunk in graph.astream(
+                final_state,
+                config=config,
+                stream_mode="updates",
+            ):
+                if not isinstance(chunk, dict):
                     continue
-                prev_step_len = len(final_state.get("steps") or [])
-                final_state.update(update)
-                yield {
-                    "event": "node",
-                    "node": node_name,
-                    "data": _sse_safe(_compact_update(update)),
-                }
-                steps = update.get("steps") or []
-                for step in steps[prev_step_len:]:
+                for node_name, update in chunk.items():
+                    if not isinstance(update, dict):
+                        continue
+                    prev_step_len = len(final_state.get("steps") or [])
+                    final_state.update(update)
                     yield {
-                        "event": "step",
+                        "event": "node",
                         "node": node_name,
-                        "step": _sse_safe(step),
+                        "data": _sse_safe(_compact_update(update)),
                     }
+                    steps = update.get("steps") or []
+                    for step in steps[prev_step_len:]:
+                        yield {
+                            "event": "step",
+                            "node": node_name,
+                            "step": _sse_safe(step),
+                        }
 
         history = None
         for attempt in range(3):
@@ -309,7 +248,6 @@ async def stream_query(
                 )
                 break
             except OperationalError as exc:
-                # Do not let metadata write failures hide a successful answer.
                 if "database is locked" not in str(exc).lower() or attempt == 2:
                     logger.warning(
                         "Could not persist query history after %s attempt(s): %s",
@@ -324,11 +262,17 @@ async def stream_query(
 
         done_payload = _compact_state(final_state)
         done_payload["history_id"] = history.id if history else None
+        if tracker.records:
+            done_payload["usage_summary"] = {
+                "by_stage": tracker.summary_by_stage(),
+                "cost_usd": tracker.total_cost(),
+                "total_cost_usd": tracker.total_cost(),
+                "calls": len(tracker.records),
+            }
         yield {
             "event": "done",
             "data": _sse_safe(done_payload),
         }
-        # Compact result for UI — no bulky steps array
         yield {
             "event": "result",
             "data": _sse_safe(
@@ -341,12 +285,13 @@ async def stream_query(
                     "confidence": done_payload.get("confidence"),
                     "trust_level": done_payload.get("trust_level"),
                     "assumption": done_payload.get("assumption"),
-                    "key_finding": done_payload.get("key_finding"),
                     "follow_ups": done_payload.get("follow_ups"),
                     "clarification_options": done_payload.get(
                         "clarification_options"
                     ),
                     "used_golden": done_payload.get("used_golden"),
+                    "ambiguity": done_payload.get("ambiguity"),
+                    "usage_summary": done_payload.get("usage_summary"),
                     "history_id": done_payload.get("history_id"),
                     "error": done_payload.get("error"),
                 }
@@ -358,8 +303,6 @@ async def stream_query(
             "error": str(exc),
             "data": _sse_safe(dict(final_state)),
         }
-        # Do not re-raise — query.py event_generator would emit a duplicate
-        # error event plus an empty done payload.
     finally:
         await provider.close()
 

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import time
 from typing import Any
 
 from langchain_core.embeddings import Embeddings
@@ -10,6 +9,7 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from src.config.settings import get_settings
 from src.observability.usage import get_active_tracker, make_usage_callbacks
 from src.providers.llm.base import BaseLLMProvider
+from src.providers.llm.embeddings import TrackingEmbeddings
 
 
 def _is_reasoning_model(model: str) -> bool:
@@ -17,62 +17,12 @@ def _is_reasoning_model(model: str) -> bool:
     return name.startswith("gpt-5") or "luna" in name or "terra" in name or "sol" in name
 
 
-class _TrackingEmbeddings(Embeddings):
-    """Wrap embeddings to record token usage when a UsageTracker is active."""
-
-    def __init__(self, inner: Embeddings, model: str) -> None:
-        self._inner = inner
-        self._model = model
-
-    def embed_documents(self, texts: list[str]) -> list[list[float]]:
-        started = time.perf_counter()
-        result = self._inner.embed_documents(texts)
-        self._record(texts, started)
-        return result
-
-    def embed_query(self, text: str) -> list[float]:
-        started = time.perf_counter()
-        result = self._inner.embed_query(text)
-        self._record([text], started)
-        return result
-
-    async def aembed_documents(self, texts: list[str]) -> list[list[float]]:
-        started = time.perf_counter()
-        if hasattr(self._inner, "aembed_documents"):
-            result = await self._inner.aembed_documents(texts)
-        else:
-            result = self._inner.embed_documents(texts)
-        self._record(texts, started)
-        return result
-
-    async def aembed_query(self, text: str) -> list[float]:
-        started = time.perf_counter()
-        if hasattr(self._inner, "aembed_query"):
-            result = await self._inner.aembed_query(text)
-        else:
-            result = self._inner.embed_query(text)
-        self._record([text], started)
-        return result
-
-    def _record(self, texts: list[str], started: float) -> None:
-        tracker = get_active_tracker()
-        if tracker is None:
-            return
-        # Rough estimate: ~4 chars/token when the API does not return usage.
-        chars = sum(len(t or "") for t in texts)
-        tokens = max(1, chars // 4)
-        latency_ms = int((time.perf_counter() - started) * 1000)
-        tracker.record_embedding(
-            model=self._model,
-            tokens=tokens,
-            latency_ms=latency_ms,
-            estimated=True,
-            label="embedding",
-        )
-
-
 class OpenAIProvider(BaseLLMProvider):
     """LLM provider backed by OpenAI via langchain-openai."""
+
+    @property
+    def default_model(self) -> str:
+        return get_settings().llm_model
 
     def get_chat_model(
         self,
@@ -82,9 +32,9 @@ class OpenAIProvider(BaseLLMProvider):
         model: str | None = None,
     ) -> BaseChatModel:
         settings = get_settings()
-        resolved = (model or "").strip() or settings.openai_model
+        resolved = (model or "").strip() or self.default_model
         kwargs: dict[str, Any] = {
-            "api_key": settings.openai_api_key,
+            "api_key": settings.llm_api_key,
             "model": resolved,
             "max_tokens": max_tokens,
         }
@@ -106,10 +56,11 @@ class OpenAIProvider(BaseLLMProvider):
 
     def get_embedding_model(self) -> Embeddings:
         settings = get_settings()
+        # langchain-openai stubs expect SecretStr | None; str is accepted at runtime.
         inner = OpenAIEmbeddings(
-            api_key=settings.openai_api_key,
-            model=settings.openai_embedding_model,
+            api_key=settings.llm_api_key or None,  # type: ignore[arg-type]
+            model=settings.embedding_model,
         )
         if get_active_tracker() is None:
             return inner
-        return _TrackingEmbeddings(inner, settings.openai_embedding_model)
+        return TrackingEmbeddings(inner, settings.embedding_model)

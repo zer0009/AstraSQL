@@ -18,7 +18,7 @@ import json
 import random
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 _BACKEND = Path(__file__).resolve().parents[2]
 DATA_DIR = _BACKEND / "eval" / "benchmarks" / "data" / "bird"

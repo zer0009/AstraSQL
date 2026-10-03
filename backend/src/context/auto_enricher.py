@@ -10,7 +10,8 @@ import asyncio
 import hashlib
 import json
 import logging
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -50,7 +51,7 @@ _TRIVIAL_COLS = frozenset(
 )
 
 
-def _safe_json_loads(raw: Optional[str], default: Any = None) -> Any:
+def _safe_json_loads(raw: str | None, default: Any = None) -> Any:
     if raw is None or raw == "":
         return default if default is not None else None
     try:
@@ -149,7 +150,7 @@ class SchemaAutoEnricher:
         connection_id: str,
         caches: list[SchemaCache],
         *,
-        progress: Optional[ProgressCallback] = None,
+        progress: ProgressCallback | None = None,
         skip_existing: bool = True,
     ) -> int:
         """Enrich tables in parallel batches. Returns tables successfully enriched."""

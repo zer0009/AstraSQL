@@ -25,12 +25,13 @@ import {
 } from "../components/ui";
 import { getHistoryStats, listConnections, listHistory, submitFeedback } from "../services/api";
 import type { HistoryStats, QueryHistoryItem } from "../types/api";
+import { formatConfidence } from "../lib/confidence";
+import { parseAmbiguityJson } from "../lib/ambiguity";
 import { cn } from "../lib/utils";
 
 const PAGE_SIZE = 25;
 
 type RatingFilter = "all" | "positive" | "negative";
-type ConfidenceLevel = "HIGH" | "MEDIUM" | "LOW" | null;
 
 function truncate(text: string, max: number): string {
   const t = text.replace(/\s+/g, " ").trim();
@@ -38,15 +39,8 @@ function truncate(text: string, max: number): string {
   return `${t.slice(0, max)}…`;
 }
 
-function confidenceLevel(value: number | null): ConfidenceLevel {
-  if (value == null || Number.isNaN(value)) return null;
-  if (value >= 0.85) return "HIGH";
-  if (value >= 0.4) return "MEDIUM";
-  return "LOW";
-}
-
 function ConfidenceBadge({ value }: { value: number | null }) {
-  const level = confidenceLevel(value);
+  const level = formatConfidence(value);
   if (!level) {
     return <span className="text-xs text-zinc-400">—</span>;
   }
@@ -363,6 +357,15 @@ export default function HistoryPage() {
                       </TableCell>
                       <TableCell>
                         <ConfidenceBadge value={item.confidence} />
+                        {item.trust_level ? (
+                          <span className="mt-0.5 block text-[10px] uppercase text-zinc-400">
+                            {item.trust_level}
+                          </span>
+                        ) : parseAmbiguityJson(item.ambiguity_json)?.status ? (
+                          <span className="mt-0.5 block text-[10px] uppercase text-zinc-400">
+                            {parseAmbiguityJson(item.ambiguity_json)?.status}
+                          </span>
+                        ) : null}
                       </TableCell>
                       <TableCell>
                         <RatingCell rating={item.user_rating} />

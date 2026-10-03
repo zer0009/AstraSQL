@@ -1,7 +1,10 @@
 import pytest
 
-from src.agent.nodes.query_validator import validate_syntax
-from src.agent.sql_guards import find_bind_placeholders, refuse_unbound_sql
+from src.agent.sql_guards import (
+    find_bind_placeholders,
+    refuse_unbound_sql,
+    validate_syntax,
+)
 from src.agent.utils import classify_retry_type
 from src.providers.database import list_database_types
 
@@ -36,18 +39,18 @@ def test_find_bind_placeholders_detects_dollar():
         "SELECT e.name FROM employees e WHERE e.id = $1 "
         "AND lb.year = EXTRACT(YEAR FROM CURRENT_DATE)::integer"
     )
-    assert find_bind_placeholders(sql) == ["$1"]
+    assert find_bind_placeholders(sql, "postgres") == ["$1"]
 
 
 def test_find_bind_placeholders_detects_qmark_and_pyformat():
     assert "?" in find_bind_placeholders(
-        "SELECT name FROM employees WHERE id = ?"
+        "SELECT name FROM employees WHERE id = ?", "postgres"
     )
     assert ":1" in find_bind_placeholders(
-        "SELECT name FROM employees WHERE id = :1"
+        "SELECT name FROM employees WHERE id = :1", "postgres"
     )
     assert "%s" in find_bind_placeholders(
-        "SELECT name FROM employees WHERE id = %s"
+        "SELECT name FROM employees WHERE id = %s", "postgres"
     )
 
 
@@ -63,14 +66,14 @@ def test_find_bind_placeholders_live_leave_balance():
         "AND lb.year = EXTRACT(YEAR FROM CURRENT_DATE)::integer "
         "ORDER BY lt.name LIMIT 500"
     )
-    assert find_bind_placeholders(sql) == ["$1"]
+    assert find_bind_placeholders(sql, "postgres") == ["$1"]
     with pytest.raises(ValueError, match="Unbound parameter"):
-        refuse_unbound_sql(sql)
+        refuse_unbound_sql(sql, "postgres")
 
 
 def test_find_bind_placeholders_ignores_pg_cast():
     assert find_bind_placeholders(
-        "SELECT EXTRACT(YEAR FROM CURRENT_DATE)::integer"
+        "SELECT EXTRACT(YEAR FROM CURRENT_DATE)::integer", "postgres"
     ) == []
 
 
@@ -81,11 +84,13 @@ def test_refuse_unbound_sql_blocks_live_leave_query():
         "WHERE u.id = $1 AND lb.year = EXTRACT(YEAR FROM CURRENT_DATE)::integer"
     )
     with pytest.raises(ValueError, match="Unbound parameter \\$1"):
-        refuse_unbound_sql(sql)
+        refuse_unbound_sql(sql, "postgres")
 
 
 def test_refuse_unbound_sql_allows_casts():
-    refuse_unbound_sql("SELECT EXTRACT(YEAR FROM CURRENT_DATE)::integer")
+    refuse_unbound_sql(
+        "SELECT EXTRACT(YEAR FROM CURRENT_DATE)::integer", "postgres"
+    )
 
 
 def test_validate_syntax_blocks_unbound_placeholder():

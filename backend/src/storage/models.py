@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Optional
 
 from sqlalchemy import (
     Boolean,
@@ -41,13 +40,13 @@ class Connection(Base):
     ssl_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     # None → fall back to settings.grounded_clarification_enabled (per-connection override).
     # Applied via Alembic 004; create_all fallback also creates this column from metadata.
-    grounded_clarification_enabled: Mapped[Optional[bool]] = mapped_column(
+    grounded_clarification_enabled: Mapped[bool | None] = mapped_column(
         Boolean, nullable=True, default=None
     )
     # Optional JSON: {metrics:[], synonyms:{}, join_paths:[], table_tiers:{}}.
     # Applied via Alembic 005_semantic_layer.
-    semantic_layer_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    last_scanned_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    semantic_layer_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    last_scanned_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.now(), nullable=False
@@ -86,10 +85,10 @@ class SchemaEnrichment(Base):
         String(36), ForeignKey("connections.id", ondelete="CASCADE"), nullable=False, index=True
     )
     table_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    column_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    alias: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    example_values: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON text
+    column_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    alias: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    example_values: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON text
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.now(), nullable=False
@@ -107,7 +106,7 @@ class GoldenRecord(Base):
     )
     question: Mapped[str] = mapped_column(Text, nullable=False)
     sql: Mapped[str] = mapped_column(Text, nullable=False)
-    embedding: Mapped[Optional[bytes]] = mapped_column(LargeBinary, nullable=True)
+    embedding: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.now(), nullable=False
@@ -139,7 +138,7 @@ class ChatSession(Base):
     connection_id: Mapped[str] = mapped_column(
         String(36), ForeignKey("connections.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    title: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    title: Mapped[str | None] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.now(), nullable=False
@@ -159,26 +158,27 @@ class QueryHistory(Base):
     connection_id: Mapped[str] = mapped_column(
         String(36), ForeignKey("connections.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    session_id: Mapped[Optional[str]] = mapped_column(
+    session_id: Mapped[str | None] = mapped_column(
         String(36),
         ForeignKey("chat_sessions.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
     )
-    turn_index: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    turn_index: Mapped[int | None] = mapped_column(Integer, nullable=True)
     question: Mapped[str] = mapped_column(Text, nullable=False)
     sql: Mapped[str] = mapped_column(Text, nullable=False)
-    result_row_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    confidence: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    user_rating: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    explanation: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    follow_ups: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON text
-    # Resolver / execution-gate diagnostics: status, decision_why, candidates, …
-    ambiguity_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    result_row_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
+    user_rating: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    explanation: Mapped[str | None] = mapped_column(Text, nullable=True)
+    follow_ups: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON text
+    # Ambiguity / execution-gate diagnostics: status, decision_why, candidates, …
+    ambiguity_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    trust_level: Mapped[str | None] = mapped_column(String(32), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
 
     connection: Mapped[Connection] = relationship(back_populates="query_history")
-    session: Mapped[Optional[ChatSession]] = relationship(back_populates="queries")
+    session: Mapped[ChatSession | None] = relationship(back_populates="queries")
 
 
 class SchemaCache(Base):
@@ -192,9 +192,9 @@ class SchemaCache(Base):
         String(36), ForeignKey("connections.id", ondelete="CASCADE"), nullable=False, index=True
     )
     table_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    ddl_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    columns_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    sample_rows_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    ddl_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    columns_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    sample_rows_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.now(), nullable=False
     )
@@ -212,9 +212,9 @@ class User(Base):
     is_admin: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     must_change_password: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     failed_login_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    locked_until: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    last_login_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    password_changed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    locked_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    password_changed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.now(), nullable=False
@@ -235,9 +235,9 @@ class AuthSession(Base):
     token_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False, index=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, index=True)
     last_seen_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
-    user_agent: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
-    ip: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
-    revoked_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    user_agent: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    ip: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
 
     user: Mapped[User] = relationship(back_populates="sessions")

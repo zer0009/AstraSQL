@@ -14,10 +14,19 @@ from src.agent.utils import (
     classify_retry_type,
     compute_confidence,
     extract_json,
+    get_configurable,
     message_text,
 )
 from src.config.settings import get_settings
 from src.providers.llm import get_llm_provider
+
+
+def _sqlglot_dialect(config: RunnableConfig) -> str:
+    cfg = get_configurable(config)
+    db_provider = cfg.get("db_provider")
+    if db_provider is None or not hasattr(db_provider, "sqlglot_dialect"):
+        raise ValueError("db_provider missing sqlglot_dialect()")
+    return db_provider.sqlglot_dialect()
 
 
 def _result_summary(results: dict | None, error: str | None) -> str:
@@ -36,7 +45,7 @@ def _result_summary(results: dict | None, error: str | None) -> str:
         if isinstance(row, dict):
             preview.append(row)
         elif isinstance(row, (list, tuple)) and columns:
-            preview.append(dict(zip(columns, row)))
+            preview.append(dict(zip(columns, row, strict=False)))
         else:
             preview.append(row)
     try:
@@ -77,6 +86,7 @@ async def response_formatter(
 ) -> dict[str, Any]:
     """Build the user-facing answer and deterministic confidence score."""
     settings = get_settings()
+    dialect = _sqlglot_dialect(config)
     question = state.get("question") or ""
     sql = (state.get("corrected_sql") or state.get("sql") or "").strip()
     results = state.get("results") or {}
@@ -104,6 +114,7 @@ async def response_formatter(
             generated_sql=sql,
             golden_sqls=list(context.get("golden_sqls") or []),
             used_golden=bool(state.get("used_golden")),
+            dialect=dialect,
         )
         return {
             "confidence": confidence,
@@ -145,6 +156,7 @@ async def response_formatter(
             generated_sql=sql,
             golden_sqls=list(context.get("golden_sqls") or []),
             used_golden=bool(state.get("used_golden")),
+            dialect=dialect,
         )
         return {
             "confidence": confidence,
@@ -211,6 +223,7 @@ async def response_formatter(
         generated_sql=sql,
         golden_sqls=list(context.get("golden_sqls") or []),
         used_golden=bool(state.get("used_golden")),
+        dialect=dialect,
     )
     return {
         "confidence": confidence,

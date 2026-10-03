@@ -87,12 +87,14 @@ export function FeedbackBar({ historyId, sql }: FeedbackBarProps) {
         {goldenSaved ? (
           <span className="text-xs text-emerald-700">
             {rating === -1
-              ? "Correction saved as golden record"
-              : "Saved as golden record"}
+              ? "Learned: corrected SQL saved as a golden example"
+              : "Learned: saved as a golden example"}
           </span>
         ) : null}
         {ruleSaved ? (
-          <span className="text-xs text-emerald-700">Rule saved</span>
+          <span className="text-xs text-emerald-700">
+            Learned: business rule and conventions updated
+          </span>
         ) : null}
         {feedback.isError ? (
           <span className="text-xs text-red-600">Could not save feedback</span>

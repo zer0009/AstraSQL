@@ -5,6 +5,10 @@ from typing import Any
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 
+from src.agent.execution_gate import (
+    ensure_other_option,
+    is_generic_gate_option,
+)
 from src.agent.prompts.generator import format_conversation_history
 from src.agent.state import AgentState
 from src.agent.utils import append_step, extract_json, message_text
@@ -24,14 +28,16 @@ Respond helpfully in plain language.
 - For META: answer using ONLY the schema digest above when present. Do not
   invent tables, columns, or metrics that are not listed. If the digest is
   empty, say you need a scanned connection / Context page.
-- For CLARIFICATION_NEEDED: ask 1–3 precise clarifying questions in "answer"
+- For CLARIFICATION_NEEDED: ask 1–2 precise clarifying questions in "answer"
   grounded ONLY in the schema digest and the provided options. Never suggest
   metrics (e.g. sales, performance) that are not represented in the digest.
-  Prefer the provided clarification_options as clickable rewrites; you may
-  refine wording but must stay schema-faithful. Each option must be a complete,
-  self-contained data question. Always allow the user to rephrase.
-  If conversation history already answers part of the ambiguity, acknowledge
-  what you know and only ask for what is still missing.
+  Also return clarification_options: 2–4 short, clickable choices that answer
+  those questions (same language as the user). Prefer refining the provided
+  options into natural labels (e.g. "Group by country and state", "All orders")
+  over opaque technical diffs. Each option should be a self-contained choice
+  the user can tap. Always include room for the user to rephrase (Other is
+  added automatically). If conversation history already answers part of the
+  ambiguity, acknowledge what you know and only ask for what is still missing.
 - For CHIT_CHAT: reply briefly and offer to help with data questions.
 
 Return JSON only:
@@ -173,11 +179,36 @@ async def direct_response(
     # Only surface clickable clarifications for CLARIFICATION_NEEDED.
     if intent != "CLARIFICATION_NEEDED":
         clarification_options = []
-    elif preset_options:
-        # Prefer policy-validated options over free-form LLM inventions.
-        clarification_options = preset_options
-    elif not clarification_options:
-        clarification_options = preset_options
+    else:
+        llm_opts = [
+            o for o in clarification_options if o and not is_generic_gate_option(o)
+        ]
+        preset_concrete = [
+            o for o in preset_options if o and not is_generic_gate_option(o)
+        ]
+        preset_generic = [
+            o for o in preset_options if o and is_generic_gate_option(o)
+        ]
+        # Prefer natural-language options (LLM or concrete gate labels) over
+        # opaque "Use reading where: Different SQL…" placeholders.
+        if llm_opts:
+            clarification_options = llm_opts
+        elif preset_concrete:
+            clarification_options = preset_concrete
+        elif preset_options:
+            clarification_options = preset_options
+        # Keep any non-generic presets the LLM missed (e.g. Group by …).
+        for opt in preset_concrete:
+            if opt not in clarification_options:
+                clarification_options.append(opt)
+        # Drop leftover generic placeholders once we have real choices.
+        if any(not is_generic_gate_option(o) for o in clarification_options):
+            clarification_options = [
+                o for o in clarification_options if not is_generic_gate_option(o)
+            ]
+        elif preset_generic and not clarification_options:
+            clarification_options = preset_generic
+        clarification_options = ensure_other_option(clarification_options)
 
     return {
         "answer": answer,

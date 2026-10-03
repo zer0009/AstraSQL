@@ -8,6 +8,10 @@ import {
 } from "../services/api";
 import type { ChatSession, QueryHistoryItem } from "../types/api";
 import {
+  clarificationOptionsFrom,
+  parseAmbiguityJson,
+} from "../lib/ambiguity";
+import {
   readCurrentSessionId,
   writeCurrentSessionId,
 } from "../lib/userPrefs";
@@ -45,23 +49,50 @@ function extractApiError(err: unknown): string {
 export function reconstructMessages(
   queries: QueryHistoryItem[],
 ): ChatMessage[] {
-  return queries.flatMap((q) => [
-    {
-      id: `${q.id}-user`,
-      role: "user" as const,
-      content: q.question,
-    },
-    {
-      id: q.id,
-      role: "assistant" as const,
-      content: q.explanation ?? "Query completed.",
-      sql: q.sql,
-      historyId: q.id,
-      confidence: q.confidence ?? undefined,
-      followUps: parseFollowUps(q.follow_ups),
-      // results intentionally omitted — re-run executes saved SQL directly
-    },
-  ]);
+  return queries.flatMap((q) => {
+    const ambiguity = parseAmbiguityJson(q.ambiguity_json);
+    const followUps = parseFollowUps(q.follow_ups);
+    const clarificationOptions = clarificationOptionsFrom(
+      undefined,
+      ambiguity,
+    );
+    const isClarify =
+      Boolean(ambiguity?.should_clarify) ||
+      ambiguity?.status === "ambiguous" ||
+      ambiguity?.status === "unanswerable";
+    const content =
+      q.explanation ??
+      (isClarify
+        ? ambiguity?.reason || "Clarification needed."
+        : q.sql
+          ? "Query completed."
+          : "Done.");
+
+    return [
+      {
+        id: `${q.id}-user`,
+        role: "user" as const,
+        content: q.question,
+      },
+      {
+        id: q.id,
+        role: "assistant" as const,
+        content,
+        sql: q.sql || undefined,
+        historyId: q.id,
+        confidence: q.confidence ?? undefined,
+        trustLevel:
+          q.trust_level ??
+          (isClarify ? "clarifying" : undefined) ??
+          undefined,
+        followUps,
+        clarificationOptions,
+        assumption: ambiguity?.assumption,
+        ambiguity,
+        // results intentionally omitted — re-run executes saved SQL directly
+      },
+    ];
+  });
 }
 
 export function useChatSession(connectionId: string | null) {
@@ -84,6 +115,7 @@ export function useChatSession(connectionId: string | null) {
     send: streamSend,
     isStreaming,
     reset,
+    cancel,
     updateMessage,
     lastResult,
   } = useStreamQuery(connectionId, {
@@ -163,7 +195,7 @@ export function useChatSession(connectionId: string | null) {
   );
 
   const send = useCallback(
-    async (question: string) => {
+    async (question: string, evidence?: string) => {
       const trimmed = question.trim();
       if (!trimmed || !connectionId || isStreaming) return;
 
@@ -173,7 +205,10 @@ export function useChatSession(connectionId: string | null) {
       } catch (err) {
         console.error("Failed to create chat session", err);
       }
-      await streamSend(trimmed, { sessionId: activeSessionId });
+      await streamSend(trimmed, {
+        sessionId: activeSessionId,
+        evidence,
+      });
     },
     [connectionId, ensureSession, isStreaming, streamSend],
   );
@@ -295,6 +330,7 @@ export function useChatSession(connectionId: string | null) {
     rerunningMessageId,
     clear,
     newChat,
+    cancel,
     rename,
     switchTo,
     resetSession,

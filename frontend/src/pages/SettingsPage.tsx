@@ -445,6 +445,28 @@ export default function SettingsPage() {
                 >
                   {settings.max_result_rows.toLocaleString()}
                 </SettingRow>
+                {settings.sse_row_preview_limit != null ? (
+                  <SettingRow
+                    label="Chat preview rows"
+                    description="Rows streamed into chat before truncation notice."
+                  >
+                    {settings.sse_row_preview_limit.toLocaleString()}
+                  </SettingRow>
+                ) : null}
+                <SettingRow label="Ask vs guess policy">
+                  <span className="capitalize">
+                    {settings.ambiguity_policy ?? "balanced"}
+                  </span>
+                </SettingRow>
+                <SettingRow label="Consistency gate">
+                  {settings.execution_evidence_gate === false ? "Off" : "On"}
+                </SettingRow>
+                <SettingRow label="Merged interpret+generate">
+                  {settings.merge_interpret_generate === false ? "Off" : "On"}
+                </SettingRow>
+                <SettingRow label="Learning from feedback">
+                  {settings.learning_loop_enabled === false ? "Off" : "On"}
+                </SettingRow>
                 <SettingRow label="Databases">
                   <div className="flex flex-wrap justify-end gap-1">
                     {settings.database_types.length === 0 ? (

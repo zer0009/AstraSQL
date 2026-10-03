@@ -24,14 +24,53 @@ jobs:
         run: uv sync --extra dev
       - name: Ruff check
         run: uv run ruff check src tests
+      - name: Mypy (scoped)
+        run: uv run mypy -p src.providers -p src.config -p src.api -p src.storage
       - name: Pytest
         env:
           DEBUG: "true"
           ENCRYPTION_KEY: ci-test-encryption-key-not-for-prod
-        run: uv run pytest -q
+        run: uv run pytest -q --ignore=tests/test_postgres_provider.py
+
+  backend-postgres:
+    name: Backend (Postgres provider)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: astrasql
+          POSTGRES_PASSWORD: astrasql
+          POSTGRES_DB: astrasql_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U astrasql -d astrasql_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: uv sync --extra dev
+      - name: Postgres provider smoke
+        env:
+          DEBUG: "true"
+          ENCRYPTION_KEY: ci-test-encryption-key-not-for-prod
+          ASTRASQL_PG_DSN: postgresql+asyncpg://astrasql:astrasql@localhost:5432/astrasql_ci
+        run: uv run pytest -q tests/test_postgres_provider.py -m postgres
 
   frontend:
-    name: Frontend (build)
+    name: Frontend (lint + test + build)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -45,5 +84,11 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Install
         run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Test
+        run: npm test
       - name: Build
         run: npm run build

@@ -6,103 +6,21 @@ import logging
 from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy import and_, case, func, or_, select
 
-from src.agent.verified_cache import normalize_question
-from src.api.deps import DbSession
+from src.api.deps import DbSession, GoldenStoreDep, RulesStoreDep
 from src.api.schemas import FeedbackOut, FeedbackRequest, HistoryOut, HistoryStatsOut
 from src.config.settings import get_settings
-from src.context import BusinessRulesStore, GoldenRecordsStore
 from src.context.learning_loop import record_repair_memory, record_reviewed_query
 from src.context.semantic_layer import parse_semantic_layer
-from src.storage.models import Connection, GoldenRecord, QueryHistory
+from src.services.golden_promotion import promote_golden
+from src.storage.models import Connection, QueryHistory
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["history"])
 
-golden_store = GoldenRecordsStore()
-rules_store = BusinessRulesStore()
-
 # Matches frontend confidenceLevel / confidence_to_float mapping.
 _HIGH = 0.85
 _MEDIUM = 0.4
-
-
-async def _find_duplicate_golden(
-    db: DbSession,
-    connection_id: str,
-    question: str,
-) -> GoldenRecord | None:
-    """Return an existing golden with the same normalized question, if any."""
-    norm = normalize_question(question)
-    if not norm:
-        return None
-    result = await db.execute(
-        select(GoldenRecord).where(GoldenRecord.connection_id == connection_id)
-    )
-    for row in result.scalars().all():
-        if normalize_question(row.question or "") == norm:
-            return row
-    return None
-
-
-async def _try_execute_readonly(connection: Connection | None, sql: str) -> bool:
-    """Best-effort readonly execute before promoting to golden. False on failure."""
-    if connection is None or not sql.strip():
-        return False
-    try:
-        from src.providers.database.registry import provider_from_connection
-
-        provider = provider_from_connection(connection)
-        try:
-            await provider.execute_readonly(sql, max_rows=1)
-            return True
-        finally:
-            await provider.close()
-    except Exception:
-        logger.info(
-            "Golden promote execute check failed for connection %s",
-            getattr(connection, "id", None),
-            exc_info=True,
-        )
-        return False
-
-
-async def _promote_golden(
-    db: DbSession,
-    *,
-    connection_id: str,
-    question: str,
-    sql: str,
-) -> GoldenRecord | None:
-    """Promote Q→SQL to golden with empty/dedup/execute gates. None if rejected."""
-    cleaned = (sql or "").strip()
-    if not cleaned:
-        logger.info("Skipping golden promote: empty SQL")
-        return None
-
-    existing = await _find_duplicate_golden(db, connection_id, question)
-    if existing is not None:
-        # Dedup: keep existing record (optionally refresh SQL if empty — keep minimal).
-        return existing
-
-    connection = await db.get(Connection, connection_id)
-    # Optional execute check — catch errors but still allow promote if provider
-    # is unavailable (stub dialects). Reject only when execute raises on a live DB.
-    if connection is not None and getattr(connection, "db_type", "") not in (
-        "mysql",
-        "mssql",
-    ):
-        # Soft gate: log failure but still promote (roadmap: catch errors).
-        await _try_execute_readonly(connection, cleaned)
-
-    golden = await golden_store.add(
-        db,
-        connection_id=connection_id,
-        question=question,
-        sql=cleaned,
-    )
-    await golden_store.rebuild_index(db, connection_id)
-    return golden
 
 
 @router.get("/stats", response_model=HistoryStatsOut)
@@ -241,7 +159,11 @@ async def get_history(history_id: str, db: DbSession) -> QueryHistory:
 
 @router.post("/{history_id}/feedback", response_model=FeedbackOut)
 async def submit_feedback(
-    history_id: str, body: FeedbackRequest, db: DbSession
+    history_id: str,
+    body: FeedbackRequest,
+    db: DbSession,
+    golden_store: GoldenStoreDep,
+    rules_store: RulesStoreDep,
 ) -> FeedbackOut:
     row = await db.get(QueryHistory, history_id)
     if row is None:
@@ -252,20 +174,22 @@ async def submit_feedback(
     rule_id: str | None = None
 
     if body.rating == 1:
-        golden = await _promote_golden(
+        golden = await promote_golden(
             db,
             connection_id=row.connection_id,
             question=row.question,
             sql=row.sql,
+            golden_store=golden_store,
         )
         if golden is not None:
             golden_record_id = golden.id
     elif body.rating == -1 and body.corrected_sql:
-        golden = await _promote_golden(
+        golden = await promote_golden(
             db,
             connection_id=row.connection_id,
             question=row.question,
             sql=body.corrected_sql,
+            golden_store=golden_store,
         )
         if golden is not None:
             golden_record_id = golden.id

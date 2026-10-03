@@ -6,7 +6,7 @@ import pickle
 import re
 from datetime import date
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import faiss
 import numpy as np
@@ -103,7 +103,7 @@ class SchemaLinker:
 
     def _load_index(
         self, connection_id: str
-    ) -> tuple[Optional[faiss.Index], list[str]]:
+    ) -> tuple[faiss.Index | None, list[str]]:
         index_path = self._index_path(connection_id)
         ids_path = self._ids_path(connection_id)
         if not index_path.exists() or not ids_path.exists():
@@ -236,7 +236,7 @@ class SchemaLinker:
         connection_id: str,
         question: str,
         all_tables: list[str],
-        top_k: Optional[int] = None,
+        top_k: int | None = None,
     ) -> list[str]:
         """Phase 1: FAISS coarse filter. Skip if fewer than 20 tables."""
         if top_k is None:

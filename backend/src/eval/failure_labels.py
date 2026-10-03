@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Optional
+from typing import Any
 
 import sqlglot
 from sqlglot import exp
@@ -13,7 +13,7 @@ from src.eval.compare import results_equal, results_equal_values
 FailureLabel = str
 
 
-def extract_tables(sql: Optional[str], dialect: str = "sqlite") -> set[str]:
+def extract_tables(sql: str | None, dialect: str = "sqlite") -> set[str]:
     text = (sql or "").strip()
     if not text:
         return set()
@@ -37,7 +37,7 @@ def extract_tables(sql: Optional[str], dialect: str = "sqlite") -> set[str]:
     return found
 
 
-def _columns(sql: Optional[str], dialect: str = "sqlite") -> set[str]:
+def _columns(sql: str | None, dialect: str = "sqlite") -> set[str]:
     text = (sql or "").strip()
     if not text:
         return set()
@@ -53,7 +53,7 @@ def _columns(sql: Optional[str], dialect: str = "sqlite") -> set[str]:
     return found
 
 
-def _has_left_join(sql: Optional[str], dialect: str = "sqlite") -> bool:
+def _has_left_join(sql: str | None, dialect: str = "sqlite") -> bool:
     text = (sql or "").strip()
     if not text:
         return False
@@ -70,11 +70,11 @@ def _has_left_join(sql: Optional[str], dialect: str = "sqlite") -> bool:
     return False
 
 
-def _has_max_subquery(sql: Optional[str]) -> bool:
+def _has_max_subquery(sql: str | None) -> bool:
     return bool(re.search(r"\bmax\s*\(", (sql or ""), re.IGNORECASE))
 
 
-def _has_order_limit_subquery(sql: Optional[str]) -> bool:
+def _has_order_limit_subquery(sql: str | None) -> bool:
     text = (sql or "")
     return bool(
         re.search(r"\border\s+by\b[\s\S]{0,80}\blimit\s+\d+", text, re.IGNORECASE)
@@ -84,12 +84,12 @@ def _has_order_limit_subquery(sql: Optional[str]) -> bool:
 def label_failure(
     *,
     question: str = "",
-    gold_sql: Optional[str],
-    generated_sql: Optional[str],
-    gold_result: Optional[dict] = None,
-    generated_result: Optional[dict] = None,
+    gold_sql: str | None,
+    generated_sql: str | None,
+    gold_result: dict | None = None,
+    generated_result: dict | None = None,
     clarified: bool = False,
-    error: Optional[str] = None,
+    error: str | None = None,
     dialect: str = "sqlite",
 ) -> FailureLabel:
     """Return a single failure label for a non-matching case."""

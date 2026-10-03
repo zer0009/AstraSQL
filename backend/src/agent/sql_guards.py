@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import re
-from typing import Optional
 
 import sqlglot
 from sqlglot import exp
+from sqlglot.errors import ParseError
 
 _TABLE_HEADER_RE = re.compile(r"^--\s*TABLE:\s*(\S+)", re.IGNORECASE)
 # Postgres $1 — not the same as ::type casts.
@@ -17,9 +17,65 @@ _QMARK_BIND_RE = re.compile(r"(^|[\s=(,])\?(?=\s|$|,|\))")
 _PYFORMAT_BIND_RE = re.compile(r"%(\([A-Za-z_][A-Za-z0-9_]*\))?s\b")
 
 
-def refuse_unbound_sql(sql: str) -> None:
+_DML_TYPES = (
+    exp.Insert,
+    exp.Update,
+    exp.Delete,
+    exp.Drop,
+    exp.Create,
+    exp.Alter,
+    exp.TruncateTable,
+)
+
+
+def validate_syntax(
+    sql: str, sqlglot_dialect: str
+) -> tuple[bool, str | None, bool]:
+    """Layer 1: parse + block DML.
+
+    Returns (ok, error_message, is_dml_block).
+    """
+    try:
+        tree = sqlglot.parse_one(sql, dialect=sqlglot_dialect)
+    except ParseError as e:
+        return False, f"SQL syntax error: {e}", False
+    except Exception as e:
+        return False, f"SQL parse failed: {e}", False
+
+    placeholders = find_bind_placeholders(sql, sqlglot_dialect)
+    if placeholders:
+        shown = ", ".join(placeholders[:5])
+        return (
+            False,
+            (
+                f"Unbound parameter {shown}: never emit $1 / :name placeholders. "
+                "Write a literal only when the question names the value. "
+                "If the person or id is unknown, do not guess."
+            ),
+            False,
+        )
+
+    if isinstance(tree, _DML_TYPES) or any(tree.find(t) for t in _DML_TYPES):
+        kind = type(tree).__name__
+        for t in _DML_TYPES:
+            found = tree.find(t)
+            if found is not None:
+                kind = type(found).__name__
+                break
+        return (
+            False,
+            (
+                f"DML statement blocked: {kind}. "
+                "Only SELECT/WITH queries are permitted."
+            ),
+            True,
+        )
+    return True, None, False
+
+
+def refuse_unbound_sql(sql: str, dialect: str) -> None:
     """Raise before the driver sees a parameter this runner cannot bind."""
-    found = find_bind_placeholders(sql)
+    found = find_bind_placeholders(sql, dialect)
     if found:
         shown = ", ".join(found[:5])
         raise ValueError(
@@ -27,7 +83,7 @@ def refuse_unbound_sql(sql: str) -> None:
         )
 
 
-def find_bind_placeholders(sql: str) -> list[str]:
+def find_bind_placeholders(sql: str, dialect: str) -> list[str]:
     """Return unbound parameter markers the driver cannot fill ($1, :name)."""
     text = sql or ""
     found: list[str] = []
@@ -46,7 +102,7 @@ def find_bind_placeholders(sql: str) -> list[str]:
         if token not in found:
             found.append(token)
     try:
-        tree = sqlglot.parse_one(text, dialect="postgres")
+        tree = sqlglot.parse_one(text, dialect=dialect)
     except Exception:
         tree = None
     if tree is not None:
@@ -60,6 +116,8 @@ def find_bind_placeholders(sql: str) -> list[str]:
             if token not in found:
                 found.append(token)
     return found
+
+
 # Matches: "    name  VARCHAR(64)," or "    name  character varying -- ..."
 _COL_DECL_RE = re.compile(
     r"^\s+(\w+)\s+"
@@ -72,7 +130,7 @@ _COL_DECL_RE = re.compile(
 def parse_column_types(enriched_schema: str) -> dict[tuple[str, str], str]:
     """Parse ``(table, column) -> type`` from enriched CREATE TABLE text."""
     types: dict[tuple[str, str], str] = {}
-    current_table: Optional[str] = None
+    current_table: str | None = None
     for line in (enriched_schema or "").splitlines():
         header = _TABLE_HEADER_RE.match(line.strip())
         if header:

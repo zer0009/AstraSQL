@@ -59,6 +59,9 @@ class SQLiteProvider(BaseDatabaseProvider):
         # Uses PRAGMA busy_timeout (wired from query_timeout_seconds).
         return True
 
+    def needs_deterministic_repair(self) -> bool:
+        return True
+
     def quote_ident(self, name: str) -> str:
         return _quote_ident(name)
 
@@ -132,7 +135,7 @@ class SQLiteProvider(BaseDatabaseProvider):
             return False
 
     async def explain_query(self, sql: str) -> str:
-        refuse_unbound_sql(sql)
+        refuse_unbound_sql(sql, self.sqlglot_dialect())
         cleaned = sql.strip().rstrip(";")
         engine = self.get_async_engine()
         async with engine.connect() as conn:
@@ -229,7 +232,7 @@ class SQLiteProvider(BaseDatabaseProvider):
             if col["name"] in fk_by_col:
                 col["foreign_key"] = fk_by_col[col["name"]]
 
-        samples = [dict(zip(sample_cols, row)) for row in sample_raw]
+        samples = [dict(zip(sample_cols, row, strict=False)) for row in sample_raw]
         return {
             "table_name": table_name,
             "columns": columns,
@@ -299,7 +302,7 @@ class SQLiteProvider(BaseDatabaseProvider):
     async def execute_readonly(
         self, sql: str, max_rows: int = 500
     ) -> dict[str, Any]:
-        refuse_unbound_sql(sql)
+        refuse_unbound_sql(sql, self.sqlglot_dialect())
         limited_sql = self._ensure_outer_limit(sql, max_rows)
         engine = self.get_async_engine()
         async with engine.connect() as conn:
@@ -307,7 +310,8 @@ class SQLiteProvider(BaseDatabaseProvider):
             columns = list(result.keys())
             rows_raw = result.fetchmany(max_rows)
             rows = [
-                {col: val for col, val in zip(columns, row)} for row in rows_raw
+                {col: val for col, val in zip(columns, row, strict=False)}
+                for row in rows_raw
             ]
         return {
             "columns": columns,

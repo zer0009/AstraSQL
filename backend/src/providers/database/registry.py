@@ -18,26 +18,35 @@ _REGISTRY: dict[str, type[BaseDatabaseProvider]] = {
     "sqlite": SQLiteProvider,
 }
 
+_DB_TYPE_ALIASES: dict[str, str] = {
+    "postgres": "postgresql",
+    "pg": "postgresql",
+    "sqlserver": "mssql",
+    "sql_server": "mssql",
+}
+
+
+def normalize_db_type(db_type: str) -> str:
+    """Map common aliases to the canonical registry key (lowercase)."""
+    key = (db_type or "").lower().strip()
+    return _DB_TYPE_ALIASES.get(key, key)
+
 
 def register_database_provider(name: str, cls: type[BaseDatabaseProvider]) -> None:
     _REGISTRY[name] = cls
 
 
-def get_database_provider(db_type: str, **kwargs) -> BaseDatabaseProvider:
-    key = db_type.lower().strip()
-    # Accept common aliases
-    aliases = {
-        "postgres": "postgresql",
-        "pg": "postgresql",
-        "sqlserver": "mssql",
-        "sql_server": "mssql",
-    }
-    key = aliases.get(key, key)
+def get_provider_class(db_type: str) -> type[BaseDatabaseProvider]:
+    key = normalize_db_type(db_type)
     if key not in _REGISTRY:
         raise ValueError(
             f"Unknown database provider: {db_type!r}. Available: {list(_REGISTRY)}"
         )
-    return _REGISTRY[key](**kwargs)
+    return _REGISTRY[key]
+
+
+def get_database_provider(db_type: str, **kwargs) -> BaseDatabaseProvider:
+    return get_provider_class(db_type)(**kwargs)
 
 
 def list_database_types() -> list[str]:

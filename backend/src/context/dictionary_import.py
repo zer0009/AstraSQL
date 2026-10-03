@@ -14,7 +14,7 @@ import csv
 import json
 import logging
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -54,7 +54,7 @@ def parse_bird_description_csv(path: Path) -> list[dict[str, Any]]:
             return []
         fields = {h.lower().strip(): h for h in reader.fieldnames if h}
 
-        def _col(*names: str) -> Optional[str]:
+        def _col(*names: str) -> str | None:
             for n in names:
                 if n in fields:
                     return fields[n]
@@ -238,12 +238,14 @@ async def import_bird_descriptions_for_db(
     session: AsyncSession,
     connection_id: str,
     db_id: str,
-    root: Path | None = None,
+    root: Path,
 ) -> int:
-    """Import BIRD database_description CSVs for one db_id when present."""
-    from src.eval.bird_data import bird_root
+    """Import BIRD database_description CSVs for one db_id under ``root``.
 
-    base = root or bird_root()
+    ``root`` is supplied by the offline eval harness (keeps runtime free of
+    ``src.eval`` imports).
+    """
+    base = root
     candidates = [
         base / "database_description" / db_id,
         base / "dev_databases" / db_id / "database_description",

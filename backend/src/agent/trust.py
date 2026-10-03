@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal, Optional
+from typing import Literal
 
 import sqlglot
 from sqlglot.errors import ParseError
@@ -12,7 +12,7 @@ TrustLevel = Literal["certified", "taught", "guessed", "clarifying", "failed"]
 _CLARIFY_INTENT = "CLARIFICATION_NEEDED"
 
 
-def normalize_sql(sql: str, dialect: str = "postgres") -> str:
+def normalize_sql(sql: str, dialect: str) -> str:
     """Canonicalize SQL for equality checks. Empty/unparseable input stays stripped."""
     text = (sql or "").strip()
     if not text:
@@ -29,10 +29,11 @@ def normalize_sql(sql: str, dialect: str = "postgres") -> str:
 def compute_trust_level(
     *,
     intent: str,
-    error: Optional[str],
+    error: str | None,
     generated_sql: str,
     golden_sqls: list[str],
     used_golden: bool,
+    dialect: str,
 ) -> TrustLevel:
     """Label how much of the project's language this answer used.
 
@@ -54,9 +55,9 @@ def compute_trust_level(
             return "clarifying"
         return "failed"
 
-    generated_norm = normalize_sql(sql)
+    generated_norm = normalize_sql(sql, dialect)
     for golden in golden_sqls:
-        if generated_norm and generated_norm == normalize_sql(golden):
+        if generated_norm and generated_norm == normalize_sql(golden, dialect):
             return "certified"
 
     if used_golden:

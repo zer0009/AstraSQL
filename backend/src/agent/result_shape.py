@@ -33,7 +33,7 @@ def _row_key(row: Any, columns: list[str]) -> tuple[Any, ...]:
     return (row,)
 
 
-def _sql_has_filter_predicate(sql: str, dialect: str = "postgres") -> bool:
+def _sql_has_filter_predicate(sql: str, dialect: str) -> bool:
     """True when the query has WHERE / JOIN ON / HAVING (light AST + text fallback)."""
     text = (sql or "").strip()
     if not text:
@@ -71,7 +71,7 @@ def analyze_result_shape(
     sql: str,
     results: dict[str, Any],
     max_rows: int,
-    dialect: str = "postgres",
+    dialect: str,
     retries: int = 0,
 ) -> dict[str, Any]:
     """Compute shape warnings and whether to soft-retry on empty/suspicious results.

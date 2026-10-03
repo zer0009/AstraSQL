@@ -1,0 +1,68 @@
+{
+  "description": "Recorded ambiguity statuses for graph routing replay (no LLM).",
+  "cases": [
+    {
+      "name": "clear_answer",
+      "route": "after_generate",
+      "status": "clear",
+      "expected": "validate",
+      "question": "How many users are there?",
+      "sql": "SELECT COUNT(*) FROM users",
+      "ambiguity": {
+        "status": "clear",
+        "should_clarify": false,
+        "needs_execution_gate": false,
+        "decision_points": []
+      }
+    },
+    {
+      "name": "assumed_with_gate",
+      "route": "after_generate",
+      "status": "assumed",
+      "expected": "gate",
+      "question": "Show orders for ACME",
+      "sql": "SELECT * FROM orders o JOIN customers c ON o.customer_id = c.id WHERE c.name = 'ACME'",
+      "ambiguity": {
+        "status": "assumed",
+        "should_clarify": false,
+        "needs_execution_gate": true,
+        "decision_points": [
+          {"kind": "entity", "term": "ACME"}
+        ]
+      }
+    },
+    {
+      "name": "ambiguous_ask",
+      "route": "after_generate",
+      "status": "ambiguous",
+      "expected": "clarify",
+      "question": "Show revenue",
+      "sql": null,
+      "ambiguity": {
+        "status": "ambiguous",
+        "should_clarify": true,
+        "clarifying_question": "Which revenue definition — booked or collected?"
+      }
+    },
+    {
+      "name": "gate_proceed",
+      "route": "after_gate",
+      "status": "clear",
+      "expected": "validate",
+      "ambiguity": {
+        "status": "clear",
+        "should_clarify": false
+      }
+    },
+    {
+      "name": "gate_clarify",
+      "route": "after_gate",
+      "status": "ambiguous",
+      "expected": "clarify",
+      "ambiguity": {
+        "status": "ambiguous",
+        "should_clarify": true
+      }
+    }
+  ]
+}

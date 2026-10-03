@@ -10,4 +10,8 @@ data/
 .env
 .git/
 *.md
+# Dev-only packs — not needed in the runtime image.
+# (eval helpers used at runtime live under src/agent/, e.g. result_compare.py)
+eval/
+scripts/
 tests/

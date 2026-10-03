@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import re
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -60,7 +60,7 @@ _QUOTED_RE = re.compile(
 _NUMBER_RE = re.compile(r"\b\d+(?:\.\d+)?\b")
 
 
-def _safe_json_loads(raw: Optional[str], default: Any = None) -> Any:
+def _safe_json_loads(raw: str | None, default: Any = None) -> Any:
     if raw is None or raw == "":
         return default if default is not None else None
     try:

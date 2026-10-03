@@ -67,6 +67,7 @@ def _slots(sql: str, question: str, extra: str = ""):
     return ungrounded_key_filters(
         sql,
         question=question,
+        dialect="postgres",
         extra_text=extra,
         identity_keys=KEYS,
     )
@@ -121,6 +122,7 @@ def test_bind_without_catalog_still_blocked():
     slots = ungrounded_key_filters(
         LIVE_BIND_SQL,
         question="اريد معرفة رصيد اجازتي",
+        dialect="postgres",
         identity_keys=set(),
     )
     assert slots
@@ -174,6 +176,7 @@ def test_status_filter_is_not_a_key():
     slots = ungrounded_key_filters(
         "SELECT COUNT(*) FROM orders WHERE status = 'completed'",
         question="how many orders",
+        dialect="postgres",
         identity_keys=shop,
     )
     assert slots == []

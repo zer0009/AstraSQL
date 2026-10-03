@@ -2,6 +2,8 @@ from src.agent.execution_gate import (
     clause_diffs,
     cluster_by_results,
     decide_from_clusters,
+    is_generic_gate_option,
+    options_from_clusters,
 )
 
 
@@ -85,3 +87,65 @@ def test_clause_diffs_join_types():
         "SELECT * FROM a LEFT JOIN b ON a.id = b.a_id",
     )
     assert any("Join" in d for d in diffs)
+
+
+def test_options_from_clusters_uses_group_by_labels():
+    clusters = cluster_by_results(
+        [
+            {
+                "sql": (
+                    "SELECT country, SUM(qty) AS q FROM sales "
+                    "GROUP BY country"
+                ),
+                "results": _res([["SA", 10]], ["country", "q"]),
+            },
+            {
+                "sql": (
+                    "SELECT country, state, SUM(qty) AS q FROM sales "
+                    "GROUP BY country, state"
+                ),
+                "results": _res([["SA", "Riyadh", 4]], ["country", "state", "q"]),
+            },
+        ]
+    )
+    options = options_from_clusters(clusters, dialect="postgres")
+    assert any("Group by" in o and "country" in o.lower() for o in options)
+    assert any(o.lower().startswith("other") for o in options)
+    assert not any(
+        is_generic_gate_option(o)
+        for o in options
+        if not o.lower().startswith("other")
+    )
+    # Must not push raw *_id identifiers into the next user turn.
+    assert not any("country_id" in o for o in options)
+
+
+def test_options_from_clusters_postgres_json_dialect():
+    """Wrong dialect used to yield only 'Different SQL implementations'."""
+    clusters = cluster_by_results(
+        [
+            {
+                "sql": (
+                    "SELECT rc.name->>'en_US' AS country, SUM(s.qty) "
+                    "FROM sales s JOIN res_country rc ON s.country_id = rc.id "
+                    "GROUP BY rc.name->>'en_US'"
+                ),
+                "results": _res([["SA", 10]], ["country", "sum"]),
+            },
+            {
+                "sql": (
+                    "SELECT rc.name->>'en_US' AS country, "
+                    "rcs.name->>'en_US' AS state, SUM(s.qty) "
+                    "FROM sales s "
+                    "JOIN res_country rc ON s.country_id = rc.id "
+                    "JOIN res_country_state rcs ON s.state_id = rcs.id "
+                    "GROUP BY rc.name->>'en_US', rcs.name->>'en_US'"
+                ),
+                "results": _res([["SA", "Riyadh", 4]], ["country", "state", "sum"]),
+            },
+        ]
+    )
+    options = options_from_clusters(clusters, dialect="postgres")
+    assert len(options) >= 2
+    assert not any("Different SQL implementations" in o for o in options)
+    assert any("Group by" in o for o in options)

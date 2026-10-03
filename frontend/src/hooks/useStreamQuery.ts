@@ -1,10 +1,16 @@
 import { useCallback, useRef, useState } from "react";
+import {
+  clarificationOptionsFrom,
+  parseAmbiguity,
+} from "../lib/ambiguity";
 import { streamQuery } from "../services/api";
 import type {
   AgentStep,
+  Ambiguity,
   ConversationHistoryTurn,
   QueryResult,
   StreamQueryEvent,
+  UsageSummary,
 } from "../types/api";
 
 export type ChatMessage = {
@@ -23,6 +29,9 @@ export type ChatMessage = {
   keyFinding?: string;
   historyId?: string;
   error?: string;
+  ambiguity?: Ambiguity;
+  intent?: string;
+  usage?: UsageSummary;
 };
 
 export type StreamLastResult = {
@@ -39,6 +48,9 @@ export type StreamLastResult = {
   historyId?: string;
   error?: string;
   steps?: AgentStep[];
+  ambiguity?: Ambiguity;
+  intent?: string;
+  usage?: UsageSummary;
 };
 
 /**
@@ -71,7 +83,7 @@ function buildTurnHistory(
   return turns.slice(-Math.max(1, maxTurns));
 }
 
-function asRecord(value: unknown): Record<string, unknown> | null {
+export function asRecord(value: unknown): Record<string, unknown> | null {
   if (value && typeof value === "object" && !Array.isArray(value)) {
     return value as Record<string, unknown>;
   }
@@ -105,6 +117,7 @@ function parseResults(value: unknown): QueryResult | undefined {
     columns,
     rows,
     row_count: rowCount,
+    truncated: Boolean(obj.truncated),
   };
 }
 
@@ -123,8 +136,18 @@ function parseSteps(value: unknown): AgentStep[] | undefined {
       const tables = parseStepTables(obj.tables);
       return {
         name: obj.name,
-        detail: typeof obj.detail === "string" ? obj.detail : String(obj.detail ?? ""),
+        detail:
+          typeof obj.detail === "string"
+            ? obj.detail
+            : String(obj.detail ?? ""),
         ...(tables ? { tables } : {}),
+        ...(typeof obj.status === "string" ? { status: obj.status } : {}),
+        ...(typeof obj.cluster_count === "number"
+          ? { cluster_count: obj.cluster_count }
+          : {}),
+        ...(obj.generation && typeof obj.generation === "object"
+          ? { generation: obj.generation as Record<string, unknown> }
+          : {}),
       } satisfies AgentStep;
     })
     .filter((s): s is AgentStep => s !== null);
@@ -135,7 +158,14 @@ function parseFollowUps(value: unknown): string[] | undefined {
   return value.map(String).filter(Boolean);
 }
 
-function applyStatePatch(
+function parseUsage(value: unknown): UsageSummary | undefined {
+  const obj = asRecord(value);
+  if (!obj) return undefined;
+  return obj as UsageSummary;
+}
+
+/** Apply a compact agent-state patch onto a chat message. Exported for tests. */
+export function applyStatePatch(
   message: ChatMessage,
   patch: Record<string, unknown>,
 ): ChatMessage {
@@ -156,7 +186,10 @@ function applyStatePatch(
   const results = parseResults(patch.results);
   if (results) next.results = results;
 
-  if (typeof patch.confidence === "string" || typeof patch.confidence === "number") {
+  if (
+    typeof patch.confidence === "string" ||
+    typeof patch.confidence === "number"
+  ) {
     next.confidence = patch.confidence;
   }
 
@@ -179,6 +212,32 @@ function applyStatePatch(
   if (typeof patch.key_finding === "string" && patch.key_finding) {
     next.keyFinding = patch.key_finding;
   }
+
+  const ambiguity = parseAmbiguity(patch.ambiguity);
+  if (ambiguity) {
+    next.ambiguity = ambiguity;
+    if (!next.assumption && ambiguity.assumption) {
+      next.assumption = ambiguity.assumption;
+    }
+    const fromAmbiguity = clarificationOptionsFrom(
+      next.clarificationOptions,
+      ambiguity,
+    );
+    if (fromAmbiguity) next.clarificationOptions = fromAmbiguity;
+    if (
+      ambiguity.should_clarify &&
+      (!next.trustLevel || next.trustLevel === "guessed")
+    ) {
+      next.trustLevel = "clarifying";
+    }
+  }
+
+  if (typeof patch.intent === "string" && patch.intent) {
+    next.intent = patch.intent;
+  }
+
+  const usage = parseUsage(patch.usage_summary ?? patch.usage);
+  if (usage) next.usage = usage;
 
   const steps = parseSteps(patch.steps);
   if (steps) next.steps = steps;
@@ -219,6 +278,9 @@ function toLastResult(msg: ChatMessage): StreamLastResult {
     historyId: msg.historyId,
     error: msg.error,
     steps: msg.steps,
+    ambiguity: msg.ambiguity,
+    intent: msg.intent,
+    usage: msg.usage,
   };
 }
 
@@ -286,6 +348,17 @@ export function useStreamQuery(
     [],
   );
 
+  const cancel = useCallback(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setIsStreaming(false);
+    updateAssistant((msg) => ({
+      ...msg,
+      error: msg.error || "Cancelled",
+      content: msg.content || "Query cancelled.",
+    }));
+  }, [updateAssistant]);
+
   const updateMessage = useCallback(
     (
       messageId: string,
@@ -309,6 +382,10 @@ export function useStreamQuery(
       const name = event.event;
       const data = event.data;
 
+      if (name === "start") {
+        return;
+      }
+
       if (name === "step") {
         const payload = asRecord(data);
         const stepRaw = payload?.step ?? payload;
@@ -322,6 +399,17 @@ export function useStreamQuery(
               ? stepObj.detail
               : String(stepObj.detail ?? ""),
           ...(tables ? { tables } : {}),
+          ...(typeof stepObj.status === "string"
+            ? { status: stepObj.status }
+            : {}),
+          ...(typeof stepObj.cluster_count === "number"
+            ? { cluster_count: stepObj.cluster_count }
+            : {}),
+          ...(stepObj.generation && typeof stepObj.generation === "object"
+            ? {
+                generation: stepObj.generation as Record<string, unknown>,
+              }
+            : {}),
         };
         updateAssistant((msg) => ({
           ...msg,
@@ -341,14 +429,26 @@ export function useStreamQuery(
         const patch = asRecord(data) ?? {};
         const updated = updateAssistant((msg) => {
           const next = applyStatePatch(msg, patch);
-          // Map result-event sql field
           if (!next.sql && typeof patch.sql === "string") {
             next.sql = patch.sql;
           }
           if (!next.content && !next.error) {
-            next.content = next.sql
-              ? "Query completed."
-              : "Done.";
+            const status = next.ambiguity?.status;
+            if (status === "ambiguous" || next.clarificationOptions?.length) {
+              next.content =
+                next.ambiguity?.reason ||
+                "I need a bit more detail to answer accurately.";
+            } else if (status === "unanswerable") {
+              next.content =
+                next.ambiguity?.reason ||
+                "I could not find data that answers this question.";
+            } else if (status === "not_a_data_question") {
+              next.content =
+                next.content ||
+                "That does not look like a question about your data.";
+            } else {
+              next.content = next.sql ? "Query completed." : "Done.";
+            }
           }
           return next;
         });
@@ -374,7 +474,7 @@ export function useStreamQuery(
   const send = useCallback(
     async (
       question: string,
-      overrides?: { sessionId?: string | null },
+      overrides?: { sessionId?: string | null; evidence?: string },
     ) => {
       const trimmed = question.trim();
       if (!trimmed || !connectionId || isStreaming) return;
@@ -383,7 +483,6 @@ export function useStreamQuery(
       const controller = new AbortController();
       abortRef.current = controller;
 
-      // Capture prior completed turns before appending the new pair.
       const conversation_history = buildTurnHistory(
         messagesRef.current,
         conversationTurnsRef.current,
@@ -422,14 +521,21 @@ export function useStreamQuery(
             question: trimmed,
             conversation_history,
             session_id: activeSessionId || undefined,
+            evidence: overrides?.evidence?.trim() || undefined,
           },
           handleEvent,
           controller.signal,
         );
       } catch (err) {
-        if (controller.signal.aborted) return;
-        const message =
-          err instanceof Error ? err.message : "Query failed";
+        if (controller.signal.aborted) {
+          updateAssistant((msg) => ({
+            ...msg,
+            error: msg.error || "Cancelled",
+            content: msg.content || "Query cancelled.",
+          }));
+          return;
+        }
+        const message = err instanceof Error ? err.message : "Query failed";
         const updated = updateAssistant((msg) => ({ ...msg, error: message }));
         if (updated) setLastResult(toLastResult(updated));
       } finally {
@@ -442,6 +548,14 @@ export function useStreamQuery(
     [connectionId, handleEvent, isStreaming, updateAssistant],
   );
 
-  return { messages, send, isStreaming, clear, reset, updateMessage, lastResult };
+  return {
+    messages,
+    send,
+    isStreaming,
+    clear,
+    reset,
+    cancel,
+    updateMessage,
+    lastResult,
+  };
 }
-

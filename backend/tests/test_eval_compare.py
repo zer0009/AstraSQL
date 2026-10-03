@@ -10,11 +10,15 @@ from src.eval.run import build_report
 
 
 def test_sql_equal_ignores_whitespace_and_case():
-    assert sql_equal("SELECT COUNT(*) FROM customers", "select count(*) from customers")
+    assert sql_equal(
+        "SELECT COUNT(*) FROM customers",
+        "select count(*) from customers",
+        "postgres",
+    )
 
 
 def test_sql_equal_false_on_empty():
-    assert sql_equal("", "SELECT 1") is False
+    assert sql_equal("", "SELECT 1", "postgres") is False
 
 
 def test_results_equal_ignores_column_case_and_row_order():

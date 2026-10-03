@@ -3,16 +3,17 @@
 from __future__ import annotations
 
 import time
+from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
-from typing import Any, Iterator, Optional
+from typing import Any
 
 from langchain_core.callbacks.base import BaseCallbackHandler
 from langchain_core.outputs import ChatGeneration, LLMResult
 
 # Active tracker for the current async task / thread.
-_ACTIVE_TRACKER: ContextVar[Optional["UsageTracker"]] = ContextVar(
+_ACTIVE_TRACKER: ContextVar[UsageTracker | None] = ContextVar(
     "astrasql_usage_tracker", default=None
 )
 _ACTIVE_STAGE: ContextVar[str] = ContextVar("astrasql_usage_stage", default="")
@@ -35,7 +36,7 @@ class RateCard:
     embedding_per_m: float = 0.02
 
     @classmethod
-    def default(cls) -> "RateCard":
+    def default(cls) -> RateCard:
         return cls(
             models={
                 "gpt-5.6-luna": ModelRates(0.20, 1.20, 0.02),
@@ -290,7 +291,7 @@ def _stage_summary(rows: list[CallRecord]) -> dict[str, dict[str, Any]]:
     return out
 
 
-def get_active_tracker() -> Optional[UsageTracker]:
+def get_active_tracker() -> UsageTracker | None:
     return _ACTIVE_TRACKER.get()
 
 

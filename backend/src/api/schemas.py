@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
-
 
 # ---------------------------------------------------------------------------
 # Connections
@@ -23,14 +22,14 @@ class ConnectionCreate(BaseModel):
 
 
 class ConnectionUpdate(BaseModel):
-    name: Optional[str] = None
-    db_type: Optional[str] = None
-    host: Optional[str] = None
-    port: Optional[int] = None
-    database: Optional[str] = None
-    username: Optional[str] = None
-    password: Optional[str] = None
-    ssl_enabled: Optional[bool] = None
+    name: str | None = None
+    db_type: str | None = None
+    host: str | None = None
+    port: int | None = None
+    database: str | None = None
+    username: str | None = None
+    password: str | None = None
+    ssl_enabled: bool | None = None
 
 
 class ConnectionOut(BaseModel):
@@ -45,7 +44,7 @@ class ConnectionOut(BaseModel):
     username: str
     password_set: bool = True
     ssl_enabled: bool
-    last_scanned_at: Optional[datetime] = None
+    last_scanned_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -71,15 +70,15 @@ class ScanJobStatus(BaseModel):
     status: str
     phase: str
     message: str
-    current_table: Optional[str] = None
+    current_table: str | None = None
     tables_total: int = 0
     tables_done: int = 0
     tables_cached: list[str] = Field(default_factory=list)
     percent: int = 0
-    error: Optional[str] = None
-    started_at: Optional[str] = None
-    finished_at: Optional[str] = None
-    last_scanned_at: Optional[str] = None
+    error: str | None = None
+    started_at: str | None = None
+    finished_at: str | None = None
+    last_scanned_at: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -90,18 +89,18 @@ class ScanJobStatus(BaseModel):
 class EnrichmentCreate(BaseModel):
     connection_id: str
     table_name: str
-    column_name: Optional[str] = None
-    description: Optional[str] = None
-    alias: Optional[str] = None
-    example_values: Optional[Any] = None
+    column_name: str | None = None
+    description: str | None = None
+    alias: str | None = None
+    example_values: Any | None = None
 
 
 class EnrichmentUpdate(BaseModel):
-    table_name: Optional[str] = None
-    column_name: Optional[str] = None
-    description: Optional[str] = None
-    alias: Optional[str] = None
-    example_values: Optional[Any] = None
+    table_name: str | None = None
+    column_name: str | None = None
+    description: str | None = None
+    alias: str | None = None
+    example_values: Any | None = None
 
 
 class EnrichmentOut(BaseModel):
@@ -110,10 +109,10 @@ class EnrichmentOut(BaseModel):
     id: str
     connection_id: str
     table_name: str
-    column_name: Optional[str] = None
-    description: Optional[str] = None
-    alias: Optional[str] = None
-    example_values: Optional[str] = None
+    column_name: str | None = None
+    description: str | None = None
+    alias: str | None = None
+    example_values: str | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -191,16 +190,18 @@ class ConversationTurn(BaseModel):
     """One completed Q-SQL-Answer turn for multi-turn context."""
 
     question: str
-    sql: Optional[str] = None
-    answer: Optional[str] = None
-    trust_level: Optional[str] = None
+    sql: str | None = None
+    answer: str | None = None
+    trust_level: str | None = None
 
 
 class QueryRequest(BaseModel):
     connection_id: str
     question: str
     conversation_history: list[ConversationTurn] = Field(default_factory=list)
-    session_id: Optional[str] = None
+    session_id: str | None = None
+    # Optional schema/business hint (BIRD-style evidence / glossary snippet).
+    evidence: str | None = None
 
 
 class ExecuteSqlRequest(BaseModel):
@@ -222,25 +223,25 @@ class AgentStateOut(BaseModel):
 
     model_config = ConfigDict(extra="allow")
 
-    question: Optional[str] = None
-    sql: Optional[str] = None
-    corrected_sql: Optional[str] = None
-    columns: Optional[list[str]] = None
-    rows: Optional[list[dict[str, Any]]] = None
-    results: Optional[dict[str, Any]] = None
-    answer: Optional[str] = None
-    key_finding: Optional[str] = None
-    assumption: Optional[str] = None
-    confidence: Optional[Any] = None  # "HIGH"|"MEDIUM"|"LOW" or float
-    trust_level: Optional[str] = None
-    explanation: Optional[str] = None
-    follow_ups: Optional[list[str]] = None
-    steps: Optional[list[dict[str, Any]]] = None
-    error: Optional[str] = None
-    retries: Optional[int] = None
-    intent: Optional[str] = None
-    history_id: Optional[str] = None
-    connection_id: Optional[str] = None
+    question: str | None = None
+    sql: str | None = None
+    corrected_sql: str | None = None
+    columns: list[str] | None = None
+    rows: list[dict[str, Any]] | None = None
+    results: dict[str, Any] | None = None
+    answer: str | None = None
+    key_finding: str | None = None
+    assumption: str | None = None
+    confidence: Any | None = None  # "HIGH"|"MEDIUM"|"LOW" or float
+    trust_level: str | None = None
+    explanation: str | None = None
+    follow_ups: list[str] | None = None
+    steps: list[dict[str, Any]] | None = None
+    error: str | None = None
+    retries: int | None = None
+    intent: str | None = None
+    history_id: str | None = None
+    connection_id: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -250,7 +251,7 @@ class AgentStateOut(BaseModel):
 
 class SessionCreate(BaseModel):
     connection_id: str
-    title: Optional[str] = None
+    title: str | None = None
 
 
 class SessionRename(BaseModel):
@@ -262,7 +263,7 @@ class SessionOut(BaseModel):
 
     id: str
     connection_id: str
-    title: Optional[str] = None
+    title: str | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -277,16 +278,17 @@ class HistoryOut(BaseModel):
 
     id: str
     connection_id: str
-    session_id: Optional[str] = None
-    turn_index: Optional[int] = None
+    session_id: str | None = None
+    turn_index: int | None = None
     question: str
     sql: str
-    result_row_count: Optional[int] = None
-    confidence: Optional[float] = None
-    user_rating: Optional[int] = None
-    explanation: Optional[str] = None
-    follow_ups: Optional[str] = None
-    ambiguity_json: Optional[str] = None
+    result_row_count: int | None = None
+    confidence: float | None = None
+    trust_level: str | None = None
+    user_rating: int | None = None
+    explanation: str | None = None
+    follow_ups: str | None = None
+    ambiguity_json: str | None = None
     created_at: datetime
 
 
@@ -296,15 +298,15 @@ class SessionDetailOut(SessionOut):
 
 class FeedbackRequest(BaseModel):
     rating: Literal[1, -1]
-    corrected_sql: Optional[str] = None
-    new_rule: Optional[str] = None
+    corrected_sql: str | None = None
+    new_rule: str | None = None
 
 
 class FeedbackOut(BaseModel):
     id: str
     user_rating: int
-    golden_record_id: Optional[str] = None
-    rule_id: Optional[str] = None
+    golden_record_id: str | None = None
+    rule_id: str | None = None
 
 
 class HistoryStatsOut(BaseModel):
@@ -328,7 +330,7 @@ class ExportRequest(BaseModel):
     columns: list[str]
     rows: list[dict[str, Any] | list[Any]]
     format: Literal["csv", "xlsx", "json"]
-    filename: Optional[str] = None
+    filename: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -368,3 +370,66 @@ class PublicSettingsOut(BaseModel):
     model: str
     max_rows: int
     database_types: list[str] = Field(default_factory=list)
+    # Behavior flags (read-only; set via env).
+    execution_evidence_gate: bool = True
+    merge_interpret_generate: bool = True
+    ambiguity_policy: str = "balanced"
+    relationship_discovery_enabled: bool = True
+    relationship_auto_approve: bool = True
+    learning_loop_enabled: bool = True
+    sse_row_preview_limit: int = 100
+
+
+# ---------------------------------------------------------------------------
+# Semantic layer / relationships / dictionary
+# ---------------------------------------------------------------------------
+
+
+class SemanticRelationshipOut(BaseModel):
+    from_table: str
+    from_col: str
+    to_table: str
+    to_col: str
+    status: str = "proposed"
+    score: float | None = None
+    evidence: str | None = None
+
+
+class SemanticLayerOut(BaseModel):
+    connection_id: str
+    relationships: list[SemanticRelationshipOut] = Field(default_factory=list)
+    conventions: list[str] = Field(default_factory=list)
+    reviewed_queries: list[dict[str, Any]] = Field(default_factory=list)
+    repair_memory: list[dict[str, Any]] = Field(default_factory=list)
+    join_paths: list[str] = Field(default_factory=list)
+    raw: dict[str, Any] = Field(default_factory=dict)
+
+
+class RelationshipStatusUpdate(BaseModel):
+    status: Literal["approved", "proposed", "rejected"]
+
+
+class DictionaryImportRequest(BaseModel):
+    """Import a data dictionary into schema enrichments.
+
+    Provide either ``content`` (inline JSON/CSV text) or ``format`` hints.
+    For file uploads use multipart endpoint separately.
+    """
+
+    format: Literal["json", "csv", "bird_csv"] = "json"
+    content: str
+    table_name: str | None = None  # required for single-table bird_csv
+
+
+class DictionaryImportOut(BaseModel):
+    enrichments_created: int = 0
+    enrichments_updated: int = 0
+    rows_parsed: int = 0
+    message: str = ""
+
+
+class AgentGraphOut(BaseModel):
+    mermaid: str
+    nodes: list[str] = Field(default_factory=list)
+    merge_interpret_generate: bool = True
+    execution_evidence_gate: bool = True

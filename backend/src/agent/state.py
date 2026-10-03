@@ -1,4 +1,4 @@
-from typing import Optional, TypedDict
+from typing import TypedDict
 
 
 class AgentState(TypedDict, total=False):
@@ -14,12 +14,12 @@ class AgentState(TypedDict, total=False):
     retry_context: str
     # Soft post-execute retry (e.g. EMPTY_RESULT). Not a hard execution error.
     shape_retry: bool
-    error: Optional[str]
+    error: str | None
     confidence: str  # HIGH|MEDIUM|LOW
     trust_level: str  # certified|taught|guessed|clarifying|failed
     answer: str
     key_finding: str
-    assumption: Optional[str]
+    assumption: str | None
     follow_ups: list[str]
     clarification_options: list[str]
     used_golden: bool

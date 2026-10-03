@@ -126,7 +126,8 @@ def test_postgres_execute_applies_statement_timeout(monkeypatch):
 
     monkeypatch.setattr(pg, "get_async_engine", lambda: _Engine())
     monkeypatch.setattr(
-        "src.providers.database.postgresql.refuse_unbound_sql", lambda sql: None
+        "src.providers.database.postgresql.refuse_unbound_sql",
+        lambda sql, dialect=None: None,
     )
 
     async def _run():

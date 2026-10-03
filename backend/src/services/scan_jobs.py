@@ -5,12 +5,12 @@ from __future__ import annotations
 import asyncio
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
-from typing import Any, Optional
+from datetime import UTC, datetime
+from enum import StrEnum
+from typing import Any
 
 
-class ScanStatus(str, Enum):
+class ScanStatus(StrEnum):
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -25,14 +25,14 @@ class ScanJob:
     status: ScanStatus = ScanStatus.PENDING
     phase: str = "queued"
     message: str = "Queued"
-    current_table: Optional[str] = None
+    current_table: str | None = None
     tables_total: int = 0
     tables_done: int = 0
     tables_cached: list[str] = field(default_factory=list)
-    error: Optional[str] = None
-    started_at: Optional[datetime] = None
-    finished_at: Optional[datetime] = None
-    last_scanned_at: Optional[datetime] = None
+    error: str | None = None
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+    last_scanned_at: datetime | None = None
 
     @property
     def percent(self) -> int:
@@ -81,11 +81,11 @@ _by_connection: dict[str, str] = {}
 _lock = asyncio.Lock()
 
 
-def get_job(job_id: str) -> Optional[ScanJob]:
+def get_job(job_id: str) -> ScanJob | None:
     return _jobs.get(job_id)
 
 
-def get_job_for_connection(connection_id: str) -> Optional[ScanJob]:
+def get_job_for_connection(connection_id: str) -> ScanJob | None:
     job_id = _by_connection.get(connection_id)
     if not job_id:
         return None
@@ -104,7 +104,7 @@ def list_recent_jobs(limit: int = 20) -> list[ScanJob]:
     jobs = sorted(
         _jobs.values(),
         key=lambda j: j.started_at
-        or datetime.min.replace(tzinfo=timezone.utc),
+        or datetime.min.replace(tzinfo=UTC),
         reverse=True,
     )
     return jobs[:limit]
@@ -128,7 +128,7 @@ async def create_job(connection_id: str, connection_name: str) -> ScanJob:
             id=str(uuid.uuid4()),
             connection_id=connection_id,
             connection_name=connection_name,
-            started_at=datetime.now(timezone.utc),
+            started_at=datetime.now(UTC),
         )
         _jobs[job.id] = job
         _by_connection[connection_id] = job.id

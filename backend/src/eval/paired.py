@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 import random
-from typing import Any, Optional
+from typing import Any
 
 
 def _values_ok(row: dict[str, Any]) -> bool:

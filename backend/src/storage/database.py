@@ -1,6 +1,6 @@
+import logging
 from collections.abc import AsyncGenerator
 from pathlib import Path
-import logging
 
 from fastapi import HTTPException
 from sqlalchemy import event, inspect
@@ -153,7 +153,9 @@ async def init_db() -> None:
     try:
         await run_migrations()
     except Exception:
-        logger.exception("Alembic upgrade failed; falling back to create_all")
+        if not settings.debug:
+            raise
+        logger.exception("Alembic upgrade failed; falling back to create_all (debug)")
         async with get_engine().begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
 

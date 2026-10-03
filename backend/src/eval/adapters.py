@@ -10,7 +10,7 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 
 @dataclass
@@ -40,7 +40,7 @@ class EvalItem:
 
 
 def _stable(db_id: str, question: str, prefix: str = "") -> str:
-    digest = hashlib.sha1(f"{db_id}::{question}".encode("utf-8")).hexdigest()[:12]
+    digest = hashlib.sha1(f"{db_id}::{question}".encode()).hexdigest()[:12]
     base = f"{db_id}:{digest}"
     return f"{prefix}{base}" if prefix else base
 

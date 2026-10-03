@@ -17,6 +17,10 @@ export interface ChatInputProps {
   placeholder?: string;
   value?: string;
   onChange?: (value: string) => void;
+  evidence?: string;
+  onEvidenceChange?: (value: string) => void;
+  showEvidence?: boolean;
+  onToggleEvidence?: () => void;
 }
 
 export interface ChatInputHandle {
@@ -31,6 +35,10 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       placeholder = "Ask a question about your data…",
       value: controlledValue,
       onChange,
+      evidence = "",
+      onEvidenceChange,
+      showEvidence = false,
+      onToggleEvidence,
     },
     ref,
   ) {
@@ -85,6 +93,21 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
     return (
       <div className="border-t border-zinc-200 bg-white px-4 py-3">
         <form onSubmit={onSubmit} className="mx-auto w-full max-w-4xl">
+          {showEvidence ? (
+            <div className="mb-2">
+              <label className="mb-1 block text-[11px] font-medium text-zinc-500">
+                Context note (optional evidence for this question)
+              </label>
+              <Textarea
+                value={evidence}
+                onChange={(e) => onEvidenceChange?.(e.target.value)}
+                disabled={disabled}
+                rows={2}
+                placeholder="e.g. active means status = 'A'; revenue is order total"
+                className="min-h-[48px] resize-y text-xs"
+              />
+            </div>
+          ) : null}
           <div
             className={cn(
               "flex items-end gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 shadow-sm",
@@ -114,9 +137,20 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
               <Send className="h-4 w-4" strokeWidth={1.75} />
             </Button>
           </div>
-          <p className="mt-1.5 px-1 text-[11px] text-zinc-400">
-            Enter to send · Shift+Enter for newline
-          </p>
+          <div className="mt-1.5 flex items-center justify-between gap-2 px-1">
+            <p className="text-[11px] text-zinc-400">
+              Enter to send · Shift+Enter for newline
+            </p>
+            {onToggleEvidence ? (
+              <button
+                type="button"
+                className="text-[11px] text-zinc-500 hover:text-zinc-800"
+                onClick={onToggleEvidence}
+              >
+                {showEvidence ? "Hide context note" : "Add context note"}
+              </button>
+            ) : null}
+          </div>
         </form>
       </div>
     );

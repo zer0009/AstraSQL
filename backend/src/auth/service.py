@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 
 from fastapi import Request, Response
 from sqlalchemy import func, select, update
@@ -27,7 +26,7 @@ LOCKOUT_MINUTES = 15
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 def _client_ip(request: Request) -> str | None:
@@ -147,7 +146,7 @@ async def get_user_for_token(
     token: str,
     *,
     touch: bool = True,
-) -> Optional[User]:
+) -> User | None:
     now = _utcnow()
     token_hash = hash_session_token(token)
     row = await session.scalar(
@@ -171,7 +170,7 @@ async def get_user_for_token(
 
 async def current_session_row(
     session: AsyncSession, token: str
-) -> Optional[AuthSession]:
+) -> AuthSession | None:
     token_hash = hash_session_token(token)
     return await session.scalar(
         select(AuthSession).where(AuthSession.token_hash == token_hash)

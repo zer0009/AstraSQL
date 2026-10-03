@@ -1,10 +1,12 @@
-from typing import Annotated, AsyncGenerator
+from collections.abc import AsyncGenerator
+from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.exceptions import PasswordChangeRequiredError
 from src.auth.service import get_user_for_token, read_session_token
+from src.context import BusinessRulesStore, GoldenRecordsStore
 from src.storage.database import get_session
 from src.storage.models import User
 
@@ -15,6 +17,18 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 DbSession = Annotated[AsyncSession, Depends(get_db)]
+
+
+def get_golden_store() -> GoldenRecordsStore:
+    return GoldenRecordsStore()
+
+
+def get_rules_store() -> BusinessRulesStore:
+    return BusinessRulesStore()
+
+
+GoldenStoreDep = Annotated[GoldenRecordsStore, Depends(get_golden_store)]
+RulesStoreDep = Annotated[BusinessRulesStore, Depends(get_rules_store)]
 
 
 async def get_current_user(request: Request, db: DbSession) -> User:

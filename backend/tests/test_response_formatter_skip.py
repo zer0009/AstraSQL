@@ -51,7 +51,13 @@ async def test_formatter_skips_llm_when_format_response_off(monkeypatch):
         "context": {"golden_sqls": []},
         "steps": [],
     }
-    out = await rf_mod.response_formatter(state, config={})
+    class _Db:
+        def sqlglot_dialect(self) -> str:
+            return "postgres"
+
+    out = await rf_mod.response_formatter(
+        state, config={"configurable": {"db_provider": _Db()}}
+    )
     assert called["llm"] is False
     assert "Returned 2 rows" in out["answer"]
     assert out["confidence"] in {"HIGH", "MEDIUM", "LOW"}

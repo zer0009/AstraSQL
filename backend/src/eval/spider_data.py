@@ -6,8 +6,9 @@ import hashlib
 import json
 import random
 import zipfile
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable, Optional
+from typing import Any
 from urllib.request import urlretrieve
 
 _BACKEND = Path(__file__).resolve().parents[2]
@@ -279,7 +280,7 @@ def question_stable_id(item: dict[str, Any]) -> str:
     """Stable id for a Spider item (db + question hash)."""
     db = str(item.get("db_id") or "")
     q = str(item.get("question") or "")
-    digest = hashlib.sha1(f"{db}::{q}".encode("utf-8")).hexdigest()[:12]
+    digest = hashlib.sha1(f"{db}::{q}".encode()).hexdigest()[:12]
     return f"{db}:{digest}"
 
 

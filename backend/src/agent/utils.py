@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Any, Optional
+from typing import Any
 
 from langchain_core.messages import AIMessage
 from langchain_core.runnables import RunnableConfig
@@ -49,7 +49,7 @@ def message_text(response: Any) -> str:
     return str(content)
 
 
-def get_configurable(config: Optional[RunnableConfig]) -> dict[str, Any]:
+def get_configurable(config: RunnableConfig | None) -> dict[str, Any]:
     if not config:
         return {}
     return dict(config.get("configurable") or {})
@@ -93,9 +93,9 @@ _RETRY_FIX_HINTS: dict[str, str] = {
         "name/title/label/code/display_name columns over raw *_id FKs."
     ),
     "ENTITY_MAPPING": (
-        "Entity mapping error. JOIN the lookup table that holds the human-readable "
-        "name for the dimension the question asks about; do not group/filter by a "
-        "raw *_id foreign key as a substitute."
+        "Entity mapping error. JOIN the lookup/reference table and SELECT/GROUP BY "
+        "its label column (name/title/label/code/display_name). Do not return or "
+        "group by a raw *_id foreign key unless the user explicitly asked for ids."
     ),
     "CROSS_DIMENSIONAL": (
         "Cross-dimensional comparison missing. Implement a proper self-join or "

@@ -22,8 +22,8 @@ Check each item. If any issue is found, fix it and return the corrected SQL.
 8. SUBQUERY CORRELATION: Correlated subqueries reference the outer query correctly.
 9. DATA TYPE MISMATCH: Filters compare compatible types (e.g., integer column not compared to string literal).
 10. LIMIT/TOP PRESENCE: For list queries, does the query have an appropriate row limit?
-11. HUMAN READABILITY: If SELECT or GROUP BY contains only *_id FK columns where the question asked for a named entity (state, country, product, category, vendor), flag this and suggest a JOIN to obtain the human-readable name column.
-12. ENTITY SEMANTICS: Does each conceptual entity in the question map to its dedicated lookup/reference table in the schema? If the question asks for a named dimension (geographic location, product category, status, currency, etc.) but the query groups or filters by a raw *_id foreign key column instead of JOINing the lookup table that holds the human-readable name, flag it as an entity mapping error and rewrite to include the proper JOIN.
+11. HUMAN READABILITY (default): If SELECT or GROUP BY projects a raw *_id / foreign-key column and the referenced table (see FK comments) has a label-like column (name, title, label, code, display_name), flag ENTITY_MAPPING and rewrite to JOIN that table and use the label — unless the question explicitly asks for the id. Bare numeric dimension ids are not acceptable for end-user results.
+12. ENTITY SEMANTICS: Map each conceptual dimension to its lookup/reference table when the schema has one. Grouping/filtering by a raw FK id as a substitute for the human-readable label is an entity mapping error; rewrite with the proper JOIN.
 13. CROSS-DIMENSIONAL CHECK: If the question compares two instances of the same entity (state A vs state B, category X vs category Y), does the SQL implement a proper self-join or cross-comparison — not a single-dimension group-by?
 14. NO INVENTED IDENTITY: If a primary-key or foreign-key filter value is not in the question, omit that filter. Never introduce $1 / :name, and never invent a session or login expression. This runner binds no parameters and maps no login to a row.
 

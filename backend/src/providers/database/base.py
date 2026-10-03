@@ -48,6 +48,14 @@ class BaseDatabaseProvider(ABC):
     def supports_timeout(self) -> bool:
         return False
 
+    def supports_execute_gate(self) -> bool:
+        """Whether golden promotion may soft-check via execute_readonly."""
+        return True
+
+    def needs_deterministic_repair(self) -> bool:
+        """Whether sqlglot deterministic repairs should run after Layer-1 syntax."""
+        return False
+
     def quote_ident(self, name: str) -> str:
         """Quote an identifier for this dialect (default: double quotes)."""
         text_name = (name or "").replace('"', '""')

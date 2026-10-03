@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
 from sqlalchemy import select
 
@@ -39,7 +38,7 @@ async def run_scan_job(job: ScanJob) -> None:
                     phase="done",
                     message="Connection not found",
                     error="Connection not found",
-                    finished_at=datetime.now(timezone.utc),
+                    finished_at=datetime.now(UTC),
                 )
                 return
 
@@ -49,10 +48,10 @@ async def run_scan_job(job: ScanJob) -> None:
                 *,
                 phase: str,
                 message: str,
-                current_table: Optional[str] = None,
-                tables_total: Optional[int] = None,
-                tables_done: Optional[int] = None,
-                table_just_done: Optional[str] = None,
+                current_table: str | None = None,
+                tables_total: int | None = None,
+                tables_done: int | None = None,
+                table_just_done: str | None = None,
             ) -> None:
                 kwargs: dict = {
                     "phase": phase,
@@ -136,7 +135,7 @@ async def run_scan_job(job: ScanJob) -> None:
                 tables_total=max(job.tables_total, table_count),
                 current_table=None,
                 last_scanned_at=connection.last_scanned_at,
-                finished_at=datetime.now(timezone.utc),
+                finished_at=datetime.now(UTC),
             )
     except Exception as exc:
         logger.exception("Schema scan failed for connection %s", job.connection_id)
@@ -146,7 +145,7 @@ async def run_scan_job(job: ScanJob) -> None:
             phase="done",
             message="Schema scan failed",
             error=str(exc),
-            finished_at=datetime.now(timezone.utc),
+            finished_at=datetime.now(UTC),
         )
     finally:
         if provider is not None:

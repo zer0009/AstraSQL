@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -47,7 +46,7 @@ async def find_verified_sql(
     question: str,
     *,
     min_overlap: float = 0.9,
-) -> Optional[GoldenRecord]:
+) -> GoldenRecord | None:
     """Return a golden record with exact normalized match or high token overlap.
 
     Prefers exact normalized equality; otherwise the highest overlap >= min_overlap.

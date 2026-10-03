@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Badge } from "../ui";
 import type { AgentStep } from "../../types/api";
+import { stepLabel } from "../../lib/stepLabels";
 import { cn } from "../../lib/utils";
 
 export interface AgentStepsProps {
@@ -13,7 +14,6 @@ export function AgentSteps({ steps, isStreaming = false }: AgentStepsProps) {
   const [open, setOpen] = useState(isStreaming);
   const [userToggled, setUserToggled] = useState(false);
 
-  // Open while streaming for progress; collapse when stream ends unless user toggled.
   useEffect(() => {
     if (userToggled) return;
     setOpen(isStreaming);
@@ -25,6 +25,7 @@ export function AgentSteps({ steps, isStreaming = false }: AgentStepsProps) {
     <div className="rounded-md border border-zinc-200 bg-zinc-50/80">
       <button
         type="button"
+        aria-expanded={open}
         onClick={() => {
           setUserToggled(true);
           setOpen((v) => !v);
@@ -45,6 +46,13 @@ export function AgentSteps({ steps, isStreaming = false }: AgentStepsProps) {
           {steps.map((step, index) => {
             const isLast = index === steps.length - 1;
             const status = isStreaming && isLast ? "running" : "done";
+            const detailParts = [step.detail];
+            if (typeof step.cluster_count === "number") {
+              detailParts.push(`${step.cluster_count} cluster(s)`);
+            }
+            if (step.status) {
+              detailParts.push(step.status);
+            }
 
             return (
               <li
@@ -63,12 +71,18 @@ export function AgentSteps({ steps, isStreaming = false }: AgentStepsProps) {
                       "text-xs font-medium text-zinc-800",
                       status === "running" && "text-zinc-900",
                     )}
+                    title={step.name}
                   >
-                    {step.name}
+                    {stepLabel(step.name)}
                   </p>
-                  {step.detail ? (
+                  {detailParts.filter(Boolean).length > 0 ? (
                     <p className="mt-0.5 text-xs leading-relaxed text-zinc-500">
-                      {step.detail}
+                      {detailParts.filter(Boolean).join(" · ")}
+                    </p>
+                  ) : null}
+                  {step.tables && step.tables.length > 0 ? (
+                    <p className="mt-0.5 font-mono text-[11px] text-zinc-400">
+                      {step.tables.join(", ")}
                     </p>
                   ) : null}
                 </div>

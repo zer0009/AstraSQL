@@ -3,6 +3,12 @@ import type { ChatMessage } from "../../hooks/useStreamQuery";
 import { AgentMessage } from "./AgentMessage.tsx";
 import { UserMessage } from "./UserMessage.tsx";
 
+const EXAMPLE_QUESTIONS = [
+  "How many rows are in each table?",
+  "Show me the top 10 records by date",
+  "What are the distinct status values?",
+];
+
 export interface MessageListProps {
   messages: ChatMessage[];
   isStreaming?: boolean;
@@ -10,6 +16,7 @@ export interface MessageListProps {
   onFollowUp?: (question: string) => void;
   onAskAgain?: (question: string) => void;
   onRerunSql?: (messageId: string, sql?: string) => void;
+  onRetry?: (question: string) => void;
   originalQuestions?: Record<string, string>;
 }
 
@@ -20,6 +27,7 @@ export function MessageList({
   onFollowUp,
   onAskAgain,
   onRerunSql,
+  onRetry,
   originalQuestions = {},
 }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -40,8 +48,23 @@ export function MessageList({
             database.
           </p>
           <p className="mt-1.5 text-xs text-zinc-400">
-            Live results from the DB. Row data is not stored in chat history.
+            Live results from the DB. Row data is not stored in chat history —
+            use Re-run to refresh.
           </p>
+          {onFollowUp ? (
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              {EXAMPLE_QUESTIONS.map((q) => (
+                <button
+                  key={q}
+                  type="button"
+                  onClick={() => onFollowUp(q)}
+                  className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-left text-xs text-zinc-700 hover:border-zinc-300 hover:bg-zinc-50"
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
+          ) : null}
         </div>
       </div>
     );
@@ -78,6 +101,11 @@ export function MessageList({
               onRerunSql={
                 onRerunSql && msg.sql
                   ? (sql?: string) => onRerunSql(msg.id, sql)
+                  : undefined
+              }
+              onRetry={
+                onRetry && originalQuestion && msg.error
+                  ? () => onRetry(originalQuestion)
                   : undefined
               }
             />

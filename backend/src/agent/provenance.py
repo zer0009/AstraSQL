@@ -122,9 +122,9 @@ def ungrounded_key_filters(
     sql: str,
     *,
     question: str,
+    dialect: str,
     extra_text: str = "",
     identity_keys: set[tuple[str, str]] | None = None,
-    dialect: str = "postgres",
 ) -> list[MissingSlot]:
     """PK/FK filters whose RHS was not supplied by the user.
 
@@ -134,7 +134,7 @@ def ungrounded_key_filters(
         return []
     keys = identity_keys or set()
     haystack = grounded_text(question, extra_text)
-    binds = find_bind_placeholders(sql)
+    binds = find_bind_placeholders(sql, dialect)
     missing: list[MissingSlot] = []
     seen: set[tuple[str, str, str]] = set()
 
@@ -222,8 +222,7 @@ def _grounding_text(state: dict) -> str:
 
 
 def _clarify_update(state: dict, sql: str, slots: list[MissingSlot]) -> dict:
-    from src.agent.utils import append_step
-    from src.agent.utils import max_retries
+    from src.agent.utils import append_step, max_retries
 
     ambiguity = ambiguity_from_slots(slots)
     return {
@@ -245,28 +244,28 @@ def _clarify_update(state: dict, sql: str, slots: list[MissingSlot]) -> dict:
     }
 
 
-def clarify_or_none(state: dict, sql: str, dialect: str = "postgres") -> dict | None:
+def clarify_or_none(state: dict, sql: str, dialect: str) -> dict | None:
     """Ask if a catalog-key filter is ungrounded. Never execute that SQL."""
     context = state.get("context") or {}
     keys = deserialize_keys(context.get("identity_keys"))
     slots = ungrounded_key_filters(
         sql,
         question=state.get("question") or "",
+        dialect=dialect,
         extra_text=_grounding_text(state),
         identity_keys=keys,
-        dialect=dialect,
     )
     if not slots:
         return None
     return _clarify_update(state, sql, slots)
 
 
-def clarify_unbound(state: dict, sql: str, dialect: str = "postgres") -> dict:
+def clarify_unbound(state: dict, sql: str, dialect: str) -> dict:
     """Always ask — used when the driver rejected a bind we must not retry."""
     update = clarify_or_none(state, sql, dialect)
     if update is not None:
         return update
-    binds = find_bind_placeholders(sql)
+    binds = find_bind_placeholders(sql, dialect)
     token = binds[0] if binds else "$1"
     return _clarify_update(
         state, sql, [MissingSlot("query", "parameter", token)]

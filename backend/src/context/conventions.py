@@ -7,7 +7,7 @@ No English business word lists — only structural SQL preferences.
 from __future__ import annotations
 
 import re
-from typing import Any, Optional
+from typing import Any
 
 from src.context.learning_loop import record_learned_convention
 
@@ -16,7 +16,7 @@ _JOIN_RE = re.compile(
 )
 
 
-def detect_join_type(sql: str) -> Optional[str]:
+def detect_join_type(sql: str) -> str | None:
     m = _JOIN_RE.search(sql or "")
     if not m:
         if re.search(r"\bjoin\b", sql or "", re.IGNORECASE):
