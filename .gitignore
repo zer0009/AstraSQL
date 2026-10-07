@@ -35,3 +35,6 @@ frontend/dist/
 # Coverage
 htmlcov/
 .coverage
+
+
+docs/

@@ -8,10 +8,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../ui";
-import { exportData } from "../../services/api";
-import type { QueryResult } from "../../types/api";
-import { cn } from "../../lib/utils";
+} from "../../ui";
+import { exportData } from "../../../services/api";
+import type { QueryResult } from "../../../types/api";
+import { cn } from "../../../lib/utils";
 
 const PAGE_SIZE = 25;
 

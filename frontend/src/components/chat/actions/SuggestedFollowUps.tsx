@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { cn } from "../../lib/utils";
-import { Button } from "../ui";
+import { cn } from "../../../lib/utils";
+import { Button } from "../../ui";
 
 export interface SuggestedFollowUpsProps {
   questions: string[];

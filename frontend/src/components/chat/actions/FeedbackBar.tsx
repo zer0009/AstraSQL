@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ThumbsDown, ThumbsUp } from "lucide-react";
-import { Button, Textarea } from "../ui";
-import { useFeedback } from "../../hooks/useFeedback";
+import { Button, Textarea } from "../../ui";
+import { useFeedback } from "../../../hooks/useFeedback";
 
 export interface FeedbackBarProps {
   historyId: string;
@@ -61,7 +61,7 @@ export function FeedbackBar({ historyId, sql }: FeedbackBarProps) {
   };
 
   return (
-    <div className="space-y-2 border-t border-zinc-100 pt-2">
+    <div className="space-y-2 border-t border-[var(--border)] pt-2">
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-xs text-zinc-500">Was this helpful?</span>
         <Button

@@ -1,12 +1,41 @@
 @import "tailwindcss";
 
+:root {
+  --surface: #fafafa;
+  --surface-raised: #ffffff;
+  --surface-muted: #f4f4f5;
+  --border: #e4e4e7;
+  --text: #18181b;
+  --text-muted: #a1a1aa;
+  --accent: #0d9488;
+  --accent-soft: #ccfbf1;
+  --focus-ring: #14b8a6;
+}
+
+@theme {
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-muted: var(--surface-muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+}
+
 body {
   font-family: Inter, system-ui, sans-serif;
-  @apply bg-zinc-50 text-zinc-900 antialiased;
+  background-color: var(--surface);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
-  @apply min-h-screen;
+  min-height: 100vh;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }
 
 /* Local UI density preference (Settings → localStorage) */
@@ -18,4 +47,25 @@ html[data-density="compact"] main td,
 html[data-density="compact"] main th {
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
+}
+
+html[data-density="compact"] .chat-scroll {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+html[data-density="compact"] .chat-composer {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

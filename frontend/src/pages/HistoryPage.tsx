@@ -9,6 +9,7 @@ import {
   GraduationCap,
   RotateCcw,
 } from "lucide-react";
+import { ConfidenceBadge } from "../components/chat";
 import { PageHeader } from "../components/PageHeader";
 import {
   Badge,
@@ -25,9 +26,7 @@ import {
 } from "../components/ui";
 import { getHistoryStats, listConnections, listHistory, submitFeedback } from "../services/api";
 import type { HistoryStats, QueryHistoryItem } from "../types/api";
-import { formatConfidence } from "../lib/confidence";
 import { parseAmbiguityJson } from "../lib/ambiguity";
-import { cn } from "../lib/utils";
 
 const PAGE_SIZE = 25;
 
@@ -37,25 +36,6 @@ function truncate(text: string, max: number): string {
   const t = text.replace(/\s+/g, " ").trim();
   if (t.length <= max) return t;
   return `${t.slice(0, max)}…`;
-}
-
-function ConfidenceBadge({ value }: { value: number | null }) {
-  const level = formatConfidence(value);
-  if (!level) {
-    return <span className="text-xs text-zinc-400">—</span>;
-  }
-
-  return (
-    <Badge
-      className={cn(
-        level === "HIGH" && "border-zinc-300 bg-zinc-100 text-zinc-800",
-        level === "MEDIUM" && "border-amber-200 bg-amber-50 text-amber-800",
-        level === "LOW" && "border-red-200 bg-red-50 text-red-700",
-      )}
-    >
-      {level}
-    </Badge>
-  );
 }
 
 function RatingCell({ rating }: { rating: number | null }) {

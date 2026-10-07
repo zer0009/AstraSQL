@@ -4,17 +4,14 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ChevronLeft,
   ChevronRight,
-  Database,
-  History,
-  Layers,
   MessageSquare,
   Plus,
-  Settings,
   Trash2,
 } from "lucide-react";
 import { Button, Select, Spinner } from "../ui";
 import { AstraLogo } from "../brand";
 import { UserMenu } from "./UserMenu";
+import { CHAT_FOOTER_NAV } from "./navItems";
 import { deleteSession, listSessions } from "../../services/api";
 import type { Connection } from "../../types/api";
 import { useUserPrefs } from "../../hooks/useUserPrefs";
@@ -32,13 +29,6 @@ export interface SessionSidebarProps {
   onDeleteSession: (id: string) => void;
   disabled?: boolean;
 }
-
-const FOOTER_NAV = [
-  { to: "/connections", label: "Connections", icon: Database },
-  { to: "/context", label: "Context", icon: Layers },
-  { to: "/history", label: "History", icon: History },
-  { to: "/settings", label: "Settings", icon: Settings },
-] as const;
 
 function formatRelative(iso: string): string {
   const then = new Date(iso).getTime();
@@ -99,11 +89,14 @@ export function SessionSidebar({
 
   if (!open) {
     return (
-      <aside className="flex w-12 shrink-0 flex-col items-center gap-2 border-r border-zinc-200 bg-white py-3">
+      <aside
+        className="flex w-12 shrink-0 flex-col items-center gap-2 border-r border-[var(--border)] bg-[var(--surface-raised)] py-3"
+        aria-label="Chat sessions"
+      >
         <button
           type="button"
           title="AstraSQL"
-          className="flex h-8 w-8 items-center justify-center rounded-md"
+          className="flex h-8 w-8 items-center justify-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
           onClick={() => setOpen(true)}
         >
           <AstraLogo variant="mark" size={28} />
@@ -113,7 +106,7 @@ export function SessionSidebar({
           title="New chat"
           disabled={disabled || !connectionId}
           onClick={onNewChat}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-zinc-600 hover:bg-zinc-100 disabled:opacity-40"
+          className="flex h-8 w-8 items-center justify-center rounded-md text-zinc-600 hover:bg-[var(--surface-muted)] disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
         >
           <Plus className="h-4 w-4" strokeWidth={1.75} />
         </button>
@@ -126,21 +119,21 @@ export function SessionSidebar({
               disabled={disabled}
               onClick={() => onSwitchSession(s.id)}
               className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-md text-zinc-500 hover:bg-zinc-100",
-                activeSessionId === s.id && "bg-zinc-100 text-zinc-900",
+                "flex h-8 w-8 items-center justify-center rounded-md text-zinc-500 hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]",
+                activeSessionId === s.id && "bg-[var(--surface-muted)] text-zinc-900",
               )}
             >
               <MessageSquare className="h-3.5 w-3.5" strokeWidth={1.75} />
             </button>
           ))}
         </div>
-        <div className="flex flex-col items-center gap-1 border-t border-zinc-200 pt-2">
-          {FOOTER_NAV.map(({ to, label, icon: Icon }) => (
+        <div className="flex flex-col items-center gap-1 border-t border-[var(--border)] pt-2">
+          {CHAT_FOOTER_NAV.map(({ to, label, icon: Icon }) => (
             <Link
               key={to}
               to={to}
               title={label}
-              className="flex h-8 w-8 items-center justify-center rounded-md text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800"
+              className="flex h-8 w-8 items-center justify-center rounded-md text-zinc-500 hover:bg-[var(--surface-muted)] hover:text-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
             >
               <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />
             </Link>
@@ -151,7 +144,7 @@ export function SessionSidebar({
           type="button"
           title="Expand sidebar"
           onClick={() => setOpen(true)}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-zinc-500 hover:bg-zinc-100"
+          className="flex h-8 w-8 items-center justify-center rounded-md text-zinc-500 hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
         >
           <ChevronRight className="h-4 w-4" strokeWidth={1.75} />
         </button>
@@ -160,15 +153,18 @@ export function SessionSidebar({
   }
 
   return (
-    <aside className="flex w-60 shrink-0 flex-col border-r border-zinc-200 bg-white">
-      <div className="flex h-12 shrink-0 items-center border-b border-zinc-200 px-4">
+    <aside
+      className="flex w-60 shrink-0 flex-col border-r border-[var(--border)] bg-[var(--surface-raised)]"
+      aria-label="Chat sessions"
+    >
+      <div className="flex h-12 shrink-0 items-center border-b border-[var(--border)] px-4">
         <AstraLogo size={22} />
       </div>
 
-      <div className="space-y-2 border-b border-zinc-200 p-3">
+      <div className="space-y-2 border-b border-[var(--border)] p-3">
         <label
           htmlFor="sidebar-connection"
-          className="text-[11px] font-medium uppercase tracking-wide text-zinc-500"
+          className="text-[11px] font-medium uppercase tracking-wide text-[var(--text-muted)]"
         >
           Connection
         </label>
@@ -226,47 +222,41 @@ export function SessionSidebar({
           <ul className="space-y-0.5">
             {sessions.map((s) => {
               const active = activeSessionId === s.id;
+              const title = s.title || "Untitled chat";
               return (
-                <li key={s.id}>
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => !disabled && onSwitchSession(s.id)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        if (!disabled) onSwitchSession(s.id);
-                      }
-                    }}
+                <li key={s.id} className="group flex items-stretch gap-0.5">
+                  <button
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => onSwitchSession(s.id)}
                     className={cn(
-                      "group flex w-full cursor-pointer items-start gap-1 rounded-md px-2 py-1.5 text-left hover:bg-zinc-100",
-                      active && "bg-zinc-100",
-                      disabled && "pointer-events-none opacity-50",
+                      "min-w-0 flex-1 rounded-md px-2 py-1.5 text-left hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]",
+                      active && "bg-[var(--surface-muted)]",
+                      disabled && "opacity-50",
                     )}
                   >
-                    <div className="min-w-0 flex-1">
-                      <p
-                        className={cn(
-                          "truncate text-xs font-medium text-zinc-800",
-                          active && "text-zinc-900",
-                        )}
-                      >
-                        {s.title || "Untitled chat"}
-                      </p>
-                      <p className="text-[10px] text-zinc-500">
-                        {formatRelative(s.updated_at)}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      title="Delete chat"
-                      aria-label="Delete chat"
-                      className="mt-0.5 hidden shrink-0 rounded p-0.5 text-zinc-400 hover:bg-zinc-200 hover:text-red-600 group-hover:block"
-                      onClick={(e) => void handleDelete(s.id, e)}
+                    <p
+                      className={cn(
+                        "truncate text-xs font-medium text-zinc-800",
+                        active && "text-zinc-900",
+                      )}
                     >
-                      <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} />
-                    </button>
-                  </div>
+                      {title}
+                    </p>
+                    <p className="text-[10px] text-[var(--text-muted)]">
+                      {formatRelative(s.updated_at)}
+                    </p>
+                  </button>
+                  <button
+                    type="button"
+                    title={`Delete ${title}`}
+                    aria-label={`Delete ${title}`}
+                    disabled={disabled}
+                    className="mt-0.5 shrink-0 rounded p-1.5 text-zinc-400 opacity-0 hover:bg-zinc-200 hover:text-red-600 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] group-hover:opacity-100 group-focus-within:opacity-100"
+                    onClick={(e) => void handleDelete(s.id, e)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} />
+                  </button>
                 </li>
               );
             })}
@@ -274,27 +264,30 @@ export function SessionSidebar({
         )}
       </div>
 
-      <div className="shrink-0 border-t border-zinc-200 p-2">
-        <div className="mb-1 flex items-center justify-around gap-0.5">
-          {FOOTER_NAV.map(({ to, label, icon: Icon }) => (
+      <div className="shrink-0 border-t border-[var(--border)] p-2">
+        <nav
+          className="mb-1 flex items-center justify-around gap-0.5"
+          aria-label="App sections"
+        >
+          {CHAT_FOOTER_NAV.map(({ to, label, icon: Icon }) => (
             <Link
               key={to}
               to={to}
               title={label}
-              className="flex h-8 w-8 items-center justify-center rounded-md text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800"
+              className="flex h-8 w-8 items-center justify-center rounded-md text-zinc-500 hover:bg-[var(--surface-muted)] hover:text-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
             >
               <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />
             </Link>
           ))}
-        </div>
+        </nav>
         <UserMenu className="mb-1 justify-between px-1" />
-        <p className="mb-1 px-1 text-center text-[10px] text-zinc-400">
+        <p className="mb-1 px-1 text-center text-[10px] text-[var(--text-muted)]">
           Self-hosted NL2SQL
         </p>
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800"
+          className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-zinc-500 hover:bg-[var(--surface-muted)] hover:text-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
         >
           <ChevronLeft className="h-3.5 w-3.5" strokeWidth={1.75} />
           Collapse

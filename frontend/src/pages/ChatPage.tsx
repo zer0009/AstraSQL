@@ -3,7 +3,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ChatInput, MessageList } from "../components/chat";
 import { SessionSidebar } from "../components/layout/SessionSidebar";
-import { UserMenu } from "../components/layout/UserMenu";
 import { Button, Input, Spinner } from "../components/ui";
 import { useChatSession } from "../hooks/useChatSession";
 import { listConnections } from "../services/api";
@@ -142,7 +141,7 @@ export default function ChatPage() {
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-zinc-200 bg-white px-5">
+        <header className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--surface-raised)] px-5">
           <div className="flex min-w-0 items-center gap-2">
             {session ? (
               editingTitle ? (
@@ -166,7 +165,7 @@ export default function ChatPage() {
               ) : (
                 <button
                   type="button"
-                  className="truncate text-sm font-medium text-zinc-800 hover:text-zinc-950"
+                  className="truncate text-sm font-medium text-zinc-800 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] rounded"
                   title="Click to rename"
                   onClick={() => setEditingTitle(true)}
                 >
@@ -174,7 +173,9 @@ export default function ChatPage() {
                 </button>
               )
             ) : (
-              <h1 className="text-sm font-semibold text-zinc-900">New chat</h1>
+              <h1 className="text-sm font-semibold text-[var(--text)]">
+                New chat
+              </h1>
             )}
           </div>
 
@@ -208,13 +209,12 @@ export default function ChatPage() {
                 Delete chat
               </Button>
             ) : null}
-            <UserMenu />
           </div>
         </header>
 
         {!hasConnection ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6">
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-[var(--text-muted)]">
               {connections.length === 0
                 ? "Add a connection to start querying."
                 : "Select a connection in the sidebar to start querying."}
@@ -222,7 +222,7 @@ export default function ChatPage() {
             {connections.length === 0 ? (
               <Link
                 to="/connections"
-                className="inline-flex h-8 items-center justify-center rounded-md bg-zinc-900 px-3 text-xs font-medium text-white hover:bg-zinc-800"
+                className="inline-flex h-8 items-center justify-center rounded-md bg-zinc-900 px-3 text-xs font-medium text-white hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
               >
                 Add connection
               </Link>

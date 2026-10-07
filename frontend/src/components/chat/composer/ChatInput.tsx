@@ -8,8 +8,8 @@ import {
   type KeyboardEvent,
 } from "react";
 import { Send } from "lucide-react";
-import { Button, Textarea } from "../ui";
-import { cn } from "../../lib/utils";
+import { Button, Textarea } from "../../ui";
+import { cn } from "../../../lib/utils";
 
 export interface ChatInputProps {
   onSend: (question: string) => void;
@@ -91,14 +91,18 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
     };
 
     return (
-      <div className="border-t border-zinc-200 bg-white px-4 py-3">
+      <div className="chat-composer border-t border-[var(--border)] bg-[var(--surface-raised)] px-4 py-3">
         <form onSubmit={onSubmit} className="mx-auto w-full max-w-4xl">
           {showEvidence ? (
             <div className="mb-2">
-              <label className="mb-1 block text-[11px] font-medium text-zinc-500">
+              <label
+                htmlFor="chat-evidence"
+                className="mb-1 block text-[11px] font-medium text-[var(--text-muted)]"
+              >
                 Context note (optional evidence for this question)
               </label>
               <Textarea
+                id="chat-evidence"
                 value={evidence}
                 onChange={(e) => onEvidenceChange?.(e.target.value)}
                 disabled={disabled}
@@ -110,8 +114,8 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
           ) : null}
           <div
             className={cn(
-              "flex items-end gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 shadow-sm",
-              "focus-within:border-zinc-300 focus-within:ring-1 focus-within:ring-zinc-200",
+              "flex items-end gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] px-3 py-2 shadow-sm",
+              "focus-within:border-zinc-300 focus-within:ring-2 focus-within:ring-[var(--focus-ring)]",
             )}
           >
             <Textarea
@@ -125,6 +129,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
               disabled={disabled}
               placeholder={placeholder}
               rows={1}
+              aria-label="Ask a question"
               className="min-h-[40px] max-h-32 flex-1 resize-none border-0 bg-transparent px-0 py-2 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
             />
             <Button
@@ -138,13 +143,13 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
             </Button>
           </div>
           <div className="mt-1.5 flex items-center justify-between gap-2 px-1">
-            <p className="text-[11px] text-zinc-400">
+            <p className="text-[11px] text-[var(--text-muted)]">
               Enter to send · Shift+Enter for newline
             </p>
             {onToggleEvidence ? (
               <button
                 type="button"
-                className="text-[11px] text-zinc-500 hover:text-zinc-800"
+                className="text-[11px] text-[var(--text-muted)] hover:text-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] rounded"
                 onClick={onToggleEvidence}
               >
                 {showEvidence ? "Hide context note" : "Add context note"}

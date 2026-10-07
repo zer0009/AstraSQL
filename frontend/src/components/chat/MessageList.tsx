@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { ChatMessage } from "../../hooks/useStreamQuery";
-import { AgentMessage } from "./AgentMessage.tsx";
-import { UserMessage } from "./UserMessage.tsx";
+import { AgentMessage } from "./AgentMessage";
+import { UserMessage } from "./UserMessage";
 
 const EXAMPLE_QUESTIONS = [
   "How many rows are in each table?",
@@ -38,27 +38,23 @@ export function MessageList({
 
   if (messages.length === 0) {
     return (
-      <div className="flex flex-1 items-center justify-center px-6 py-10">
-        <div className="mx-auto w-full max-w-lg text-center">
-          <h2 className="text-xl font-semibold tracking-tight text-zinc-900">
+      <div className="chat-scroll flex flex-1 items-center justify-center px-6 py-10">
+        <div className="mx-auto w-full max-w-md text-center">
+          <h2 className="text-xl font-semibold tracking-tight text-[var(--text)]">
             Ask your data
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-zinc-600">
-            Ask in plain language. AstraSQL runs read-only SQL on your connected
-            database.
-          </p>
-          <p className="mt-1.5 text-xs text-zinc-400">
-            Live results from the DB. Row data is not stored in chat history —
-            use Re-run to refresh.
+            Plain-language questions. Read-only SQL on your connection — with a
+            clear trust level on every answer.
           </p>
           {onFollowUp ? (
-            <div className="mt-5 flex flex-wrap justify-center gap-2">
+            <div className="mt-6 flex flex-wrap justify-center gap-2">
               {EXAMPLE_QUESTIONS.map((q) => (
                 <button
                   key={q}
                   type="button"
                   onClick={() => onFollowUp(q)}
-                  className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-left text-xs text-zinc-700 hover:border-zinc-300 hover:bg-zinc-50"
+                  className="rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] px-3 py-1.5 text-left text-xs text-zinc-700 hover:border-zinc-300 hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
                 >
                   {q}
                 </button>
@@ -71,7 +67,7 @@ export function MessageList({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-5">
+    <div className="chat-scroll flex-1 overflow-y-auto px-4 py-5">
       <div className="mx-auto flex max-w-4xl flex-col gap-5">
         {messages.map((msg, index) => {
           if (msg.role === "user") {

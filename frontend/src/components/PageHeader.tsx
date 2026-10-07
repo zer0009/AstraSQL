@@ -6,11 +6,11 @@ export function PageHeader({
   description?: string;
 }) {
   return (
-    <header className="flex h-12 shrink-0 items-center border-b border-zinc-200 bg-white px-5">
+    <header className="flex h-12 shrink-0 items-center border-b border-[var(--border)] bg-[var(--surface-raised)] px-5">
       <div>
-        <h1 className="text-sm font-semibold text-zinc-900">{title}</h1>
+        <h1 className="text-sm font-semibold text-[var(--text)]">{title}</h1>
         {description ? (
-          <p className="text-xs text-zinc-500">{description}</p>
+          <p className="text-xs text-[var(--text-muted)]">{description}</p>
         ) : null}
       </div>
     </header>
