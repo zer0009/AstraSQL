@@ -19,6 +19,27 @@ def _norm(name: str) -> str:
     return (name or "").strip().strip('"').strip("`").strip("[]").lower()
 
 
+def _cte_names_and_columns(tree: exp.Expression) -> tuple[set[str], set[str]]:
+    """Return CTE aliases and projected column names from WITH clauses."""
+    names: set[str] = set()
+    columns: set[str] = set()
+    for cte in tree.find_all(exp.CTE):
+        alias = _norm(str(cte.alias or cte.alias_or_name or ""))
+        if alias:
+            names.add(alias)
+        query = cte.this
+        if isinstance(query, exp.Subquery):
+            query = query.this
+        if not isinstance(query, exp.Select):
+            continue
+        for proj in query.expressions:
+            if isinstance(proj, exp.Alias):
+                columns.add(_norm(proj.alias))
+            elif isinstance(proj, exp.Column):
+                columns.add(_norm(proj.name))
+    return names, columns
+
+
 def check_catalog(
     sql: str,
     sqlglot_dialect: str,
@@ -28,10 +49,14 @@ def check_catalog(
 ) -> list[str]:
     """Optional deterministic catalog check against context selections.
 
+    Validates that physical base tables appear in the selected context. CTE
+    names and their projected columns are in-scope by construction. Column
+    membership is not closed-world against ``selected_columns`` (that list is
+    a retrieval hint and is often sparse on large schemas).
+
     Skips silently when selected_tables / selected_columns are unavailable.
     """
     tables = {_norm(t) for t in (selected_tables or []) if _norm(t)}
-    col_pairs: set[tuple[str, str]] = set()
     bare_cols: set[str] = set()
     for item in selected_columns or []:
         if not isinstance(item, dict):
@@ -40,8 +65,7 @@ def check_catalog(
         c = _norm(str(item.get("column") or item.get("name") or ""))
         if c:
             bare_cols.add(c)
-        if t and c:
-            col_pairs.add((t, c))
+        if t:
             tables.add(t)
 
     if not tables and not bare_cols:
@@ -52,8 +76,9 @@ def check_catalog(
     except Exception:
         return []
 
+    cte_names, cte_columns = _cte_names_and_columns(tree)
     issues: list[str] = []
-    # Alias → physical table for qualified column checks.
+    # Alias → physical table (or CTE name) for qualified column checks.
     alias_map: dict[str, str] = {}
     for src in tree.find_all(exp.Table):
         name = _norm(src.name)
@@ -63,29 +88,43 @@ def check_catalog(
         if alias:
             alias_map[alias] = name
         alias_map[name] = name
+        if name in cte_names:
+            continue
         if tables and name not in tables:
             issues.append(f"Unknown table not in selected context: {src.name}")
 
-    if bare_cols or col_pairs:
-        for col in tree.find_all(exp.Column):
-            cname = _norm(col.name)
-            if not cname or cname == "*":
+    if not bare_cols and not cte_columns:
+        return issues
+
+    for col in tree.find_all(exp.Column):
+        cname = _norm(col.name)
+        if not cname or cname == "*":
+            continue
+        if cname in cte_columns:
+            continue
+        table_ref = _norm(col.table) if col.table else ""
+        if table_ref:
+            physical = alias_map.get(table_ref, table_ref)
+            if physical in cte_names or table_ref in cte_names:
                 continue
-            table_ref = _norm(col.table) if col.table else ""
-            if table_ref:
-                physical = alias_map.get(table_ref, table_ref)
-                if col_pairs and (physical, cname) not in col_pairs:
-                    # Allow if bare name is selected (linker sometimes omits table).
-                    if cname not in bare_cols:
-                        issues.append(
-                            f"Unknown column not in selected context: "
-                            f"{table_ref}.{col.name}"
-                        )
-            elif bare_cols and cname not in bare_cols:
-                # Unqualified — only flag when we have a bare-column allow-list.
+            # Column on a selected physical table is allowed — selected_columns
+            # is not a closed-world allow-list (sparse on large schemas).
+            if tables and physical in tables:
+                continue
+            if tables and physical not in tables:
+                # Table already flagged; skip duplicate column noise.
+                continue
+            if bare_cols and cname not in bare_cols:
                 issues.append(
-                    f"Unknown column not in selected context: {col.name}"
+                    f"Unknown column not in selected context: "
+                    f"{table_ref}.{col.name}"
                 )
+        elif bare_cols and cname not in bare_cols and cname not in cte_columns:
+            # Unqualified — only flag when we have a bare-column allow-list
+            # and it is not a CTE projection.
+            issues.append(
+                f"Unknown column not in selected context: {col.name}"
+            )
 
     return issues
 

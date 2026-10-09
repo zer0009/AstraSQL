@@ -72,26 +72,32 @@ async def _expand_link_query(question: str) -> str:
     """LLM-enrich the FAISS query with entity synonyms (database-agnostic).
 
     Falls back to the original question on any failure so retrieval still runs.
+    When ``schema_link_expand`` is false (default), skip the LLM call.
     """
     text = (question or "").strip()
     if not text:
         return question
 
+    settings = get_settings()
+    if not bool(getattr(settings, "schema_link_expand", False)):
+        return text
+
     try:
         from langchain_core.messages import HumanMessage, SystemMessage
 
-        from src.providers.llm import get_llm_provider
+        from src.providers.llm import get_llm_provider, stage_chat_kwargs
 
-        settings = get_settings()
         model_name = (
             (settings.expansion_model or "").strip()
             or (settings.enrichment_model or "").strip()
             or None
         )
         chat = get_llm_provider().get_chat_model(
-            temperature=0.0,
-            max_tokens=256,
-            model=model_name,
+            **stage_chat_kwargs(
+                "expansion",
+                settings=settings,
+                model=model_name,
+            )
         )
         response = await chat.ainvoke(
             [

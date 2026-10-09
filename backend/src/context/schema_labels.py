@@ -83,25 +83,95 @@ def is_fk_like_identifier(name: str | None) -> bool:
     return text.endswith("_id") or text.endswith("_pk") or text.endswith("_fk")
 
 
+_SQL_KEYWORDS = frozenset(
+    {
+        "coalesce",
+        "nullif",
+        "null",
+        "true",
+        "false",
+        "case",
+        "when",
+        "then",
+        "else",
+        "end",
+        "cast",
+        "as",
+        "and",
+        "or",
+        "not",
+        "in",
+        "is",
+        "like",
+        "between",
+        "distinct",
+        "date_trunc",
+        "to_char",
+        "sum",
+        "count",
+        "avg",
+        "min",
+        "max",
+    }
+)
+
+
+def _strip_id_suffix(text: str) -> str:
+    lower = text.lower()
+    if lower.endswith("_id"):
+        return text[:-3]
+    if lower.endswith("_pk") or lower.endswith("_fk"):
+        return text[:-3]
+    return text
+
+
 def humanize_dimension_expr(expr: str) -> str:
-    """Turn ``rp.country_id`` / ``"Country Id"`` into a short readable label."""
+    """Turn ``rp.country_id`` / ``COALESCE(rc.code, …)`` into a short label."""
     text = " ".join((expr or "").split()).strip().strip('"')
     if not text:
         return text
-    # Drop JSON extract noise for display: name->>'en_US' → name
-    for marker in ("->>", "->"):
-        if marker in text:
-            text = text.split(marker, 1)[0].strip()
+
+    # Complex expressions: pick the most meaningful identifier (not SQL keywords).
+    # Avoid ``rsplit('.', 1)`` which breaks on ``COALESCE(rc.code, '')``.
+    idents = [
+        i
+        for i in _IDENT_RE.findall(text)
+        if i.lower() not in _SQL_KEYWORDS and not i.isdigit()
+    ]
+    if len(idents) >= 1 and (
+        "(" in text or "->>" in text or "->" in text or "," in text
+    ):
+        preferred_tails = (
+            "name",
+            "code",
+            "title",
+            "label",
+            "country",
+            "state",
+            "month",
+            "date",
+        )
+        chosen = idents[-1]
+        for pref in preferred_tails:
+            for ident in reversed(idents):
+                low = ident.lower()
+                if low == pref or low.endswith("_" + pref):
+                    chosen = ident
+                    break
+            else:
+                continue
             break
-    # Last identifier segment after table/alias.
-    if "." in text:
-        text = text.rsplit(".", 1)[-1]
-    text = text.strip().strip('"')
-    lower = text.lower()
-    if lower.endswith("_id"):
-        text = text[:-3]
-    elif lower.endswith("_pk") or lower.endswith("_fk"):
-        text = text[:-3]
+        text = chosen
+    else:
+        for marker in ("->>", "->"):
+            if marker in text:
+                text = text.split(marker, 1)[0].strip()
+                break
+        if "." in text:
+            text = text.rsplit(".", 1)[-1]
+        text = text.strip().strip('"')
+
+    text = _strip_id_suffix(text)
     text = text.replace("_", " ").strip()
     return text or expr
 
@@ -112,7 +182,16 @@ def reading_label_for_group_keys(keys: list[str] | tuple[str, ...]) -> str:
         return "No grouping (detail rows)"
     parts = [humanize_dimension_expr(k) for k in keys[:4]]
     parts = [p for p in parts if p]
-    joined = ", ".join(parts) if parts else "dimensions"
+    # Deduplicate while preserving order (code + name from same dimension).
+    seen: set[str] = set()
+    uniq: list[str] = []
+    for p in parts:
+        key = p.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        uniq.append(p)
+    joined = ", ".join(uniq) if uniq else "dimensions"
     # If keys look like raw IDs, nudge the next turn toward readable names.
     if any(is_fk_like_identifier(_last_ident(k)) for k in keys):
         return f"Group by {joined} (show names, not ids)"

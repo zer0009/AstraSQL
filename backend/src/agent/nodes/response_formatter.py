@@ -18,7 +18,7 @@ from src.agent.utils import (
     message_text,
 )
 from src.config.settings import get_settings
-from src.providers.llm import get_llm_provider
+from src.providers.llm import get_llm_provider, stage_chat_kwargs
 
 
 def _sqlglot_dialect(config: RunnableConfig) -> str:
@@ -81,6 +81,13 @@ def _resolve_formatter_model(settings: Any) -> str | None:
     return fallback or None
 
 
+def _has_result_payload(results: Any) -> bool:
+    """True when state carries an executed result set (including 0 rows)."""
+    if not isinstance(results, dict) or results.get("columns") is None:
+        return False
+    return "row_count" in results or results.get("rows") is not None
+
+
 async def response_formatter(
     state: AgentState, config: RunnableConfig
 ) -> dict[str, Any]:
@@ -90,11 +97,15 @@ async def response_formatter(
     question = state.get("question") or ""
     sql = (state.get("corrected_sql") or state.get("sql") or "").strip()
     results = state.get("results") or {}
-    error = state.get("error")
+    # Prefer execution evidence over a stale validator/retry error. The gate
+    # may leave successful results in state while a later soft-fail still sets
+    # ``error`` — narrating failure in that case is wrong.
+    raw_error = state.get("error")
+    error = None if _has_result_payload(results) else raw_error
     retries = int(state.get("retries") or 0)
     row_count = int((results or {}).get("row_count") or 0)
 
-    if error and not results:
+    if error and not _has_result_payload(results):
         confidence = "LOW" if retries >= 2 else "MEDIUM"
         if classify_retry_type(error=str(error)) == "BIND_PARAMETER":
             answer = (
@@ -136,7 +147,7 @@ async def response_formatter(
         }
 
     confidence = compute_confidence(retries, row_count)
-    summary = _result_summary(results if not error else None, error)
+    summary = _result_summary(results, error)
     preset_assumption = str(state.get("assumption") or "").strip() or None
     preset_follow_ups = [
         str(x).strip()
@@ -146,9 +157,7 @@ async def response_formatter(
 
     # Eval / API mode: skip NL formatter LLM for lower latency.
     if not settings.format_response:
-        answer, key_finding = _deterministic_answer(
-            results if not error else None, error
-        )
+        answer, key_finding = _deterministic_answer(results, error)
         context = state.get("context") or {}
         trust_level = compute_trust_level(
             intent=str(state.get("intent") or ""),
@@ -178,9 +187,12 @@ async def response_formatter(
         system = render_formatter_prompt(question, sql, summary)
         model_name = _resolve_formatter_model(settings)
         llm = get_llm_provider().get_chat_model(
-            temperature=0.3,
-            max_tokens=settings.llm_max_tokens,
-            model=model_name,
+            **stage_chat_kwargs(
+                "response_formatter",
+                settings=settings,
+                model=model_name,
+                temperature=0.3,
+            )
         )
         response = await llm.ainvoke(
             [

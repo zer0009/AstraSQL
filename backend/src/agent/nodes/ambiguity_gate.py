@@ -1,8 +1,9 @@
 """Execution-evidence ambiguity gate node.
 
 Runs after SQL generation when the resolver deferred an ask, or when the
-merged generator flagged decision_points. Samples K candidate SQLs, executes
-them, clusters by denotation, and asks only on split clusters.
+merged generator flagged decision_points. Reuses the primary SQL as candidate
+0, samples additional SQLs in parallel, executes each once, clusters by
+denotation, and asks only on split clusters (unless answer_first is on).
 """
 
 from __future__ import annotations
@@ -45,6 +46,15 @@ def _connection_policy(connection: Any, settings: Any) -> str:
     return str(getattr(settings, "ambiguity_policy", "balanced") or "balanced")
 
 
+def _results_for_sql(
+    executed: list[dict[str, Any]], sql: str
+) -> dict[str, Any] | None:
+    for item in executed:
+        if item.get("sql") == sql and isinstance(item.get("results"), dict):
+            return item["results"]
+    return None
+
+
 async def ambiguity_gate(
     state: AgentState, config: RunnableConfig
 ) -> dict[str, Any]:
@@ -62,11 +72,17 @@ async def ambiguity_gate(
         }
 
     ambiguity = state.get("ambiguity") if isinstance(state.get("ambiguity"), dict) else {}
+    # Refine / resume turns must never re-ask.
+    if state.get("allow_clarify") is False:
+        return {
+            "steps": append_step(
+                state, "ambiguity_gate_skipped", "allow_clarify=false"
+            ),
+        }
+
     needs_gate = bool(ambiguity.get("needs_execution_gate"))
     decision_points = list(ambiguity.get("decision_points") or [])
-    # Also run when merge path flagged intent-level points.
     if not needs_gate and not decision_points:
-        # Cheap path: single SQL already generated and no flags — pass through.
         return {
             "steps": append_step(
                 state, "ambiguity_gate_skipped", "no_flags", status="clear"
@@ -80,7 +96,6 @@ async def ambiguity_gate(
             ),
         }
 
-    # If we already clarified upstream, do not re-gate.
     if ambiguity.get("should_clarify"):
         return {
             "steps": append_step(
@@ -89,14 +104,11 @@ async def ambiguity_gate(
         }
 
     question = state.get("question") or ""
-    # Adaptive K: sample 2 first; escalate to configured max only if they disagree.
+    seed_sql = (state.get("corrected_sql") or state.get("sql") or "").strip()
     configured = int(getattr(settings, "ambiguity_sample_count", 3) or 3)
     configured = max(1, min(configured, 5))
     initial_k = min(2, configured) if configured >= 2 else configured
 
-    # sqlglot needs the short dialect key (postgres/sqlite/mysql), not the
-    # human-readable prompt name ("PostgreSQL 16"). Wrong dialect → parse
-    # failures → generic "Different SQL implementations" options.
     dialect = ""
     try:
         if hasattr(db_provider, "sqlglot_dialect"):
@@ -106,7 +118,7 @@ async def ambiguity_gate(
     except Exception:
         dialect = ""
 
-    async def _sample(count: int) -> list[str]:
+    async def _sample(count: int) -> tuple[list[str], list[dict[str, Any]]]:
         _sql, meta = await generate_and_select_candidates(
             state=state,
             config=config,
@@ -115,16 +127,18 @@ async def ambiguity_gate(
             candidate_count=count,
             question=question,
             retry_context=state.get("retry_context") or "",
+            seed_sql=seed_sql or None,
+            execute=True,
+            use_merged=True,
         )
         sqls = list(meta.get("candidates") or [])
-        if not sqls and state.get("sql"):
-            sqls = [str(state.get("sql"))]
-        return sqls
+        executed = list(meta.get("executed") or [])
+        if not sqls and seed_sql:
+            sqls = [seed_sql]
+        return sqls, executed
 
-    # Reuse multi-candidate generation (variants) then cluster ourselves so we
-    # keep all cluster metadata for ask/assume decisions.
     try:
-        candidate_sqls = await _sample(initial_k)
+        candidate_sqls, executed = await _sample(initial_k)
     except Exception as exc:
         logger.warning("ambiguity_gate sample failed open: %s", exc)
         return {
@@ -141,27 +155,34 @@ async def ambiguity_gate(
             ),
         }
 
-    executed: list[dict[str, Any]] = []
-    for sql in candidate_sqls:
-        try:
-            results = await db_provider.execute_readonly(
-                sql, max_rows=settings.max_result_rows
-            )
-            executed.append({"sql": sql, "results": results})
-        except Exception:
-            executed.append({"sql": sql, "results": None})
+    # If generate_and_select_candidates already executed, reuse those results.
+    if not executed:
+        executed = []
+        for sql in candidate_sqls:
+            try:
+                results = await db_provider.execute_readonly(
+                    sql, max_rows=settings.max_result_rows
+                )
+                executed.append({"sql": sql, "results": results})
+            except Exception:
+                executed.append({"sql": sql, "results": None})
 
     clusters = cluster_by_results(executed)
-    # Escalate only when the first two disagree and a higher K is configured.
     if (
         configured > initial_k
         and len(clusters) > 1
         and len(candidate_sqls) < configured
     ):
         try:
-            extra = await _sample(configured)
+            extra_sqls, extra_exec = await _sample(configured)
             seen = {c.get("sql") for c in executed}
-            for sql in extra:
+            for item in extra_exec or []:
+                sql = item.get("sql")
+                if sql in seen:
+                    continue
+                executed.append(item)
+                seen.add(sql)
+            for sql in extra_sqls:
                 if sql in seen:
                     continue
                 try:
@@ -176,6 +197,7 @@ async def ambiguity_gate(
             clusters = cluster_by_results(executed)
         except Exception as exc:
             logger.warning("ambiguity_gate escalate sample failed open: %s", exc)
+
     threshold = effective_dominance_threshold(
         base=float(getattr(settings, "ambiguity_dominance_threshold", 0.67)),
         policy=_connection_policy(connection, settings),
@@ -191,54 +213,87 @@ async def ambiguity_gate(
         ),
     )
 
+    # Answer-first: never block on clarify unless policy is strict.
+    answer_first = bool(getattr(settings, "answer_first", True))
+    policy = _connection_policy(connection, settings)
+    force_ask = decision.should_clarify and (
+        policy == "strict" or not answer_first
+    )
+
     update: dict[str, Any] = {
         "ambiguity": {
             **ambiguity,
-            "should_clarify": decision.should_clarify,
+            "should_clarify": force_ask,
             "reason": decision.reason,
             "options": decision.options,
-            "status": decision.status,
-            "decision_why": decision.decision_why,
-            "assumption": decision.assumption,
+            "status": (
+                decision.status
+                if force_ask or not decision.should_clarify
+                else "assumed"
+            ),
+            "decision_why": decision.decision_why
+            + (";answer_first" if decision.should_clarify and not force_ask else ""),
+            "assumption": decision.assumption
+            or (
+                "Assumed dominant reading; alternatives available"
+                if decision.should_clarify and not force_ask
+                else ""
+            ),
             "clusters": decision.clusters,
+            "readings": list(decision.readings or []),
             "gate": decision.gate,
             "needs_execution_gate": False,
+            "alternatives": [
+                o
+                for o in (decision.options or [])
+                if o and not str(o).lower().startswith("other")
+            ],
         },
         "steps": append_step(
             state,
             "ambiguity_gate",
             (
-                f"status={decision.status} clarify={decision.should_clarify} "
+                f"status={decision.status} clarify={force_ask} "
                 f"why={decision.decision_why}"
             ),
             status=decision.status,
-            should_clarify=decision.should_clarify,
+            should_clarify=force_ask,
             decision_why=decision.decision_why,
             cluster_count=len(decision.clusters),
             sample_count=len(candidate_sqls),
         ),
     }
 
-    if decision.assumption:
-        update["assumption"] = decision.assumption
+    assumption = (
+        decision.assumption
+        or update["ambiguity"].get("assumption")
+        or ""
+    )
+    if assumption:
+        update["assumption"] = assumption
 
-    if decision.selected_sql:
-        update["sql"] = decision.selected_sql
-        update["corrected_sql"] = decision.selected_sql
-        # Cache executed result for the chosen SQL to avoid re-exec later.
-        for item in executed:
-            if item.get("sql") == decision.selected_sql and isinstance(
-                item.get("results"), dict
-            ):
-                update["results"] = item["results"]
-                break
+    selected = decision.selected_sql or seed_sql
+    if selected and not force_ask:
+        update["sql"] = selected
+        update["corrected_sql"] = selected
+        cached = _results_for_sql(executed, selected)
+        if cached is not None:
+            update["results"] = cached
+            update["cached_execution"] = True
 
-    if decision.should_clarify:
+    if force_ask:
         update["intent"] = "CLARIFICATION_NEEDED"
         update["intent_reason"] = decision.reason
         if decision.options:
             update["clarification_options"] = decision.options
     elif decision.options:
-        update["follow_ups"] = decision.options
+        # Surface as follow-ups / alternatives chips (non-blocking).
+        alts = [
+            o
+            for o in decision.options
+            if o and not str(o).lower().startswith("other")
+        ]
+        update["follow_ups"] = alts
+        update["clarification_options"] = alts
 
     return update

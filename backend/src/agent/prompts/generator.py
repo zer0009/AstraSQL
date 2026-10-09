@@ -97,7 +97,7 @@ Return JSON only:
 
 
 def format_conversation_history(turns: list[dict[str, Any]] | None) -> str:
-    """Render prior Q-SQL-Answer turns as prompt text. Empty list → empty string."""
+    """Render prior Q-SQL-Answer turns as compact prompt text."""
     if not turns:
         return ""
 
@@ -108,8 +108,18 @@ def format_conversation_history(turns: list[dict[str, Any]] | None) -> str:
         question = str(turn.get("question") or "").strip()
         if not question:
             continue
-        sql = str(turn.get("sql") or "").strip() or "(none)"
-        answer = str(turn.get("answer") or "").strip() or "(none)"
+        sql = str(turn.get("sql") or "").strip()
+        if sql and len(sql) > 400:
+            sql = sql[:400] + "…"
+        sql = sql or "(none)"
+        answer = str(turn.get("answer") or "").strip()
+        # One-line answer only — full paragraphs burn tokens.
+        if answer:
+            answer = " ".join(answer.split())
+            if len(answer) > 160:
+                answer = answer[:160] + "…"
+        else:
+            answer = "(none)"
         blocks.append(
             f"Turn {index} — User: {question}\n"
             f"          SQL: {sql}\n"
@@ -124,9 +134,6 @@ You are an expert {dialect_name} analyst. You interpret the question AND generat
 ━━━ DATABASE SCHEMA ━━━
 Target dialect: {dialect_name}
 {enriched_schema}
-
-━━━ SCHEMA DIGEST (compact) ━━━
-{schema_digest}
 
 ━━━ BUSINESS RULES ━━━
 {business_rules}
@@ -154,6 +161,8 @@ Target dialect: {dialect_name}
 7. Flag decision_points ONLY when the question is genuinely underspecified
    (missing formula, vague entity, or multiple schema-grounded readings that
    would change the answer). Do NOT invent ambiguity for clear questions.
+8. When assuming, put a short assumption in "assumptions" and list 1–3 alternative
+   readings in "alternatives" (short clickable labels, not SQL).
 
 {retry_context}
 
@@ -165,6 +174,7 @@ Return JSON only:
   "status": "clear" | "assumed" | "ambiguous" | "unanswerable" | "not_a_data_question",
   "interpretation": "one-sentence reading of the question",
   "assumptions": ["assumption if any"],
+  "alternatives": ["optional alternative reading label 1", "label 2"],
   "decision_points": [
     {{"level": "intent"|"implementation", "description": "what is underspecified"}}
   ],
@@ -233,6 +243,7 @@ def render_merged_generator_prompt(
     **kwargs,
 ) -> str:
     """Render interpret+generate merged system prompt (skips separate resolver)."""
+    del schema_digest  # digest removed — enriched_schema already carries the info
     return render(
         MERGED_GENERATOR_SYSTEM_PROMPT,
         dialect_name=dialect_name,
@@ -245,6 +256,5 @@ def render_merged_generator_prompt(
         retry_context=retry_context or "",
         user_question=user_question,
         current_date=current_date,
-        schema_digest=schema_digest or "(none)",
         **kwargs,
     )

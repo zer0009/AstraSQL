@@ -36,6 +36,8 @@ class GateDecision:
     reason: str
     assumption: str
     options: list[str] = field(default_factory=list)
+    # Parallel to clickable options: full SQL for each non-"Other" reading.
+    readings: list[dict[str, str]] = field(default_factory=list)
     decision_why: str = ""
     selected_sql: str | None = None
     clusters: list[dict[str, Any]] = field(default_factory=list)
@@ -243,9 +245,68 @@ def _cluster_reading_labels(
         label = " · ".join(parts)
         if len(label) > _MAX_OPTION_LEN:
             label = label[: _MAX_OPTION_LEN - 1] + "…"
-        if label not in labels:
-            labels.append(label)
+        # One label per cluster (suffix on collision so refine can map 1:1).
+        if label in labels:
+            label = f"{label} (alt {i + 1})"
+        labels.append(label)
     return labels
+
+
+def readings_from_clusters(
+    clusters: list[ResultCluster],
+    *,
+    dialect: str | None = None,
+    max_options: int = 4,
+) -> list[dict[str, str]]:
+    """Build ``{label, sql}`` readings — one per result cluster (no Other)."""
+    if len(clusters) < 2:
+        return []
+
+    labels = _cluster_reading_labels(clusters, dialect=dialect)
+    readings: list[dict[str, str]] = []
+    used_labels: set[str] = set()
+
+    if labels and len(labels) == len(clusters):
+        pairs = list(zip(labels, clusters, strict=False))
+    elif labels:
+        # Label count can shrink on collisions; pair in order then fall back.
+        pairs = []
+        for i, cluster in enumerate(clusters):
+            label = labels[i] if i < len(labels) else f"Reading {i + 1}"
+            pairs.append((label, cluster))
+    else:
+        pairs = []
+        base = clusters[0]
+        for i, other in enumerate(clusters):
+            if i == 0:
+                label = "Primary reading"
+            else:
+                diffs = clause_diffs(
+                    base.representative_sql,
+                    other.representative_sql,
+                    dialect=dialect,
+                )
+                label = (
+                    f"Use reading where: {diffs[0]}"
+                    if diffs
+                    else f"Reading {i + 1}"
+                )
+            pairs.append((label, other))
+
+    for label, cluster in pairs:
+        text = str(label or "").strip()
+        if not text or text.lower().startswith("other"):
+            continue
+        if text in used_labels:
+            text = f"{text} (alt)"
+        used_labels.add(text)
+        sql = str(cluster.representative_sql or "").strip()
+        if not sql:
+            continue
+        readings.append({"label": text, "sql": sql})
+        if len(readings) >= max_options - 1:
+            break
+    return readings
 
 
 def options_from_clusters(
@@ -255,32 +316,49 @@ def options_from_clusters(
     max_options: int = 4,
 ) -> list[str]:
     """Build clarification options: one concrete reading per result cluster."""
-    if len(clusters) < 2:
-        return []
-
-    options = _cluster_reading_labels(clusters, dialect=dialect)
-
-    # Legacy pairwise diffs only when we could not label clusters.
-    if not options:
-        base = clusters[0]
-        for other in clusters[1:]:
-            for diff in clause_diffs(
-                base.representative_sql,
-                other.representative_sql,
-                dialect=dialect,
-            ):
-                option = f"Use reading where: {diff}"
-                if option not in options:
-                    options.append(option)
-                if len(options) >= max_options - 1:
-                    break
-            if len(options) >= max_options - 1:
-                break
-
+    readings = readings_from_clusters(
+        clusters, dialect=dialect, max_options=max_options
+    )
+    options = [r["label"] for r in readings]
     # Always leave an escape hatch for free-text rephrase.
     if _OTHER_OPTION not in options:
         options.append(_OTHER_OPTION)
     return options[:max_options]
+
+
+def resolve_reading_sql(
+    choice: str,
+    readings: list[dict[str, Any]] | None,
+) -> str | None:
+    """Map a chip label (or exact SQL) back to a stored reading SQL."""
+    text = (choice or "").strip()
+    if not text or not readings:
+        return None
+    # Exact label match first.
+    for item in readings:
+        if not isinstance(item, dict):
+            continue
+        label = str(item.get("label") or "").strip()
+        sql = str(item.get("sql") or "").strip()
+        if label and label == text and sql:
+            return sql
+    # Exact SQL paste.
+    for item in readings:
+        if not isinstance(item, dict):
+            continue
+        sql = str(item.get("sql") or "").strip()
+        if sql and sql == text:
+            return sql
+    # Case-insensitive label match.
+    lowered = text.lower()
+    for item in readings:
+        if not isinstance(item, dict):
+            continue
+        label = str(item.get("label") or "").strip()
+        sql = str(item.get("sql") or "").strip()
+        if label and label.lower() == lowered and sql:
+            return sql
+    return None
 
 
 def is_generic_gate_option(text: str) -> bool:
@@ -333,7 +411,7 @@ def decide_from_clusters(
     cluster_payload = [
         {
             "size": len(c.member_indices),
-            "sql": c.representative_sql[:500],
+            "sql": c.representative_sql,  # full SQL — needed for refine resume
             "row_count": (c.results or {}).get("row_count"),
         }
         for c in ranked
@@ -346,14 +424,20 @@ def decide_from_clusters(
             reason="All executable candidates agree on results",
             assumption=assumption_hint,
             options=[],
+            readings=[],
             decision_why=f"execution_gate;single_cluster;n={total}",
             selected_sql=top.representative_sql,
             clusters=cluster_payload,
         )
 
+    readings = readings_from_clusters(ranked, dialect=dialect)
+    options = [r["label"] for r in readings] + (
+        [_OTHER_OPTION]
+        if not any(r["label"].lower().startswith("other") for r in readings)
+        else []
+    )
+
     if mass >= dominance_threshold and not intent_flagged:
-        options = options_from_clusters(ranked, dialect=dialect)
-        # Drop the "Other" from assumed path follow-ups noise if only 1 real option.
         alts = [o for o in options if not o.lower().startswith("other")]
         return GateDecision(
             should_clarify=False,
@@ -368,6 +452,7 @@ def decide_from_clusters(
                 f"({len(top.member_indices)} of {total} candidates)"
             ),
             options=alts[:3],
+            readings=readings[:3],
             decision_why=(
                 f"execution_gate;dominant;mass={mass:.2f};"
                 f"threshold={dominance_threshold:.2f};clusters={len(ranked)}"
@@ -377,7 +462,6 @@ def decide_from_clusters(
         )
 
     # Split (or intent-flagged with multiple clusters) → ask.
-    options = options_from_clusters(ranked, dialect=dialect)
     return GateDecision(
         should_clarify=True,
         status="ambiguous",
@@ -387,6 +471,7 @@ def decide_from_clusters(
         ),
         assumption="",
         options=options,
+        readings=readings,
         decision_why=(
             f"execution_gate;split;mass={mass:.2f};"
             f"threshold={dominance_threshold:.2f};clusters={len(ranked)}"

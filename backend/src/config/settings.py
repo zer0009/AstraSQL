@@ -51,8 +51,22 @@ class Settings(BaseSettings):
     )
     llm_temperature: float = 0.0
     llm_max_tokens: int = 8192
-    # Reasoning models (gpt-5.*): none|low|medium|high. Empty → omit the param.
-    llm_reasoning_effort: str = ""
+    # Reasoning models (gpt-5.*): none|low|medium|high|xhigh ("minimal" → none).
+    # Default low — empty previously meant provider default (often high) and burned tokens.
+    llm_reasoning_effort: str = "low"
+    # Per-stage effort overrides (empty → stage defaults / llm_reasoning_effort).
+    intent_reasoning_effort: str = "none"
+    formatter_reasoning_effort: str = "none"
+    expansion_reasoning_effort: str = "none"
+    generator_reasoning_effort: str = ""
+    repair_reasoning_effort: str = "medium"
+    # Per-stage max_tokens caps (0 → llm_max_tokens).
+    intent_max_tokens: int = Field(default=256, ge=0, le=8192)
+    formatter_max_tokens: int = Field(default=1024, ge=0, le=8192)
+    expansion_max_tokens: int = Field(default=256, ge=0, le=8192)
+    generator_max_tokens: int = Field(default=4096, ge=0, le=16384)
+    validator_max_tokens: int = Field(default=2048, ge=0, le=8192)
+    direct_max_tokens: int = Field(default=1024, ge=0, le=8192)
 
     # Schema enrichment (cheaper/faster path than query generation)
     # Empty enrichment_model → use the provider's default chat model.
@@ -64,10 +78,20 @@ class Settings(BaseSettings):
     # Query
     max_result_rows: int = 500
     max_retries: int = 3
-    max_conversation_turns: int = Field(default=3, ge=1, le=10)
+    max_conversation_turns: int = Field(default=2, ge=1, le=10)
     schema_cache_ttl_days: int = 7
     faiss_top_k_tables: int = 60
     golden_records_top_k: int = 5
+    # Minimum FAISS inner-product score to inject a golden few-shot (0 = always top-k).
+    golden_min_score: float = Field(default=0.45, ge=0.0, le=1.0)
+    # Verified-cache embedding similarity to skip generation entirely.
+    verified_min_score: float = Field(default=0.92, ge=0.5, le=1.0)
+    # Sample rows included in schema prompts (0 = none).
+    schema_sample_rows: int = Field(default=2, ge=0, le=5)
+    # Skip expansion LLM for schema linking (use question + history only).
+    schema_link_expand: bool = False
+    # Use a single LLM select call (table-first) instead of parallel table+column.
+    schema_link_single_select: bool = True
 
     # Schema-grounded clarification (ask vs proceed after context retrieval)
     grounded_clarification_enabled: bool = True
@@ -80,9 +104,12 @@ class Settings(BaseSettings):
     # schema_link: auto | full | faiss  (auto = full schema when under token budget)
     # format_response: on | off  (off skips NL formatter — API/eval mode)
     interpretation_mode: str = "on"
-    validator_mode: str = "full"
+    # Deterministic+EXPLAIN by default; LLM validator only when flags fire.
+    validator_mode: str = "deterministic"
     schema_link_mode: str = "auto"
     format_response: bool = True
+    # Stream tabular/SQL result before the NL formatter finishes.
+    format_response_async: bool = True
     # Max candidates for adaptive multi-path generation (1 = disabled).
     sql_candidate_count: int = Field(default=1, ge=1, le=5)
     # Approximate token budget for "pass full schema" path (schema_link_mode=auto).
@@ -103,9 +130,15 @@ class Settings(BaseSettings):
     #   off = skip resolver; merged generate-with-interpretation when merge_interpret_generate
     #   assume_only = never ask
     execution_evidence_gate: bool = True
+    # Answer-first: stream a result with assumption; alternatives arrive as chips.
+    # Strict ambiguity_policy still asks when clusters split.
+    answer_first: bool = True
     # Merge interpretation into the generator (skip intent + resolver LLM calls).
     # Measured: same/better values accuracy, lower p50/cost on held-out Spider.
     merge_interpret_generate: bool = True
+    # Always use the merged generator output schema (status/decision_points).
+    # Difficulty router only controls candidate count / model tier, not format.
+    always_merged_schema: bool = True
     # Candidates to sample when decision_points are flagged (or gate always samples).
     # Adaptive gate starts at min(2, this) and escalates only on disagreement.
     ambiguity_sample_count: int = Field(default=3, ge=1, le=5)
@@ -115,6 +148,12 @@ class Settings(BaseSettings):
     # Per-connection policy hint when no connection override: casual | balanced | strict.
     # strict asks more readily (lower dominance); casual answers more (higher).
     ambiguity_policy: str = "balanced"
+    # Bounded repair agent (tool loop) after execution evidence fails.
+    repair_agent_enabled: bool = True
+    repair_max_steps: int = Field(default=3, ge=1, le=6)
+    repair_max_cost_usd: float = Field(default=0.05, ge=0.0, le=5.0)
+    # Empty-result: probe WHERE literals before regenerating.
+    empty_result_literal_probe: bool = True
     # Estimated query cost gate: refuse/flag when EXPLAIN cost exceeds this (0 = off).
     explain_cost_limit: float = Field(default=0.0, ge=0.0, le=1e12)
     # Relationship discovery on schema scan (proposed join edges).

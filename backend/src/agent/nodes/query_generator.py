@@ -17,7 +17,7 @@ from src.agent.prompts.generator import (
 from src.agent.state import AgentState
 from src.agent.utils import append_step, extract_json, get_configurable, message_text
 from src.config.settings import get_settings
-from src.providers.llm import get_llm_provider
+from src.providers.llm import get_llm_provider, stage_chat_kwargs
 
 
 def _effective_candidate_count(settings: Any, retry_context: str) -> int:
@@ -82,8 +82,57 @@ async def query_generator(
         retries = retries + 1
         updates["retries"] = retries
 
+    # Verified near-exact golden OR refine with a stored alternate SQL —
+    # skip LLM generation entirely.
+    verified = str(context.get("verified_sql") or "").strip()
+    refine_choice = str(state.get("refine_choice") or "").strip()
+    if verified and not retry_context.strip():
+        updates["sql"] = verified
+        updates["corrected_sql"] = verified
+        updates["error"] = None
+        updates["used_golden"] = not bool(refine_choice)
+        updates["assumption"] = (
+            refine_choice
+            or "Reused a verified project query for a near-exact match"
+        )
+        updates["allow_clarify"] = False
+        updates["ambiguity"] = {
+            **(
+                state.get("ambiguity")
+                if isinstance(state.get("ambiguity"), dict)
+                else {}
+            ),
+            "should_clarify": False,
+            "status": "clear",
+            "needs_execution_gate": False,
+            "decision_why": "refine_reading" if refine_choice else "verified_cache",
+            "gate": "refine" if refine_choice else "verified",
+            "alternatives": [],
+            "readings": [],
+        }
+        updates["steps"] = append_step(
+            state,
+            "sql_verified_cache" if not refine_choice else "sql_refine_reuse",
+            (
+                "Skipped generation; reused chosen alternate SQL"
+                if refine_choice
+                else "Skipped generation; reused verified SQL"
+            ),
+            sql=verified,
+        )
+        return updates
+
+    # Refine path without a stored SQL: fold the choice into the prompt.
+    if refine_choice:
+        question = f"{question}\n\nUse this interpretation: {refine_choice}"
+        updates["assumption"] = refine_choice
+        updates["allow_clarify"] = False
+
     candidate_count = _effective_candidate_count(settings, retry_context)
-    merge = bool(getattr(settings, "merge_interpret_generate", False))
+    merge = bool(
+        getattr(settings, "always_merged_schema", True)
+        or getattr(settings, "merge_interpret_generate", False)
+    )
     # Difficulty router: escalate candidate count / disable merge on hard Qs.
     from src.agent.difficulty_router import route_generation_plan
 
@@ -93,6 +142,9 @@ async def query_generator(
         table_count=table_count,
         prior_failure=bool(retry_context.strip()),
         merge_interpret_generate=merge,
+        always_merged_schema=bool(
+            getattr(settings, "always_merged_schema", True)
+        ),
     )
     if int(plan.get("candidate_count") or 1) > candidate_count:
         candidate_count = int(plan["candidate_count"])
@@ -115,11 +167,13 @@ async def query_generator(
                 retry_context=retry_context,
                 user_question=question,
                 current_date=date.today().isoformat(),
-                schema_digest=context.get("schema_digest") or "",
             )
             llm = get_llm_provider().get_chat_model(
-                temperature=0.0,
-                max_tokens=settings.llm_max_tokens,
+                **stage_chat_kwargs(
+                    "query_generator",
+                    settings=settings,
+                    escalate=bool(retry_context.strip()),
+                )
             )
             response = await llm.ainvoke(
                 [
@@ -172,18 +226,30 @@ async def query_generator(
             if not isinstance(decision_points, list):
                 decision_points = []
             dpoints = [str(p).strip() for p in decision_points if str(p).strip()]
+            raw_alts = parsed.get("alternatives") or []
+            if not isinstance(raw_alts, list):
+                raw_alts = [raw_alts]
+            alternatives = [str(a).strip() for a in raw_alts if str(a).strip()]
             assumption_text = interpretation or (
                 "; ".join(str(a) for a in assumptions if str(a).strip())
             )
             # Gate only when the model flags underspecification — not on every
             # assumed/clear answer (that made merge slower than the resolver path).
-            needs_gate = bool(dpoints) or status == "ambiguous"
+            # Refine turns never gate.
+            allow_clarify = state.get("allow_clarify")
+            needs_gate = (
+                (bool(dpoints) or status == "ambiguous")
+                and allow_clarify is not False
+            )
 
             updates["sql"] = sql
             updates["corrected_sql"] = sql
             updates["error"] = None
             if assumption_text:
                 updates["assumption"] = assumption_text
+            if alternatives:
+                updates["follow_ups"] = alternatives
+                updates["clarification_options"] = alternatives
             updates["ambiguity"] = {
                 **(
                     state.get("ambiguity")
@@ -194,6 +260,7 @@ async def query_generator(
                 "status": status,
                 "assumption": assumption_text,
                 "decision_points": dpoints,
+                "alternatives": alternatives,
                 "needs_execution_gate": needs_gate,
                 "decision_why": "merged_generate",
                 "gate": "merged",
@@ -242,8 +309,11 @@ async def query_generator(
                 current_date=date.today().isoformat(),
             )
             llm = get_llm_provider().get_chat_model(
-                temperature=0.0,
-                max_tokens=settings.llm_max_tokens,
+                **stage_chat_kwargs(
+                    "query_generator",
+                    settings=settings,
+                    escalate=bool(retry_context.strip()),
+                )
             )
             response = await llm.ainvoke(
                 [

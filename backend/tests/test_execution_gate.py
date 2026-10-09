@@ -149,3 +149,58 @@ def test_options_from_clusters_postgres_json_dialect():
     assert len(options) >= 2
     assert not any("Different SQL implementations" in o for o in options)
     assert any("Group by" in o for o in options)
+
+
+def test_readings_map_choice_to_full_sql():
+    from src.agent.execution_gate import readings_from_clusters, resolve_reading_sql
+
+    clusters = cluster_by_results(
+        [
+            {
+                "sql": (
+                    "SELECT COALESCE(NULLIF(rc.code, ''), 'x') AS country_code, "
+                    "SUM(1) FROM sales s JOIN res_country rc ON s.country_id = rc.id "
+                    "GROUP BY COALESCE(NULLIF(rc.code, ''), 'x')"
+                ),
+                "results": _res([["SA", 10]], ["country_code", "sum"]),
+            },
+            {
+                "sql": (
+                    "SELECT COALESCE(NULLIF(rc.code, ''), 'x') AS country_code, "
+                    "rcs.code AS state_code, SUM(1) FROM sales s "
+                    "JOIN res_country rc ON s.country_id = rc.id "
+                    "JOIN res_country_state rcs ON s.state_id = rcs.id "
+                    "GROUP BY COALESCE(NULLIF(rc.code, ''), 'x'), rcs.code"
+                ),
+                "results": _res([["SA", "01", 4]], ["country_code", "state_code", "sum"]),
+            },
+        ]
+    )
+    readings = readings_from_clusters(clusters, dialect="postgres")
+    assert len(readings) >= 2
+    for r in readings:
+        assert "')" not in r["label"]
+        assert "GROUP BY" in r["sql"].upper() or "group by" in r["sql"].lower()
+    matched = resolve_reading_sql(readings[1]["label"], readings)
+    assert matched == readings[1]["sql"]
+
+
+def test_decide_from_clusters_stores_readings():
+    clusters = cluster_by_results(
+        [
+            {
+                "sql": "SELECT country, SUM(qty) FROM t GROUP BY country",
+                "results": _res([["SA", 1]], ["country", "sum"]),
+            },
+            {
+                "sql": "SELECT country, state, SUM(qty) FROM t GROUP BY country, state",
+                "results": _res([["SA", "R", 1]], ["country", "state", "sum"]),
+            },
+        ]
+    )
+    decision = decide_from_clusters(clusters, dominance_threshold=0.99)
+    assert decision.readings
+    assert all(r.get("sql") for r in decision.readings)
+    assert len(decision.readings[0]["sql"]) == len(
+        "SELECT country, SUM(qty) FROM t GROUP BY country"
+    ) or decision.readings[0]["sql"].startswith("SELECT")

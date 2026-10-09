@@ -59,21 +59,26 @@ def route_generation_plan(
     table_count: int = 0,
     prior_failure: bool = False,
     merge_interpret_generate: bool = False,
+    always_merged_schema: bool = True,
 ) -> dict[str, Any]:
     """Return a generation plan: direct vs escalate.
 
     - simple: single generate call (prefer merge when enabled)
     - moderate: normal pipeline
-    - challenging: escalate (higher candidate count / keep resolver)
+    - challenging: escalate candidate count / model tier, but keep merged
+      output schema so status/decision_points remain available
     """
     level = estimate_difficulty(
         question, table_count=table_count, prior_failure=prior_failure
     )
+    # Always keep the merged schema so hard questions can still clarify /
+    # return not_a_data_question. Difficulty only affects candidate count.
+    use_merge = bool(always_merged_schema or merge_interpret_generate)
     if level == "simple":
         return {
             "difficulty": level,
             "path": "direct",
-            "use_merge": True if merge_interpret_generate else merge_interpret_generate,
+            "use_merge": use_merge,
             "candidate_count": 1,
             "escalate_on_failure": True,
         }
@@ -81,14 +86,14 @@ def route_generation_plan(
         return {
             "difficulty": level,
             "path": "standard",
-            "use_merge": merge_interpret_generate,
+            "use_merge": use_merge,
             "candidate_count": 1,
             "escalate_on_failure": True,
         }
     return {
         "difficulty": level,
         "path": "escalate",
-        "use_merge": False,
+        "use_merge": use_merge,
         "candidate_count": 2,
         "escalate_on_failure": False,
     }

@@ -62,3 +62,37 @@ async def test_formatter_skips_llm_when_format_response_off(monkeypatch):
     assert "Returned 2 rows" in out["answer"]
     assert out["confidence"] in {"HIGH", "MEDIUM", "LOW"}
     get_settings.cache_clear()
+
+
+@pytest.mark.asyncio
+async def test_formatter_prefers_results_over_stale_error(monkeypatch):
+    """Gate results + leftover validator error must not narrate failure."""
+    get_settings.cache_clear()
+    monkeypatch.setenv("FORMAT_RESPONSE", "false")
+    get_settings.cache_clear()
+
+    class _Db:
+        def sqlglot_dialect(self) -> str:
+            return "postgres"
+
+    state = {
+        "question": "purchasing over time?",
+        "sql": "SELECT 1",
+        "results": {
+            "row_count": 11,
+            "columns": ["month", "qty"],
+            "rows": [{"month": "2024-01-01", "qty": 10}],
+        },
+        "error": "Unknown table not in selected context: with_changes",
+        "retries": 2,
+        "intent": "SQL_QUERY",
+        "used_golden": False,
+        "context": {"golden_sqls": []},
+        "steps": [],
+    }
+    out = await rf_mod.response_formatter(
+        state, config={"configurable": {"db_provider": _Db()}}
+    )
+    assert "failed" not in out["answer"].lower()
+    assert "11" in out["answer"]
+    get_settings.cache_clear()

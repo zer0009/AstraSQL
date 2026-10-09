@@ -51,7 +51,15 @@ def _initial_state(
     question: str,
     conversation_history: list[dict[str, Any]] | None = None,
     evidence: str = "",
+    *,
+    run_id: str | None = None,
+    allow_clarify: bool = True,
+    refine_choice: str = "",
+    context: dict[str, Any] | None = None,
+    extra: dict[str, Any] | None = None,
 ) -> AgentState:
+    import uuid
+
     state: AgentState = {
         "connection_id": connection.id,
         "question": question,
@@ -60,9 +68,18 @@ def _initial_state(
         "retry_context": "",
         "error": None,
         "conversation_history": _normalize_conversation_history(conversation_history),
+        "run_id": run_id or str(uuid.uuid4()),
+        "allow_clarify": allow_clarify,
     }
     if (evidence or "").strip():
         state["evidence"] = evidence.strip()
+    if refine_choice:
+        state["refine_choice"] = refine_choice
+        state["allow_clarify"] = False
+    if context:
+        state["context"] = context
+    if extra:
+        state.update(extra)  # type: ignore[typeddict-item]
     return state
 
 
@@ -122,6 +139,7 @@ def _compact_state(state: AgentState) -> dict[str, Any]:
         "clarification_options": state.get("clarification_options") or [],
         "used_golden": bool(state.get("used_golden")),
         "ambiguity": ambiguity,
+        "run_id": state.get("run_id"),
         # Steps stream via "step" events — omit from done to keep SSE JSON small
     }
 
@@ -184,6 +202,21 @@ async def run_query(
                 "calls": len(tracker.records),
             }
         await _persist_history(session, connection, result, session_id=session_id)
+        try:
+            from src.storage.repositories.snapshots import persist_run_snapshot
+
+            snap = await persist_run_snapshot(
+                session,
+                connection_id=connection.id,
+                state=result,
+                session_id=session_id,
+                history_id=None,
+            )
+            if snap is not None:
+                result = dict(result)
+                result["run_id"] = snap.id
+        except Exception as exc:
+            logger.warning("Could not persist run snapshot: %s", exc)
         return result
     finally:
         await provider.close()
@@ -215,6 +248,8 @@ async def stream_query(
                 "question": question,
             }
 
+            settings = get_settings()
+            early_result_sent = False
             async for chunk in graph.astream(
                 final_state,
                 config=config,
@@ -239,6 +274,80 @@ async def stream_query(
                             "node": node_name,
                             "step": _sse_safe(step),
                         }
+                    # Emit tabular/SQL result before the NL formatter finishes.
+                    if (
+                        not early_result_sent
+                        and bool(getattr(settings, "format_response_async", True))
+                        and node_name in {"query_executor", "ambiguity_gate"}
+                        and isinstance(update.get("results"), dict)
+                        and (update.get("results") or {}).get("columns") is not None
+                        and not update.get("shape_retry")
+                    ):
+                        early_result_sent = True
+                        yield {
+                            "event": "result",
+                            "data": _sse_safe(
+                                {
+                                    "answer": final_state.get("answer")
+                                    or "Query completed.",
+                                    "key_finding": final_state.get("key_finding"),
+                                    "sql": final_state.get("corrected_sql")
+                                    or final_state.get("sql"),
+                                    "results": update.get("results"),
+                                    "confidence": final_state.get("confidence"),
+                                    "trust_level": final_state.get("trust_level"),
+                                    "assumption": final_state.get("assumption"),
+                                    "follow_ups": final_state.get("follow_ups") or [],
+                                    "clarification_options": final_state.get(
+                                        "clarification_options"
+                                    )
+                                    or [],
+                                    "used_golden": final_state.get("used_golden"),
+                                    "ambiguity": final_state.get("ambiguity"),
+                                    "partial": True,
+                                }
+                            ),
+                        }
+                    # Surface alternative readings as soon as the gate produces them.
+                    alts = None
+                    amb = update.get("ambiguity")
+                    if isinstance(amb, dict):
+                        alts = amb.get("alternatives") or amb.get("options")
+                    if not alts:
+                        alts = update.get("clarification_options") or update.get(
+                            "follow_ups"
+                        )
+                    if alts and node_name in {
+                        "ambiguity_gate",
+                        "query_generator",
+                        "direct_response",
+                    }:
+                        concrete = [
+                            str(a).strip()
+                            for a in alts
+                            if str(a).strip()
+                            and not str(a).lower().startswith("other")
+                        ]
+                        if concrete:
+                            yield {
+                                "event": "alternatives",
+                                "data": _sse_safe(
+                                    {
+                                        "alternatives": concrete,
+                                        "run_id": final_state.get("run_id"),
+                                        "assumption": final_state.get("assumption"),
+                                    }
+                                ),
+                            }
+
+        if tracker.records:
+            final_state = dict(final_state)
+            final_state["usage_summary"] = {
+                "by_stage": tracker.summary_by_stage(),
+                "cost_usd": tracker.total_cost(),
+                "total_cost_usd": tracker.total_cost(),
+                "calls": len(tracker.records),
+            }
 
         history = None
         for attempt in range(3):
@@ -260,15 +369,26 @@ async def stream_query(
                 logger.warning("Could not persist query history: %s", exc)
                 break
 
+        try:
+            from src.storage.repositories.snapshots import persist_run_snapshot
+
+            snap = await persist_run_snapshot(
+                session,
+                connection_id=connection.id,
+                state=final_state,
+                session_id=session_id,
+                history_id=history.id if history else None,
+            )
+            if snap is not None:
+                final_state = dict(final_state)
+                final_state["run_id"] = snap.id
+        except Exception as exc:
+            logger.warning("Could not persist run snapshot: %s", exc)
+
         done_payload = _compact_state(final_state)
         done_payload["history_id"] = history.id if history else None
-        if tracker.records:
-            done_payload["usage_summary"] = {
-                "by_stage": tracker.summary_by_stage(),
-                "cost_usd": tracker.total_cost(),
-                "total_cost_usd": tracker.total_cost(),
-                "calls": len(tracker.records),
-            }
+        if final_state.get("usage_summary"):
+            done_payload["usage_summary"] = final_state["usage_summary"]
         yield {
             "event": "done",
             "data": _sse_safe(done_payload),
@@ -293,6 +413,7 @@ async def stream_query(
                     "ambiguity": done_payload.get("ambiguity"),
                     "usage_summary": done_payload.get("usage_summary"),
                     "history_id": done_payload.get("history_id"),
+                    "run_id": done_payload.get("run_id"),
                     "error": done_payload.get("error"),
                 }
             ),

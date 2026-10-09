@@ -27,28 +27,52 @@ from src.agent.utils import (
     message_text,
 )
 from src.config.settings import get_settings
-from src.providers.llm import get_llm_provider
+from src.providers.llm import get_llm_provider, stage_chat_kwargs
 
 # Backward-compatible re-exports (helpers live in validator_helpers).
 __all__ = ["check_catalog", "query_validator", "validate_syntax"]
 
 
+def _should_escalate_to_llm(state: AgentState, settings: Any) -> bool:
+    """LLM validator only when flags / retries suggest semantic risk."""
+    if int(state.get("retries") or 0) > 0:
+        return True
+    retry = (state.get("retry_context") or "").upper()
+    if any(
+        token in retry
+        for token in (
+            "EMPTY_RESULT",
+            "SUSPICIOUS",
+            "SYNTAX_ERROR",
+            "WRONG_COLUMN",
+            "WRONG_TABLE",
+            "TYPE_MISMATCH",
+            "ENTITY_MAPPING",
+        )
+    ):
+        return True
+    amb = state.get("ambiguity") if isinstance(state.get("ambiguity"), dict) else {}
+    if amb.get("needs_execution_gate") or amb.get("decision_points"):
+        return True
+    return False
+
+
 async def query_validator(
     state: AgentState, config: RunnableConfig
 ) -> dict[str, Any]:
-    """Validate SQL: Layer 1 always; LLM only when validator_mode=full.
+    """Validate SQL: Layer 1 always; LLM only when mode=full or flags fire.
 
     Modes (settings.validator_mode):
       - full: Layer 1 + LLM semantic validator (legacy)
-      - deterministic: Layer 1 + optional catalog checks; skip LLM
+      - deterministic: Layer 1 + catalog/readability; LLM only on flags/retries
       - off: Layer 1 only; skip LLM when syntax/DML passes
     """
     cfg = get_configurable(config)
     db_provider = cfg.get("db_provider")
     settings = get_settings()
-    mode = (settings.validator_mode or "full").strip().lower()
+    mode = (settings.validator_mode or "deterministic").strip().lower()
     if mode not in {"full", "deterministic", "off"}:
-        mode = "full"
+        mode = "deterministic"
 
     sql = (state.get("corrected_sql") or state.get("sql") or "").strip()
     question = state.get("question") or ""
@@ -149,6 +173,16 @@ async def query_validator(
             selected_columns=list(context.get("selected_columns") or []),
         )
         if catalog_issues:
+            # Ambiguity-gate already executed this SQL successfully — trust
+            # execution evidence over a heuristic catalog miss.
+            prior = state.get("results") if isinstance(state.get("results"), dict) else None
+            if state.get("cached_execution") and prior and "row_count" in prior:
+                return _pass_without_llm(
+                    state,
+                    sql=sql,
+                    mode=mode,
+                    catalog_issues=catalog_issues,
+                )
             return _fail_or_retry(
                 state,
                 sql=sql,
@@ -160,11 +194,13 @@ async def query_validator(
                 if any("column" in i.lower() for i in catalog_issues)
                 else "WRONG_TABLE",
             )
-        return _pass_without_llm(
-            state, sql=sql, mode=mode, catalog_issues=catalog_issues
-        )
+        if not _should_escalate_to_llm(state, settings):
+            return _pass_without_llm(
+                state, sql=sql, mode=mode, catalog_issues=catalog_issues
+            )
+        # Fall through to LLM validator when flags / retries fire.
 
-    # Layer 2 — LLM semantic validator (full mode)
+    # Layer 2 — LLM semantic validator (full mode or escalated deterministic)
     try:
         checklist_items = db_provider.dialect_validator_checklist() or []
         checklist_text = "\n".join(f"- {item}" for item in checklist_items)
@@ -177,8 +213,7 @@ async def query_validator(
             user_question=question,
         )
         llm = get_llm_provider().get_chat_model(
-            temperature=0.0,
-            max_tokens=settings.llm_max_tokens,
+            **stage_chat_kwargs("query_validator", settings=settings)
         )
         response = await llm.ainvoke(
             [

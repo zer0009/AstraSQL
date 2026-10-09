@@ -3,7 +3,7 @@ import {
   clarificationOptionsFrom,
   parseAmbiguity,
 } from "../lib/ambiguity";
-import { streamQuery } from "../services/api";
+import { streamQuery, streamRefine } from "../services/api";
 import type {
   AgentStep,
   Ambiguity,
@@ -32,6 +32,7 @@ export type ChatMessage = {
   ambiguity?: Ambiguity;
   intent?: string;
   usage?: UsageSummary;
+  runId?: string;
 };
 
 export type StreamLastResult = {
@@ -51,6 +52,7 @@ export type StreamLastResult = {
   ambiguity?: Ambiguity;
   intent?: string;
   usage?: UsageSummary;
+  runId?: string;
 };
 
 /**
@@ -246,6 +248,10 @@ export function applyStatePatch(
     next.historyId = patch.history_id;
   }
 
+  if (typeof patch.run_id === "string" && patch.run_id) {
+    next.runId = patch.run_id;
+  }
+
   if (typeof patch.error === "string" && patch.error) {
     next.error = patch.error;
   }
@@ -281,6 +287,7 @@ function toLastResult(msg: ChatMessage): StreamLastResult {
     ambiguity: msg.ambiguity,
     intent: msg.intent,
     usage: msg.usage,
+    runId: msg.runId,
   };
 }
 
@@ -425,12 +432,38 @@ export function useStreamQuery(
         return;
       }
 
+      if (name === "alternatives") {
+        const patch = asRecord(data) ?? {};
+        const alts = Array.isArray(patch.alternatives)
+          ? patch.alternatives.map(String).filter(Boolean)
+          : undefined;
+        updateAssistant((msg) => {
+          const next = { ...msg };
+          if (alts?.length) {
+            next.clarificationOptions = alts;
+            next.followUps = alts;
+          }
+          if (typeof patch.run_id === "string" && patch.run_id) {
+            next.runId = patch.run_id;
+          }
+          if (typeof patch.assumption === "string" && patch.assumption) {
+            next.assumption = patch.assumption;
+          }
+          return next;
+        });
+        return;
+      }
+
       if (name === "done" || name === "result") {
         const patch = asRecord(data) ?? {};
         const updated = updateAssistant((msg) => {
           const next = applyStatePatch(msg, patch);
           if (!next.sql && typeof patch.sql === "string") {
             next.sql = patch.sql;
+          }
+          // Partial results (pre-formatter) should not wipe a later narrative.
+          if (patch.partial === true && msg.content && !patch.answer) {
+            next.content = msg.content;
           }
           if (!next.content && !next.error) {
             const status = next.ambiguity?.status;
@@ -548,9 +581,83 @@ export function useStreamQuery(
     [connectionId, handleEvent, isStreaming, updateAssistant],
   );
 
+  const refine = useCallback(
+    async (
+      runId: string,
+      choice: string,
+      overrides?: { sessionId?: string | null },
+    ) => {
+      const trimmedChoice = choice.trim();
+      if (!trimmedChoice || !connectionId || !runId || isStreaming) return;
+
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      const userMsg: ChatMessage = {
+        id: newId(),
+        role: "user",
+        content: trimmedChoice,
+      };
+      const assistantMsg: ChatMessage = {
+        id: newId(),
+        role: "assistant",
+        content: "",
+        steps: [],
+        runId,
+      };
+      assistantIdRef.current = assistantMsg.id;
+
+      setMessages((prev) => {
+        const next = [...prev, userMsg, assistantMsg];
+        messagesRef.current = next;
+        return next;
+      });
+      setIsStreaming(true);
+      setLastResult(null);
+
+      const activeSessionId =
+        overrides?.sessionId !== undefined
+          ? overrides.sessionId
+          : sessionIdRef.current;
+
+      try {
+        await streamRefine(
+          {
+            run_id: runId,
+            choice: trimmedChoice,
+            connection_id: connectionId,
+            session_id: activeSessionId || undefined,
+          },
+          handleEvent,
+          controller.signal,
+        );
+      } catch (err) {
+        if (controller.signal.aborted) {
+          updateAssistant((msg) => ({
+            ...msg,
+            error: msg.error || "Cancelled",
+            content: msg.content || "Query cancelled.",
+          }));
+          return;
+        }
+        const message = err instanceof Error ? err.message : "Refine failed";
+        const updated = updateAssistant((msg) => ({ ...msg, error: message }));
+        if (updated) setLastResult(toLastResult(updated));
+      } finally {
+        if (abortRef.current === controller) {
+          abortRef.current = null;
+          setIsStreaming(false);
+        }
+      }
+    },
+    [connectionId, handleEvent, isStreaming, updateAssistant],
+  );
+
   return {
     messages,
     send,
+    refine,
     isStreaming,
     clear,
     reset,

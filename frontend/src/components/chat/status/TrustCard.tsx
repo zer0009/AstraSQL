@@ -5,12 +5,14 @@ export function TrustCard({
   keyFinding,
   decisionWhy,
   onChangeAssumption,
+  onRemember,
 }: {
   assumption?: string;
   keyFinding?: string;
   /** Only pass when AmbiguityBanner is not already showing why. */
   decisionWhy?: string;
   onChangeAssumption?: () => void;
+  onRemember?: () => void;
 }) {
   if (!assumption && !keyFinding) return null;
 
@@ -35,17 +37,28 @@ export function TrustCard({
               {decisionWhy}
             </span>
           ) : null}
-          {onChangeAssumption ? (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="mt-2"
-              onClick={onChangeAssumption}
-            >
-              Change assumption
-            </Button>
-          ) : null}
+          <div className="mt-2 flex flex-wrap gap-2">
+            {onChangeAssumption ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={onChangeAssumption}
+              >
+                Change assumption
+              </Button>
+            ) : null}
+            {onRemember ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={onRemember}
+              >
+                Remember this definition
+              </Button>
+            ) : null}
+          </div>
         </div>
       ) : null}
     </div>

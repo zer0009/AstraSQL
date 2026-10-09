@@ -22,7 +22,7 @@ from src.agent.prompts.interpretation import render_interpretation_prompt
 from src.agent.state import AgentState
 from src.agent.utils import append_step, extract_json, get_configurable, message_text
 from src.config.settings import get_settings
-from src.providers.llm import get_llm_provider
+from src.providers.llm import get_llm_provider, stage_chat_kwargs
 
 logger = logging.getLogger(__name__)
 
@@ -163,9 +163,11 @@ async def interpretation_resolver(
         if not model_name:
             model_name = (settings.enrichment_model or "").strip()
         llm = get_llm_provider().get_chat_model(
-            temperature=0.0,
-            max_tokens=min(settings.llm_max_tokens, 2048),
-            model=model_name or None,
+            **stage_chat_kwargs(
+                "interpretation_resolver",
+                settings=settings,
+                model=model_name or None,
+            )
         )
         response = await llm.ainvoke(
             [SystemMessage(content=system), HumanMessage(content=user)],

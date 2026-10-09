@@ -11,6 +11,15 @@ def test_humanize_strips_id_suffix():
     assert humanize_dimension_expr('rcs.name->>\'en_US\'') == "name"
 
 
+def test_humanize_coalesce_json_does_not_emit_sql_fragments():
+    expr = "COALESCE(NULLIF(rc.code, ''), 'غير محدد')"
+    label = humanize_dimension_expr(expr)
+    assert "coalesce" not in label.lower()
+    assert "nullif" not in label.lower()
+    assert "')" not in label
+    assert label in {"code", "rc"}
+
+
 def test_reading_label_nudge_for_fk_ids():
     label = reading_label_for_group_keys(["rp.country_id", "rp.state_id"])
     assert "country" in label.lower()

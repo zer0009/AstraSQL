@@ -62,6 +62,14 @@ async def persist_query_history(
         )
         turn_index = int(count_result.scalar_one() or 0)
 
+    usage = state.get("usage_summary")
+    usage_text = None
+    if isinstance(usage, dict) and usage:
+        try:
+            usage_text = json.dumps(usage, default=str)
+        except (TypeError, ValueError):
+            usage_text = None
+
     record = QueryHistory(
         connection_id=connection.id,
         session_id=session_id,
@@ -74,6 +82,8 @@ async def persist_query_history(
         explanation=state.get("answer"),
         follow_ups=json.dumps(follow_ups) if follow_ups else None,
         ambiguity_json=ambiguity_text,
+        usage_json=usage_text,
+        run_id=(str(state.get("run_id") or "").strip() or None),
     )
     session.add(record)
 

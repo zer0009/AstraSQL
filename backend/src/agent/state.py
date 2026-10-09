@@ -10,6 +10,8 @@ class AgentState(TypedDict, total=False):
     sql: str
     corrected_sql: str
     results: dict  # {columns, rows, row_count}
+    # When True, query_executor should skip re-running the chosen SQL.
+    cached_execution: bool
     retries: int
     retry_context: str
     # Soft post-execute retry (e.g. EMPTY_RESULT). Not a hard execution error.
@@ -31,5 +33,9 @@ class AgentState(TypedDict, total=False):
     conversation_history: list[dict]  # [{question, sql, answer, trust_level?}, ...]
     # Optional external knowledge (BIRD evidence, customer data dictionary notes).
     evidence: str
+    # Refine / resume: when False, never ask again; skip retrieval when context set.
+    allow_clarify: bool
+    run_id: str
+    refine_choice: str
     # Injected by runner (not from LLM):
     # session and connection are handled outside graph or via config

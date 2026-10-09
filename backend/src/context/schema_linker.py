@@ -331,7 +331,12 @@ class SchemaLinker:
             conversation_history=conversation_history,
         )
 
-        chat = get_llm_provider().get_chat_model(temperature=0.0)
+        from src.providers.llm import stage_chat_kwargs
+
+        chat = get_llm_provider().get_chat_model(
+            **stage_chat_kwargs("fine_select", settings=self._settings)
+        )
+        single = bool(getattr(self._settings, "schema_link_single_select", True))
 
         async def _call(system: str, user: str) -> str:
             resp = await chat.ainvoke(
@@ -345,10 +350,15 @@ class SchemaLinker:
                 )
             return str(content)
 
-        table_raw, col_raw = await asyncio.gather(
-            _call(table_system, table_user),
-            _call(col_system, col_user),
-        )
+        if single:
+            # One cheap select call (table-first); columns come from selected tables.
+            table_raw = await _call(table_system, table_user)
+            col_raw = "{}"
+        else:
+            table_raw, col_raw = await asyncio.gather(
+                _call(table_system, table_user),
+                _call(col_system, col_user),
+            )
 
         tables: set[str] = set()
         columns: list[dict[str, str]] = []

@@ -260,18 +260,20 @@ def build_retry_context(
     retry_type: str = "OTHER",
     exploration_block: str = "",
 ) -> str:
+    """Build retry context with only the latest error (no accumulation)."""
+    del prior_context  # intentionally unused — keep signature stable
     hint = _RETRY_FIX_HINTS.get(
         (retry_type or "OTHER").upper(),
         _RETRY_FIX_HINTS["OTHER"],
     )
+    # Cap previous SQL so prompts stay small across retries.
+    sql_preview = (previous_sql or "")[:800]
     block = (
         f"Retry type: [{(retry_type or 'OTHER').upper()}]\n"
-        f"Previous SQL: [{previous_sql}]\n"
+        f"Previous SQL: [{sql_preview}]\n"
         f"Error: [{error}]\n"
         f"Correction needed: {hint}"
     )
     if exploration_block and exploration_block.strip():
-        block = f"{block}\n\nColumn exploration:\n{exploration_block.strip()}"
-    if prior_context and prior_context.strip():
-        return f"{prior_context.strip()}\n\n---\n\n{block}"
+        block = f"{block}\n\nColumn exploration:\n{exploration_block.strip()[:1500]}"
     return block

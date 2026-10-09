@@ -56,8 +56,10 @@ async def list_enrichments(
 
 @router.post("/enrichments", response_model=EnrichmentOut, status_code=201)
 async def create_enrichment(body: EnrichmentCreate, db: DbSession) -> SchemaEnrichment:
+    from src.context.retrieval.schema_text_cache import invalidate_schema_text
+
     await _ensure_connection(db, body.connection_id)
-    return await enrichment_store.upsert(
+    row = await enrichment_store.upsert(
         db,
         connection_id=body.connection_id,
         table_name=body.table_name,
@@ -66,6 +68,8 @@ async def create_enrichment(body: EnrichmentCreate, db: DbSession) -> SchemaEnri
         alias=body.alias,
         example_values=_serialize_example_values(body.example_values),
     )
+    invalidate_schema_text(body.connection_id)
+    return row
 
 
 @router.put("/enrichments/{enrichment_id}", response_model=EnrichmentOut)
@@ -85,14 +89,23 @@ async def update_enrichment(
 
     await db.flush()
     await db.refresh(row)
+    from src.context.retrieval.schema_text_cache import invalidate_schema_text
+
+    invalidate_schema_text(row.connection_id)
     return row
 
 
 @router.delete("/enrichments/{enrichment_id}", status_code=204)
 async def delete_enrichment(enrichment_id: str, db: DbSession) -> None:
+    row = await db.get(SchemaEnrichment, enrichment_id)
+    connection_id = row.connection_id if row is not None else None
     deleted = await enrichment_store.delete(db, enrichment_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Enrichment not found")
+    if connection_id:
+        from src.context.retrieval.schema_text_cache import invalidate_schema_text
+
+        invalidate_schema_text(connection_id)
 
 
 # --- Golden records --------------------------------------------------------

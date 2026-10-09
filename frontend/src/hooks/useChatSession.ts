@@ -4,6 +4,7 @@ import {
   deleteSession,
   executeSql,
   getSession,
+  rememberDefinition,
   renameSession,
 } from "../services/api";
 import type { ChatSession, QueryHistoryItem } from "../types/api";
@@ -113,6 +114,7 @@ export function useChatSession(connectionId: string | null) {
   const {
     messages,
     send: streamSend,
+    refine: streamRefine,
     isStreaming,
     reset,
     cancel,
@@ -211,6 +213,33 @@ export function useChatSession(connectionId: string | null) {
       });
     },
     [connectionId, ensureSession, isStreaming, streamSend],
+  );
+
+  const refine = useCallback(
+    async (runId: string, choice: string) => {
+      if (!connectionId || isStreaming) return;
+      let activeSessionId: string | null = sessionIdRef.current;
+      try {
+        activeSessionId = await ensureSession(choice);
+      } catch (err) {
+        console.error("Failed to ensure chat session", err);
+      }
+      await streamRefine(runId, choice, { sessionId: activeSessionId });
+    },
+    [connectionId, ensureSession, isStreaming, streamRefine],
+  );
+
+  const remember = useCallback(
+    async (definition: string) => {
+      if (!connectionId) return;
+      const trimmed = definition.trim();
+      if (!trimmed) return;
+      await rememberDefinition({
+        connection_id: connectionId,
+        definition: trimmed,
+      });
+    },
+    [connectionId],
   );
 
   /**
@@ -325,6 +354,8 @@ export function useChatSession(connectionId: string | null) {
   return {
     messages,
     send,
+    refine,
+    remember,
     rerunSql,
     isStreaming,
     rerunningMessageId,

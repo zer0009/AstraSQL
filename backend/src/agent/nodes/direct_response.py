@@ -13,7 +13,7 @@ from src.agent.prompts.generator import format_conversation_history
 from src.agent.state import AgentState
 from src.agent.utils import append_step, extract_json, message_text
 from src.config.settings import get_settings
-from src.providers.llm import get_llm_provider
+from src.providers.llm import get_llm_provider, stage_chat_kwargs
 
 _DIRECT_SYSTEM = """\
 You are AstraSQL, a helpful database assistant.
@@ -120,8 +120,11 @@ async def direct_response(
             schema_block=_schema_block(context, intent),
         )
         llm = get_llm_provider().get_chat_model(
-            temperature=0.3,
-            max_tokens=settings.llm_max_tokens,
+            **stage_chat_kwargs(
+                "direct_response",
+                settings=settings,
+                temperature=0.3,
+            )
         )
         response = await llm.ainvoke(
             [SystemMessage(content=system), HumanMessage(content=user_content)],

@@ -319,9 +319,29 @@ class SchemaEnrichmentStore:
                     cache.sample_rows_json if cache else None, default=[]
                 ) or []
 
+            # Compact samples: skip when most columns already have descriptions,
+            # and cap to settings.schema_sample_rows (default 2).
             sample_block = ""
-            if sample_rows:
-                sample_block = "\n" + _format_sample_rows(table_name, sample_rows)
+            try:
+                from src.config.settings import get_settings
+
+                max_samples = int(getattr(get_settings(), "schema_sample_rows", 2) or 0)
+            except Exception:
+                max_samples = 2
+            described_cols = sum(
+                1
+                for c in columns
+                if (col_enrich.get(c.get("name") or c.get("column_name") or {}) or {}).get(
+                    "description"
+                )
+            )
+            mostly_described = bool(columns) and described_cols >= max(
+                1, int(0.6 * len(columns))
+            )
+            if sample_rows and max_samples > 0 and not mostly_described:
+                sample_block = "\n" + _format_sample_rows(
+                    table_name, list(sample_rows)[:max_samples]
+                )
 
             blocks.append("\n".join(header_lines) + "\n" + ddl + sample_block)
 

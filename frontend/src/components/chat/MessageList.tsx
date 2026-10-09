@@ -14,6 +14,8 @@ export interface MessageListProps {
   isStreaming?: boolean;
   rerunningMessageId?: string | null;
   onFollowUp?: (question: string) => void;
+  onRefine?: (runId: string, choice: string) => void;
+  onRemember?: (definition: string) => void;
   onAskAgain?: (question: string) => void;
   onRerunSql?: (messageId: string, sql?: string) => void;
   onRetry?: (question: string) => void;
@@ -25,6 +27,8 @@ export function MessageList({
   isStreaming = false,
   rerunningMessageId = null,
   onFollowUp,
+  onRefine,
+  onRemember,
   onAskAgain,
   onRerunSql,
   onRetry,
@@ -89,6 +93,8 @@ export function MessageList({
               isStreaming={isStreaming && isLast}
               isRerunning={rerunningMessageId === msg.id}
               onFollowUp={onFollowUp}
+              onRefine={onRefine}
+              onRemember={onRemember}
               onAskAgain={
                 onAskAgain && originalQuestion
                   ? () => onAskAgain(originalQuestion)

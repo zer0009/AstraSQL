@@ -36,6 +36,12 @@ from src.context.retrieval.prompt import (
     _format_history_for_linker,
 )
 from src.context.retrieval.scan import scan_connection_schema
+from src.context.retrieval.schema_text_cache import (
+    get_cached_schema_text,
+    invalidate_schema_text,
+    schema_version_token,
+    set_cached_schema_text,
+)
 from src.context.schema_enrichment import SchemaEnrichmentStore
 from src.context.schema_linker import SchemaLinker
 from src.context.semantic_layer import append_semantic_to_rules
@@ -141,9 +147,9 @@ class ContextRetriever:
         )
         caches = list(result.scalars().all())
 
+        connection_row = await session.get(Connection, connection_id)
         if not caches:
-            connection = await session.get(Connection, connection_id)
-            if connection is None:
+            if connection_row is None:
                 raise ValueError(f"Connection not found: {connection_id}")
             steps.append(
                 {
@@ -151,7 +157,10 @@ class ContextRetriever:
                     "detail": "Schema cache empty; scanning connection",
                 }
             )
-            caches = await scan_connection_schema(session, connection, db_provider)
+            caches = await scan_connection_schema(
+                session, connection_row, db_provider
+            )
+            invalidate_schema_text(connection_id)
 
         enrich_map = await self.enrichments.get_for_tables(
             session,
@@ -180,9 +189,30 @@ class ContextRetriever:
                     or [],
                 }
             )
-        full_schema_text = await self.enrichments.format_enriched_schema(
-            session, connection_id, tables_data_all
+        version = schema_version_token(
+            table_count=len(all_table_names),
+            last_scanned_at=getattr(connection_row, "last_scanned_at", None),
+            enrichment_count=sum(
+                1
+                for t in enrich_map.values()
+                for _ in ([t] if t.get("description") else [])
+            )
+            + sum(len((t.get("columns") or {})) for t in enrich_map.values()),
+            sample_rows=int(getattr(self._settings, "schema_sample_rows", 2) or 0),
         )
+        full_schema_text = get_cached_schema_text(connection_id, version)
+        if full_schema_text is None:
+            full_schema_text = await self.enrichments.format_enriched_schema(
+                session, connection_id, tables_data_all
+            )
+            set_cached_schema_text(connection_id, version, full_schema_text)
+        else:
+            steps.append(
+                {
+                    "step": "schema_text_cache",
+                    "detail": "Reused cached formatted schema text",
+                }
+            )
         full_tokens = _approx_tokens(full_schema_text)
         link_mode = (self._settings.schema_link_mode or "auto").strip().lower()
         token_budget = int(self._settings.schema_full_token_budget)
@@ -628,8 +658,9 @@ class ContextRetriever:
 
         # 4. Business rules + optional semantic layer
         business_rules = await self.rules.get_rules_text(session, connection_id)
-        connection_row = await session.get(Connection, connection_id)
-        semantic_json = getattr(connection_row, "semantic_layer_json", None)
+        if connection_row is None:
+            connection_row = await session.get(Connection, connection_id)
+        semantic_json = getattr(connection_row, "semantic_layer_json", None) if connection_row else None
         business_rules = append_semantic_to_rules(business_rules, semantic_json)
         steps.append(
             {
@@ -664,32 +695,59 @@ class ContextRetriever:
             }
         )
 
-        # 6. Verified-answer cache: near-exact golden → trust certified SQL
+        # 6. Verified-answer cache: near-exact golden → skip generation
         verified_sql = ""
-        verified = await find_verified_sql(
-            session,
-            connection_id,
-            question,
-            min_overlap=_VERIFIED_SQL_OVERLAP,
+        verified_min = float(
+            getattr(self._settings, "verified_min_score", _VERIFIED_SQL_OVERLAP)
+            or _VERIFIED_SQL_OVERLAP
         )
-        if verified is not None:
-            sql_text = (verified.sql or "").strip()
-            if sql_text:
-                overlap = token_overlap(question, verified.question or "")
-                verified_sql = sql_text
-                used_golden = True
-                if sql_text not in golden_sqls:
-                    golden_sqls.insert(0, sql_text)
-                steps.append(
-                    {
-                        "step": "verified_cache",
-                        "detail": (
-                            f"Verified SQL match "
-                            f"(overlap={overlap:.2f} >= {_VERIFIED_SQL_OVERLAP})"
-                        ),
-                        "question": verified.question,
-                    }
-                )
+        # Prefer high-score FAISS hit from golden search; fall back to token overlap.
+        best_hit = golden_hits[0] if golden_hits else None
+        if (
+            best_hit
+            and float(best_hit.get("score") or 0) >= verified_min
+            and (best_hit.get("sql") or "").strip()
+        ):
+            verified_sql = str(best_hit["sql"]).strip()
+            used_golden = True
+            if verified_sql not in golden_sqls:
+                golden_sqls.insert(0, verified_sql)
+            steps.append(
+                {
+                    "step": "verified_cache",
+                    "detail": (
+                        f"Verified SQL match "
+                        f"(score={float(best_hit.get('score') or 0):.2f} "
+                        f">= {verified_min})"
+                    ),
+                    "question": best_hit.get("question"),
+                }
+            )
+        else:
+            verified = await find_verified_sql(
+                session,
+                connection_id,
+                question,
+                min_overlap=verified_min,
+            )
+            if verified is not None:
+                sql_text = (verified.sql or "").strip()
+                if sql_text:
+                    overlap = token_overlap(question, verified.question or "")
+                    verified_sql = sql_text
+                    used_golden = True
+                    if sql_text not in golden_sqls:
+                        golden_sqls.insert(0, sql_text)
+                    steps.append(
+                        {
+                            "step": "verified_cache",
+                            "detail": (
+                                f"Verified SQL match "
+                                f"(overlap={overlap:.2f} >= {verified_min})"
+                            ),
+                            "question": verified.question,
+                        }
+                    )
 
         return RetrievedContext(
             enriched_schema=enriched_schema,

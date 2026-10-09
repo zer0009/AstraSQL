@@ -204,6 +204,23 @@ class QueryRequest(BaseModel):
     evidence: str | None = None
 
 
+class RefineRequest(BaseModel):
+    """Resume a prior run with a chosen interpretation (no full re-retrieval)."""
+
+    run_id: str
+    choice: str
+    connection_id: str | None = None
+    session_id: str | None = None
+
+
+class RememberDefinitionRequest(BaseModel):
+    """Promote a chosen reading into a durable business rule."""
+
+    connection_id: str
+    definition: str
+    term: str | None = None
+
+
 class ExecuteSqlRequest(BaseModel):
     """Re-run a previously generated SQL statement with no LLM involvement."""
 

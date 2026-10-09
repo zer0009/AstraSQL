@@ -129,3 +129,41 @@ def test_check_catalog_flags_unknown_table():
         selected_columns=[{"table": "customers", "column": "id"}],
     )
     assert any("orders" in i.lower() for i in issues)
+
+
+def test_check_catalog_allows_ctes_and_selected_table_columns():
+    sql = """
+    WITH monthly_quantities AS (
+        SELECT
+            DATE_TRUNC('month', po.create_date)::date AS purchase_month,
+            SUM(pol.product_qty) AS total_purchased_quantity
+        FROM purchase_order po
+        JOIN purchase_order_line pol ON pol.order_id = po.id
+        WHERE pol.display_type IS NULL
+        GROUP BY 1
+    ),
+    with_changes AS (
+        SELECT
+            purchase_month,
+            total_purchased_quantity,
+            LAG(total_purchased_quantity) OVER (ORDER BY purchase_month)
+                AS previous_month_quantity
+        FROM monthly_quantities
+    )
+    SELECT purchase_month, total_purchased_quantity, previous_month_quantity
+    FROM with_changes
+    ORDER BY purchase_month
+    """
+    issues = check_catalog(
+        sql,
+        "postgres",
+        selected_tables=["purchase_order", "purchase_order_line"],
+        # Sparse linker list (huge-schema PK/FK expansion) — must not reject
+        # real columns that appear in the enriched schema text.
+        selected_columns=[
+            {"table": "purchase_order", "column": "id"},
+            {"table": "purchase_order_line", "column": "id"},
+            {"table": "purchase_order_line", "column": "order_id"},
+        ],
+    )
+    assert issues == []

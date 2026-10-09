@@ -12,7 +12,7 @@ from src.agent.prompts.intent import render_intent_prompt
 from src.agent.state import AgentState
 from src.agent.utils import append_step, extract_json, get_configurable, message_text
 from src.config.settings import get_settings
-from src.providers.llm import get_llm_provider
+from src.providers.llm import get_llm_provider, stage_chat_kwargs
 
 _VALID_INTENTS = frozenset({"SQL_QUERY", "META", "CHIT_CHAT"})
 _TOKEN_RE = re.compile(r"[a-z0-9_]+", re.IGNORECASE)
@@ -73,9 +73,11 @@ async def intent_classifier(
         )
         model_name = (settings.intent_model or "").strip() or None
         llm = get_llm_provider().get_chat_model(
-            temperature=0.0,
-            max_tokens=settings.llm_max_tokens,
-            model=model_name,
+            **stage_chat_kwargs(
+                "intent_classifier",
+                settings=settings,
+                model=model_name,
+            )
         )
         response = await llm.ainvoke(
             [SystemMessage(content=system), HumanMessage(content=user)],

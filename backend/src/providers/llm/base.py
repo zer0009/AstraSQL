@@ -17,6 +17,7 @@ class BaseLLMProvider(ABC):
         temperature: float = 0.0,
         max_tokens: int = 4096,
         model: str | None = None,
+        reasoning_effort: str | None = None,
     ) -> BaseChatModel: ...
 
     @abstractmethod

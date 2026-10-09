@@ -42,6 +42,8 @@ export default function ChatPage() {
   const {
     messages,
     send,
+    refine,
+    remember,
     rerunSql,
     isStreaming,
     rerunningMessageId,
@@ -240,6 +242,8 @@ export default function ChatPage() {
               isStreaming={isStreaming}
               rerunningMessageId={rerunningMessageId}
               onFollowUp={(q) => void send(q)}
+              onRefine={(runId, choice) => void refine(runId, choice)}
+              onRemember={(definition) => void remember(definition)}
               onAskAgain={(q) => void send(q)}
               onRerunSql={(id, sql) => void rerunSql(id, sql)}
               onRetry={(q) => void send(q)}

@@ -45,6 +45,30 @@ async def query_executor(
             "error": "No SQL to execute",
             "steps": append_step(state, "execute_error", "Empty SQL"),
         }
+    # Reuse results already produced by the ambiguity gate / candidate picker.
+    prior = state.get("results") if isinstance(state.get("results"), dict) else None
+    if (
+        state.get("cached_execution")
+        and prior
+        and prior.get("columns") is not None
+        and "row_count" in prior
+    ):
+        row_count = int(prior.get("row_count") or 0)
+        return {
+            "results": prior,
+            "error": None,
+            "shape_retry": False,
+            "cached_execution": False,
+            "retry_context": "",
+            "steps": append_step(
+                state,
+                "query_executed",
+                f"Reused gated result ({row_count} row(s))",
+                row_count=row_count,
+                columns=prior.get("columns") or [],
+                reused_cached_execution=True,
+            ),
+        }
     if not hasattr(db_provider, "sqlglot_dialect"):
         return {
             "error": "db_provider missing sqlglot_dialect()",
@@ -115,28 +139,60 @@ async def query_executor(
             retries=retries,
         )
         warnings = list(shape.get("warnings") or [])
-        # Soft EMPTY_RESULT retry once (retries < 1). Clears results and sets
-        # shape_retry so route_after_execute regenerates without a hard error.
+        # Soft EMPTY_RESULT retry once only when literals look unverified.
         if shape.get("should_retry_empty"):
-            message = empty_result_message(sql)
-            return {
-                "results": {},
-                "error": None,
-                "shape_retry": True,
-                "retry_context": build_retry_context(
-                    previous_sql=sql,
-                    error=message,
-                    prior_context=state.get("retry_context") or "",
-                    retry_type="EMPTY_RESULT",
+            from src.agent.empty_result_probe import should_retry_empty
+
+            do_retry, probe_why = should_retry_empty(
+                sql=sql,
+                question=str(state.get("question") or ""),
+                context=state.get("context")
+                if isinstance(state.get("context"), dict)
+                else None,
+                dialect=dialect,
+                enabled=bool(
+                    getattr(settings, "empty_result_literal_probe", True)
                 ),
+            )
+            if do_retry:
+                message = empty_result_message(sql)
+                exploration = await _exploration_block(state, db_provider, settings)
+                return {
+                    "results": {},
+                    "error": None,
+                    "shape_retry": True,
+                    "retry_context": build_retry_context(
+                        previous_sql=sql,
+                        error=f"{message} ({probe_why})",
+                        prior_context="",
+                        retry_type="EMPTY_RESULT",
+                        exploration_block=exploration,
+                    ),
+                    "steps": append_step(
+                        state,
+                        "shape_retry_empty",
+                        f"{message} [{probe_why}]",
+                        sql=sql,
+                        row_count=0,
+                        warnings=warnings,
+                        retry_type="EMPTY_RESULT",
+                        probe=probe_why,
+                    ),
+                }
+            # Literals verified → accept honest empty answer.
+            return {
+                "results": results,
+                "error": None,
+                "shape_retry": False,
+                "retry_context": "",
                 "steps": append_step(
                     state,
-                    "shape_retry_empty",
-                    message,
-                    sql=sql,
+                    "query_executed",
+                    f"Returned 0 row(s) (accepted; {probe_why})",
                     row_count=0,
-                    warnings=warnings,
-                    retry_type="EMPTY_RESULT",
+                    columns=results.get("columns") or [],
+                    shape_warnings=warnings,
+                    probe=probe_why,
                 ),
             }
         
@@ -180,6 +236,55 @@ async def query_executor(
         message = str(exc)
         if classify_retry_type(error=message) == "BIND_PARAMETER":
             return clarify_unbound(state, sql, dialect)
+        # Bounded repair agent before falling back to regenerate.
+        if bool(getattr(settings, "repair_agent_enabled", True)) and retries < 1:
+            try:
+                from src.agent.repair_agent import run_repair_agent
+
+                repair = await run_repair_agent(
+                    state=state,
+                    db_provider=db_provider,
+                    settings=settings,
+                    error=message,
+                )
+                repaired = str(repair.get("sql") or "").strip()
+                if repaired and repaired != sql:
+                    try:
+                        results = await db_provider.execute_readonly(
+                            repaired, max_rows=settings.max_result_rows
+                        )
+                        row_count = int(results.get("row_count") or 0)
+                        return {
+                            "sql": repaired,
+                            "corrected_sql": repaired,
+                            "results": results,
+                            "error": None,
+                            "shape_retry": False,
+                            "retry_context": "",
+                            "steps": append_step(
+                                state,
+                                "repair_agent_ok",
+                                f"Repair agent fixed SQL ({row_count} row(s))",
+                                sql=repaired,
+                                observations=repair.get("observations") or [],
+                                steps_used=repair.get("steps_used"),
+                            ),
+                        }
+                    except Exception as repair_exc:
+                        message = f"{message}; repair_try_failed: {repair_exc}"
+                        exploration = "\n".join(
+                            str(x) for x in (repair.get("observations") or [])[:8]
+                        )
+                        return _execution_failure(
+                            state,
+                            sql=repaired,
+                            message=message,
+                            retries=retries,
+                            exploration_block=exploration,
+                        )
+            except Exception as repair_outer:
+                logger = __import__("logging").getLogger(__name__)
+                logger.warning("repair_agent failed open: %s", repair_outer)
         exploration = await _exploration_block(state, db_provider, settings)
         return _execution_failure(
             state,

@@ -528,12 +528,13 @@ function parseSseChunk(
   }
 }
 
-export async function streamQuery(
-  body: QueryRequest,
+async function streamSsePost(
+  url: string,
+  body: unknown,
   onEvent: (event: StreamQueryEvent) => void,
   signal?: AbortSignal,
 ): Promise<void> {
-  const response = await fetch("/api/query", {
+  const response = await fetch(url, {
     method: "POST",
     credentials: "include",
     headers: {
@@ -584,6 +585,40 @@ export async function streamQuery(
   if (buffer.trim()) {
     parseSseChunk(buffer, onEvent);
   }
+}
+
+export async function streamQuery(
+  body: QueryRequest,
+  onEvent: (event: StreamQueryEvent) => void,
+  signal?: AbortSignal,
+): Promise<void> {
+  return streamSsePost("/api/query", body, onEvent, signal);
+}
+
+export async function streamRefine(
+  body: {
+    run_id: string;
+    choice: string;
+    connection_id?: string;
+    session_id?: string;
+  },
+  onEvent: (event: StreamQueryEvent) => void,
+  signal?: AbortSignal,
+): Promise<void> {
+  return streamSsePost("/api/query/refine", body, onEvent, signal);
+}
+
+export async function rememberDefinition(body: {
+  connection_id: string;
+  definition: string;
+  term?: string;
+}): Promise<{ ok: boolean; rule_id?: string; content?: string }> {
+  const { data } = await api.post<{
+    ok: boolean;
+    rule_id?: string;
+    content?: string;
+  }>("/api/query/remember", body);
+  return data;
 }
 
 export { api };

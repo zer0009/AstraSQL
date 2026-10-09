@@ -175,10 +175,42 @@ class QueryHistory(Base):
     # Ambiguity / execution-gate diagnostics: status, decision_why, candidates, …
     ambiguity_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     trust_level: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    usage_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    run_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
 
     connection: Mapped[Connection] = relationship(back_populates="query_history")
     session: Mapped[ChatSession | None] = relationship(back_populates="queries")
+
+
+class RunSnapshot(Base):
+    """Frozen agent context so a clarification chip can resume without re-retrieval."""
+
+    __tablename__ = "run_snapshots"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    connection_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("connections.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    session_id: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey("chat_sessions.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    history_id: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey("query_history.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    question: Mapped[str] = mapped_column(Text, nullable=False)
+    context_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    assumption: Mapped[str | None] = mapped_column(Text, nullable=True)
+    alternatives_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    ambiguity_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    sql: Mapped[str | None] = mapped_column(Text, nullable=True)
+    context_version: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
 
 
 class SchemaCache(Base):

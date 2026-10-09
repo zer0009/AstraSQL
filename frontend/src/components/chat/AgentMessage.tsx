@@ -22,6 +22,8 @@ export function AgentMessage({
   isStreaming = false,
   isRerunning = false,
   onFollowUp,
+  onRefine,
+  onRemember,
   onAskAgain,
   onRerunSql,
   onRetry,
@@ -45,10 +47,21 @@ export function AgentMessage({
     Boolean(message.clarificationOptions?.length);
 
   const clarificationOptions = message.clarificationOptions ?? [];
+  const canRefine = Boolean(onRefine && message.runId);
   const showClarifications =
-    !isRerunning && clarificationOptions.length > 0 && Boolean(onFollowUp);
+    !isRerunning &&
+    clarificationOptions.length > 0 &&
+    (canRefine || Boolean(onFollowUp));
   const showClarificationsNow =
     showClarifications && (!isStreaming || clarificationOptions.length > 0);
+
+  const handleChip = (choice: string) => {
+    if (canRefine && message.runId && onRefine) {
+      onRefine(message.runId, choice);
+      return;
+    }
+    onFollowUp?.(choice);
+  };
 
   const showTrustCard =
     (!isStreaming || message.assumption || message.keyFinding) &&
@@ -108,6 +121,11 @@ export function AgentMessage({
                   )
               : undefined
           }
+          onRemember={
+            onRemember && message.assumption
+              ? () => onRemember(message.assumption!)
+              : undefined
+          }
         />
       ) : null}
 
@@ -134,9 +152,15 @@ export function AgentMessage({
 
       {showClarificationsNow ? (
         <SuggestedFollowUps
-          label={trust.isClarifying ? "Choose one:" : "Did you mean?"}
+          label={
+            trust.isClarifying
+              ? "Choose one:"
+              : canRefine
+                ? "Try another reading:"
+                : "Did you mean?"
+          }
           questions={clarificationOptions}
-          onSelect={onFollowUp!}
+          onSelect={handleChip}
           variant={trust.isClarifying ? "clarify" : "default"}
         />
       ) : null}
@@ -145,11 +169,11 @@ export function AgentMessage({
       !isRerunning &&
       message.followUps &&
       message.followUps.length > 0 &&
-      onFollowUp ? (
+      (canRefine || onFollowUp) ? (
         <SuggestedFollowUps
           label="Suggested follow-ups"
           questions={message.followUps}
-          onSelect={onFollowUp}
+          onSelect={handleChip}
         />
       ) : null}
     </MessageBubble>

@@ -126,9 +126,17 @@ class GoldenRecordsStore:
         connection_id: str,
         question: str,
         top_k: int | None = None,
-    ) -> list[dict[str, str]]:
+        min_score: float | None = None,
+        query_vector: np.ndarray | None = None,
+    ) -> list[dict[str, Any]]:
+        """Return similar golden records above ``min_score`` (FAISS IP).
+
+        Each hit includes ``score``. Pass ``query_vector`` to reuse an embedding.
+        """
         if top_k is None:
             top_k = self._settings.golden_records_top_k
+        if min_score is None:
+            min_score = float(getattr(self._settings, "golden_min_score", 0.0) or 0.0)
 
         index, ids = self._load_index(connection_id)
         if index is None or index.ntotal == 0 or not ids:
@@ -138,18 +146,31 @@ class GoldenRecordsStore:
         if k <= 0:
             return []
 
-        query = await self._embed_text(question)
+        if query_vector is not None:
+            query = np.asarray(query_vector, dtype=np.float32).reshape(1, -1)
+            query = _normalize(query)
+        else:
+            query = await self._embed_text(question)
         scores, indices = index.search(query, k)
 
-        out: list[dict[str, str]] = []
-        for idx in indices[0]:
+        out: list[dict[str, Any]] = []
+        for score, idx in zip(scores[0], indices[0], strict=False):
             if idx < 0 or idx >= len(ids):
+                continue
+            if float(score) < float(min_score):
                 continue
             record_id = ids[idx]
             row = await session.get(GoldenRecord, record_id)
             if row is None:
                 continue
-            out.append({"question": row.question, "sql": row.sql})
+            out.append(
+                {
+                    "question": row.question,
+                    "sql": row.sql,
+                    "score": float(score),
+                    "id": row.id,
+                }
+            )
         return out
 
     async def rebuild_index(

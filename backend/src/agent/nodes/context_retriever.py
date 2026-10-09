@@ -41,6 +41,28 @@ async def context_retriever_node(
             ),
         }
 
+    # Refine / resume: reuse the snapshot context (no re-retrieval).
+    existing = state.get("context") if isinstance(state.get("context"), dict) else None
+    if existing and existing.get("enriched_schema") and state.get("refine_choice"):
+        return {
+            "context": existing,
+            "used_golden": bool(state.get("used_golden")),
+            "allow_clarify": False,
+            "intent": state.get("intent") or "SQL_QUERY",
+            "ambiguity": {
+                "should_clarify": False,
+                "reason": "Refine with stored context",
+                "options": [],
+                "status": "clear",
+            },
+            "error": None,
+            "steps": append_step(
+                state,
+                "context_reused",
+                "Skipped retrieval; reused RunSnapshot context",
+            ),
+        }
+
     connection_id = state.get("connection_id") or getattr(connection, "id", None)
     question = state.get("question") or ""
     conversation_history = state.get("conversation_history") or []
